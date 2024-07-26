@@ -1,8 +1,20 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {
+  ApplicationConfig,
+  importProvidersFrom,
+  provideZoneChangeDetection,
+} from '@angular/core';
+import { ArrowRight, ArrowRightCircle, Download } from 'angular-feather/icons';
+import { FeatherModule } from 'angular-feather';
 
-import { routes } from './app.routes';
+const icons = {
+  Download,
+  ArrowRight,
+  ArrowRightCircle
+};
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes)]
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    importProvidersFrom(FeatherModule.pick(icons)),
+  ],
 };

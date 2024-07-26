@@ -1,0 +1,7 @@
+<div [class]="containerClass()">
+  @for (social of socials; track $index) {
+    <a [href]="social.link" target="_blank">
+      <fa-icon [icon]="social.icon" [class]="iconStyle()"></fa-icon>
+    </a>
+  }
+</div>
