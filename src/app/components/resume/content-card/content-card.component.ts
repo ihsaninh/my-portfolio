@@ -8,5 +8,5 @@ import { Component, input } from '@angular/core';
   styleUrl: './content-card.component.scss'
 })
 export class ContentCardComponent {
-  data = input.required<{ title: string, company: string, startDate: string, endDate: string }>();
+  data = input.required<ResumeData>();
 }

@@ -3,11 +3,12 @@ import {
   importProvidersFrom,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { Download } from 'angular-feather/icons';
+import { ArrowUpRight, Download } from 'angular-feather/icons';
 import { FeatherModule } from 'angular-feather';
 
 const icons = {
   Download,
+  ArrowUpRight,
 };
 
 export const appConfig: ApplicationConfig = {

@@ -10,7 +10,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   styleUrl: './nav.component.scss',
 })
 export class NavComponent {
-  links: { name: string; isActive: boolean }[] = [
+  links: Links[] = [
     { name: 'Home', isActive: true },
     { name: 'Resume', isActive: false },
     { name: 'Work', isActive: false },

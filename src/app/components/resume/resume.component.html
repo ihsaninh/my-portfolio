@@ -1,9 +1,14 @@
 <section class="container mt-36">
+  <h2
+    class="text-4xl relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent"
+  >
+    Resume
+  </h2>
   <div class="flex flex-row gap-12">
     <div class="w-1/3">
-      <h2 class="text-4xl">Resume</h2>
       <p class="pt-6">
-        Here is my experince, education, and skills that I have done. You can check it out.
+        Here is my experince, education, and skills that I have done. You can
+        check it out.
       </p>
 
       <!-- Resume Menu -->
@@ -23,26 +28,31 @@
         }
       </div>
     </div>
-    
 
     <!-- Menu content -->
-    <div class="w-2/3">
+    <div class="w-2/3 mt-6">
       @if (activeMenu() === 0) {
-        <app-resume-content title="My Experience" description="Here is my experience that I have done.">
-          <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
-            @for (experience of experienceData; track $index) {
-              <app-content-card [data]="experience"></app-content-card>
-            }
-          </div>
-        </app-resume-content>
+      <app-resume-content
+        title="My Experience"
+        description="Here is my experience that I have done."
+      >
+        <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
+          @for (experience of experienceData; track $index) {
+          <app-content-card [data]="experience"></app-content-card>
+          }
+        </div>
+      </app-resume-content>
       } @else if (activeMenu() === 1) {
-        <app-resume-content title="My Education" description="Here is my education that I have done.">
-          <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
-            @for (education of educationData; track $index) {
-              <app-content-card [data]="education"></app-content-card>
-            }
-          </div>
-        </app-resume-content>
+      <app-resume-content
+        title="My Education"
+        description="Here is my education that I have done."
+      >
+        <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
+          @for (education of educationData; track $index) {
+          <app-content-card [data]="education"></app-content-card>
+          }
+        </div>
+      </app-resume-content>
       }
     </div>
   </div>

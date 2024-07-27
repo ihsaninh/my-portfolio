@@ -14,13 +14,13 @@ import { ContentCardComponent } from "./content-card/content-card.component";
 export class ResumeComponent {
   activeMenu = signal(0);
 
-  resumeMenus: { id: number, name: string }[] = [
+  resumeMenus: ResumeMenu[] = [
     { id: 0, name: 'Experience' },
     { id: 1, name: 'Education' },
     { id: 2, name: 'Skills' },
   ]
 
-  educationData: { title: string, company: string, startDate: string, endDate: string }[] = [
+  educationData: ResumeData[] = [
     {
       title: 'Fullstack Developer',
       company: 'Arkademy (Pijar Camp)',
@@ -35,7 +35,7 @@ export class ResumeComponent {
     },
   ]
 
-  experienceData: { title: string, company: string, startDate: string, endDate: string }[] = [
+  experienceData: ResumeData[] = [
     {
       title: 'Frontend Developer',
       company: 'PT XL Axiata Tbk.',

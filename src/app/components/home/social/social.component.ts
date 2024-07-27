@@ -5,7 +5,6 @@ import {
   faGithub,
   faInstagram,
   faFacebook,
-  IconDefinition,
 } from '@fortawesome/free-brands-svg-icons';
 
 @Component({
@@ -18,7 +17,7 @@ import {
 export class SocialComponent {
   containerClass = input.required<string>();
   iconStyle = input.required<string>();
-  socials: { icon: IconDefinition; link: string }[] = [
+  socials: Social[] = [
     {
       icon: faFacebook,
       link: 'https://www.facebook.com/ihsan.n.habib/',
