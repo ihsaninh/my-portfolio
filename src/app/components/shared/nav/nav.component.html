@@ -1,7 +1,7 @@
 <nav class="flex gap-8">
   @for (link of links; track $index) {
   <a
-    class="hover:text-accent transition-all"
+    class="hover:text-accent transition-all cursor-pointer"
     [ngClass]="{ 'text-accent border-b-2 border-accent': link.isActive }"
   >
     {{ link.name }}

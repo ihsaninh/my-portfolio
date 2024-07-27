@@ -43,7 +43,7 @@ export class ResumeComponent {
       endDate: 'Present',
     },
     {
-      title: 'Frontend Developer',
+      title: 'Frontend Developer (Angular)',
       company: 'Axiata Digital Labs',
       startDate: 'Aug 2021',
       endDate: 'Aug 2023',

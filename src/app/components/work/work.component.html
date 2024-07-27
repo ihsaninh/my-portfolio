@@ -1,7 +1,7 @@
-<section class="container mt-12 mx-auto">
+<section class="container mt-24 mx-auto">
   <div class="relative">
     <h2
-      class="text-4xl relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent"
+      class="text-4xl font-medium relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent"
     >
       Work
     </h2>
@@ -12,11 +12,11 @@
       class="w-full lg:w-1/2 flex flex-col lg:justify-between order-2 lg:order-none"
     >
       <div class="flex flex-col gap-8">
-        <div
-          class="text-8xl leading-none font-extrabold text-transparent text-outline"
+        <!-- <div
+          class="text-8xl leading-none font-extrabold"
         >
           {{ currentProject().num }}
-        </div>
+        </div> -->
         <h2
           class="text-[42px] font-bold leading-none text-white group-hover:text-accent transition-all duration-500"
         >
@@ -25,9 +25,9 @@
         <p class="text-white/60">{{ currentProject().description }}</p>
         <ul class="flex gap-4">
           @for (stack of currentProject().stack; track $index) {
-          <li class="text-accent">
+          <li class="text-accent px-4 py-2 rounded-full text-sm cursor-pointer border-accent border tracking-wider">
             {{ stack }}
-            {{ $index !== currentProject().stack.length - 1 ? "," : "" }}
+            <!-- {{ $index !== currentProject().stack.length - 1 ? "," : "" }} -->
           </li>
           }
         </ul>
@@ -59,7 +59,6 @@
         class="lg:h-[480px] mb-12"
         space-between="30"
         slides-per-view="1"
-        navigation="true"
         #swiper
       >
         @for (project of allProject; track $index) {

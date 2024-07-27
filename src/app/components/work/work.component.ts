@@ -29,7 +29,7 @@ export class WorkComponent implements AfterViewInit {
       title: 'NewXlife',
       description:
         'NewXlife is an employee management app for XL Axiata, featuring attendance tracking, daily health reporting, WFO assessments, shuttle car reservations, a Family Member menu, and more.',
-      stack: ['Angular CLI', 'Typescript', 'TailwindCSS', 'Material UI'],
+      stack: ['Angular', 'Typescript', 'TailwindCSS', 'Material UI'],
       image: 'images/projects/NewXlife.png',
       liveUrl: 'https://www.newxlife.xl.co.id/en/',
       githubUrl: '',
@@ -39,7 +39,7 @@ export class WorkComponent implements AfterViewInit {
       title: 'eMR',
       description:
         'eMr is a platform Job Requisition for manpower request, monitoring recruitment progress, management employement contract, controlling MR, and more.',
-      stack: ['Angular CLI', 'Typescript', 'TailwindCSS', 'Material UI'],
+      stack: ['Angular', 'Typescript', 'TailwindCSS', 'Material UI'],
       image: 'images/projects/Emr.png',
       liveUrl: 'https://www.newxlife.xl.co.id/en/',
       githubUrl: '',
@@ -62,6 +62,16 @@ export class WorkComponent implements AfterViewInit {
       stack: ['React.js', 'Next.js', 'Redux'],
       image: 'images/projects/SpesialUntukmu.png',
       liveUrl: 'https://spesialuntukmu.xlaxiata.co.id/',
+      githubUrl: '',
+    },
+    {
+      num: '05',
+      title: 'Trex',
+      description:
+        'Trex is a PPOB application that sells pulsa, data packages, game topups, and various kinds of bills such as PLN, BPJS, and pay TV.',
+      stack: ['React Native', 'Typescript', 'Zustand', 'Tamagui'],
+      image: 'images/projects/Trex.png',
+      liveUrl: '',
       githubUrl: '',
     },
   ];
