@@ -7,24 +7,24 @@ import {
   CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
 import { Swiper } from 'swiper/types';
-import { FeatherModule } from 'angular-feather';
 import { SwiperContainer } from 'swiper/element';
-import { faGithub } from '@fortawesome/free-brands-svg-icons';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { faBrandGithub } from '@ng-icons/font-awesome/brands';
+import { featherArrowUpRight } from '@ng-icons/feather-icons';
 
 import { WorkSliderButtonsComponent } from './work-slider-buttons/work-slider-buttons.component';
 
 @Component({
   selector: 'app-work',
   standalone: true,
-  imports: [FeatherModule, FontAwesomeModule, WorkSliderButtonsComponent],
+  imports: [NgIconComponent, WorkSliderButtonsComponent],
+  providers: [provideIcons({ featherArrowUpRight, faBrandGithub })],
   templateUrl: './work.component.html',
   styleUrl: './work.component.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class WorkComponent implements AfterViewInit {
   swiperRef = viewChild<ElementRef<SwiperContainer>>('swiper');
-  faGithub = faGithub;
   allProject: Project[] = [
     {
       num: '01',

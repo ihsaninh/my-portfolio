@@ -36,19 +36,18 @@
             class="w-16 h-16 rounded-full bg-white/5 flex justify-center items-center group"
             (click)="openLink(currentProject().liveUrl)"
           >
-            <i-feather
-              name="arrow-up-right"
-              style="width: 30px"
+            <ng-icon
+              name="featherArrowUpRight"
               class="text-white text-3xl group-hover:text-accent"
-            ></i-feather>
+            ></ng-icon>
           </button>
           <button
-            class="w-16 h-16 rounded-full bg-white/5 flex justify-center items-center group"
+            class="w-16 h-16 rounded-full bg-white/5 flex justify-center items-center group text-white"
           >
-            <fa-icon
-              [icon]="faGithub"
+            <ng-icon
+              name="faBrandGithub"
               class="text-white text-3xl group-hover:text-accent"
-            ></fa-icon>
+            ></ng-icon>
           </button>
         </div>
       </div>

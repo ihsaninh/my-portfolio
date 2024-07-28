@@ -19,4 +19,4 @@ type ResumeData = {
   endDate: string;
 };
 
-type Social = { icon: IconDefinition; link: string }
+type Social = { icon: string; link: string }

@@ -14,17 +14,17 @@
       <!-- Resume Menu -->
       <div class="flex flex-col gap-4 mt-8">
         @for (menu of resumeMenus; track menu.id) {
-        <a
-          class="py-2 rounded-lg cursor-pointer"
-          [ngClass]="
-            menu.id === activeMenu()
-              ? 'bg-accent text-primary'
-              : 'text-white bg-secondary'
-          "
-          (click)="activeMenu.set(menu.id)"
-        >
-          <p class="text-center">{{ menu.name }}</p>
-        </a>
+          <a
+            class="py-2 rounded-lg cursor-pointer"
+            [ngClass]="
+              menu.id === activeMenu()
+                ? 'bg-accent text-primary'
+                : 'text-white bg-secondary'
+            "
+            (click)="activeMenu.set(menu.id)"
+          >
+            <p class="text-center">{{ menu.name }}</p>
+          </a>
         }
       </div>
     </div>
@@ -32,27 +32,27 @@
     <!-- Menu content -->
     <div class="w-2/3 mt-6">
       @if (activeMenu() === 0) {
-      <app-resume-content
-        title="My Experience"
-        description="Here is my experience that I have done."
-      >
-        <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
-          @for (experience of experienceData; track $index) {
-          <app-content-card [data]="experience"></app-content-card>
-          }
-        </div>
-      </app-resume-content>
+        <app-resume-content
+          title="My Experience"
+          description="Here is my experience that I have done."
+        >
+          <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
+            @for (experience of experienceData; track $index) {
+            <app-content-card [data]="experience"></app-content-card>
+            }
+          </div>
+        </app-resume-content>
       } @else if (activeMenu() === 1) {
-      <app-resume-content
-        title="My Education"
-        description="Here is my education that I have done."
-      >
-        <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
-          @for (education of educationData; track $index) {
-          <app-content-card [data]="education"></app-content-card>
-          }
-        </div>
-      </app-resume-content>
+        <app-resume-content
+          title="My Education"
+          description="Here is my education that I have done."
+        >
+          <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
+            @for (education of educationData; track $index) {
+              <app-content-card [data]="education"></app-content-card>
+            }
+          </div>
+        </app-resume-content>
       }
     </div>
   </div>

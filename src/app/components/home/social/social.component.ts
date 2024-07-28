@@ -1,16 +1,12 @@
 import { Component, input } from '@angular/core';
-import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import {
-  faLinkedin,
-  faGithub,
-  faInstagram,
-  faFacebook,
-} from '@fortawesome/free-brands-svg-icons';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import { faBrandFacebook, faBrandLinkedin, faBrandInstagram, faBrandGithub } from '@ng-icons/font-awesome/brands';
 
 @Component({
   selector: 'app-social',
   standalone: true,
-  imports: [FontAwesomeModule],
+  imports: [NgIconComponent],
+  providers: [provideIcons({ faBrandFacebook, faBrandLinkedin, faBrandInstagram, faBrandGithub })],
   templateUrl: './social.component.html',
   styleUrl: './social.component.scss',
 })
@@ -19,19 +15,19 @@ export class SocialComponent {
   iconStyle = input.required<string>();
   socials: Social[] = [
     {
-      icon: faFacebook,
+      icon: 'faBrandFacebook',
       link: 'https://www.facebook.com/ihsan.n.habib/',
     },
     {
-      icon: faLinkedin,
+      icon: 'faBrandLinkedin',
       link: 'https://www.linkedin.com/in/ihsaninh/',
     },
     {
-      icon: faInstagram,
+      icon: 'faBrandInstagram',
       link: 'https://www.instagram.com/ihsan_inh/',
     },
     {
-      icon: faGithub,
+      icon: 'faBrandGithub',
       link: 'https://github.com/ihsaninh',
     },
   ];
