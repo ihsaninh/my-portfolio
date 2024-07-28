@@ -10,5 +10,4 @@ import { SocialComponent } from "./social/social.component";
   styleUrl: './home.component.scss'
 })
 export class HomeComponent {
-
 }

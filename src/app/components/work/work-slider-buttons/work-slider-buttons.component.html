@@ -1,0 +1,14 @@
+<div [class]="containerStyle()">
+  <button [class]="btnStyles()" (click)="prev()">
+    <fa-icon
+      [icon]="faChevronLeft"
+      [class]="iconStyles()"
+    ></fa-icon>
+  </button>
+  <button [class]="btnStyles()" (click)="next()">
+    <fa-icon
+      [icon]="faChevronRight"
+      [class]="iconStyles()"
+    ></fa-icon>
+  </button>
+</div>

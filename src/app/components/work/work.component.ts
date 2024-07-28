@@ -1,21 +1,23 @@
 import {
   AfterViewInit,
   Component,
-  CUSTOM_ELEMENTS_SCHEMA,
   ElementRef,
   signal,
   viewChild,
+  CUSTOM_ELEMENTS_SCHEMA,
 } from '@angular/core';
+import { Swiper } from 'swiper/types';
 import { FeatherModule } from 'angular-feather';
+import { SwiperContainer } from 'swiper/element';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { SwiperContainer } from 'swiper/element';
-import { Swiper } from 'swiper/types';
+
+import { WorkSliderButtonsComponent } from './work-slider-buttons/work-slider-buttons.component';
 
 @Component({
   selector: 'app-work',
   standalone: true,
-  imports: [FeatherModule, FontAwesomeModule],
+  imports: [FeatherModule, FontAwesomeModule, WorkSliderButtonsComponent],
   templateUrl: './work.component.html',
   styleUrl: './work.component.scss',
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -66,6 +68,27 @@ export class WorkComponent implements AfterViewInit {
     },
     {
       num: '05',
+      title: 'BoostPreneur',
+      description:
+        'BoostPreneur is an application that can be used by agents Boost in me-register merchant (BoostSpot). Boost agent can use this application to validate and register candidates for strategic partners that are intended as BoostSpot.',
+      stack: ['React Native', 'Javascript', 'Redux'],
+      image: 'images/projects/BoostPreneur.png',
+      liveUrl: '',
+      githubUrl: '',
+    },
+    {
+      num: '06',
+      title: 'BoostPenjual',
+      description:
+        'BoostPenjual is an application that can increase revenue by making you digitally connected to various existing suppliers. That way, you can sell a variety of products including digital products.',
+      stack: ['React Native', 'Javascript', 'Redux'],
+      image: 'images/projects/BoostPenjual.png',
+      liveUrl:
+        'https://play.google.com/store/apps/details?id=com.dialog.boost.merchant.android',
+      githubUrl: '',
+    },
+    {
+      num: '07',
       title: 'Trex',
       description:
         'Trex is a PPOB application that sells pulsa, data packages, game topups, and various kinds of bills such as PLN, BPJS, and pay TV.',
@@ -88,6 +111,14 @@ export class WorkComponent implements AfterViewInit {
         this.currentProject.set(this.allProject[activeIndex]);
       }
     );
+  }
+
+  onPrevSlide() {
+    this.swiperRef()?.nativeElement.swiper.slidePrev();
+  }
+
+  onNextSlide() {
+    this.swiperRef()?.nativeElement.swiper.slideNext();
   }
 
   openLink(url: string) {
