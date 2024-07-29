@@ -9,20 +9,21 @@
         <span class="text-white">Software Engineer.</span>
       </h2>
       <p class="mb-9 text-white/80 leading-8 max-w-screen-xl px-24 text-lg">
-        I am a Software Engineer specializing in frontend development, with over 4 years of experience working on multiple projects for companies such as PT. XL Axiata, Axiata Digital Labs, and Meteor Inovasi Digital.
+        I am a Software Engineer specializing in frontend development, with over 4 years of experience working on
+        multiple projects for companies such as PT. XL Axiata, Axiata Digital Labs, and Meteor Inovasi Digital.
       </p>
     </div>
 
     <!-- Button Connect -->
     <div class="flex gap-6">
-      <button class="bg-accent px-6 py-1.5 text-primary rounded-full">
+      <a href="#contact" class="bg-accent px-6 py-1.5 text-primary rounded-full" (click)="onConnectClicked('#contact')">
         Connect with me
-      </button>
-      <button
+      </a>
+      <a href="document/CV-Ihsan-Nurul-Habib.pdf" download
         class="flex items-center justify-center gap-2 border border-accent text-accent px-6 py-1.5 rounded-full font-light hover:bg-accent hover:text-primary transition-all duration-500">
         <span>Download CV</span>
         <ng-icon name="featherDownload" class="text-lg"></ng-icon>
-      </button>
+      </a>
     </div>
   </div>
 </section>

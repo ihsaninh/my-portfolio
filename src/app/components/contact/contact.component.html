@@ -1,1 +1,68 @@
-<p>contact works!</p>
+<section class="container mt-24" id="contact">
+  <h2
+    class="text-4xl font-bold relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg"
+  >
+    Contact
+  </h2>
+  <div class="flex flex-col lg:flex-row space-between mt-6">
+    <div class="w-full lg:w-1/2 flex flex-col gap-6">
+      <p class="leading-9">
+        Have an idea you'd like me to work on? Feel free to reach out! reach
+        out! <br />
+        You can contact me through the form next to this or connect with me on
+        social media below.
+      </p>
+      <app-social
+        containerClass="flex gap-6"
+        iconStyle="w-9 h-9 border border-accent rounded-full flex justify-center 
+        items-center text-accent text-base hover:bg-accent 
+        hover:text-primary hover:transition-all duration-500"
+      >
+      </app-social>
+    </div>
+
+    <form
+      class="w-full lg:w-1/2 flex flex-col gap-6"
+      [formGroup]="contactForm"
+      (ngSubmit)="onSubmit()"
+    >
+      <div class="flex flex-col gap-1">
+        <label for="name">Your Name</label>
+        <input
+          type="text"
+          placeholder="Enter your name"
+          class="bg-secondary rounded-xl py-4 px-6"
+          formControlName="name"
+        />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="email">Your Email</label>
+        <input
+          id="email"
+          type="text"
+          placeholder="Enter your email"
+          class="bg-secondary rounded-xl py-4 px-6"
+          formControlName="email"
+        />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label for="message">Write your message here</label>
+        <textarea
+          rows="6"
+          type="text"
+          placeholder="Enter your message"
+          class="bg-secondary rounded-xl py-4 px-6"
+          formControlName="message"
+        ></textarea>
+      </div>
+
+      <button
+        type="submit"
+        class="bg-accent px-6 py-1.5 text-primary rounded-full w-min disabled:cursor-not-allowed"
+        [disabled]="contactForm.invalid"
+      >
+        Submit
+      </button>
+    </form>
+  </div>
+</section>

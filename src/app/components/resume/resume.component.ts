@@ -50,8 +50,8 @@ export class ResumeComponent {
 
   skills: Skill[] = [
     { name: 'React', icon: 'simpleReact' },
-    { name: 'Angular', icon: 'simpleAngular' },
     { name: 'Next.js', icon: 'simpleNextdotjs' },
+    { name: 'Angular', icon: 'simpleAngular' },
     { name: 'Redux', icon: 'simpleRedux' },
     { name: 'Javascript', icon: 'simpleNodedotjs' },
     { name: 'TailwindCSS', icon: 'simpleTailwindcss' },

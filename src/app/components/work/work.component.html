@@ -20,7 +20,7 @@
         >
           {{ currentProject().title }}
         </h2>
-        <p class="text-white/60">{{ currentProject().description }}</p>
+        <p class="text-white/80">{{ currentProject().description }}</p>
         <ul class="flex gap-4">
           @for (stack of currentProject().stack; track $index) {
           <li

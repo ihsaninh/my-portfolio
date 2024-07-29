@@ -1,12 +1,13 @@
 import { Component, input } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
-import { faBrandFacebook, faBrandLinkedin, faBrandInstagram, faBrandGithub } from '@ng-icons/font-awesome/brands';
+import { faBrandLinkedin, faBrandInstagram, faBrandGithub } from '@ng-icons/font-awesome/brands';
+import { faEnvelope } from '@ng-icons/font-awesome/regular';
 
 @Component({
   selector: 'app-social',
   standalone: true,
   imports: [NgIconComponent],
-  providers: [provideIcons({ faBrandFacebook, faBrandLinkedin, faBrandInstagram, faBrandGithub })],
+  providers: [provideIcons({ faEnvelope, faBrandLinkedin, faBrandInstagram, faBrandGithub })],
   templateUrl: './social.component.html',
   styleUrl: './social.component.scss',
 })
@@ -15,8 +16,8 @@ export class SocialComponent {
   iconStyle = input.required<string>();
   socials: Social[] = [
     {
-      icon: 'faBrandFacebook',
-      link: 'https://www.facebook.com/ihsan.n.habib/',
+      icon: 'faEnvelope',
+      link: 'mailto:ihsan.inh@gmail.com',
     },
     {
       icon: 'faBrandLinkedin',
