@@ -8,9 +8,11 @@ type Project = {
   githubUrl: string;
 };
 
-type Links = { name: string; isActive: boolean };
+type Links = { name: string; isActive: boolean, href: string };
 
 type ResumeMenu = { id: number; name: string };
+
+type Skill = { name: string; icon: string };
 
 type ResumeData = {
   title: string;

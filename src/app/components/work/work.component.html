@@ -1,4 +1,4 @@
-<section class="container mt-24 mx-auto">
+<section class="container mt-24 mx-auto" id="work">
   <div class="relative">
     <h2
       class="text-4xl font-bold relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg"
@@ -43,6 +43,7 @@
           </button>
           <button
             class="w-16 h-16 rounded-full bg-white/5 flex justify-center items-center group text-white"
+            (click)="openLink(currentProject().githubUrl)"
           >
             <ng-icon
               name="faBrandGithub"
@@ -62,13 +63,12 @@
         >
           @for (project of allProject; track $index) {
           <swiper-slide class="w-full">
-            <div class="h-96 relative group flex justify-center items-center">
-              <div></div>
-              <div class="relative w-full h-full rounded-lg text-">
+            <div class="h-96 relative group flex justify-center items-center rounded-lg">
+              <div class="relative w-full h-full rounded-lg">
                 <img
                   [src]="project.image"
                   [alt]="project.title"
-                  class="object-cover rounded-xl overflow-hidden"
+                  class="object-cover rounded-xl overflow-hidden cursor-pointer"
                 />
               </div>
             </div>

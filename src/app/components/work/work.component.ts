@@ -24,7 +24,7 @@ import { WorkSliderButtonsComponent } from './work-slider-buttons/work-slider-bu
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class WorkComponent implements AfterViewInit {
-  swiperRef = viewChild<ElementRef<SwiperContainer>>('swiper');
+  private swiperRef = viewChild<ElementRef<SwiperContainer>>('swiper');
   allProject: Project[] = [
     {
       num: '01',
@@ -40,7 +40,7 @@ export class WorkComponent implements AfterViewInit {
       num: '02',
       title: 'eMR',
       description:
-        'eMr is a platform Job Requisition for manpower request, monitoring recruitment progress, management employement contract, controlling MR, and more.',
+        'eMr is a platform Job Requisition platform for manpower request, monitoring recruitment progress, management employement contract, controlling MR, and more.',
       stack: ['Angular', 'Typescript', 'TailwindCSS', 'Material UI'],
       image: 'images/projects/Emr.png',
       liveUrl: 'https://www.newxlife.xl.co.id/en/',
@@ -53,7 +53,7 @@ export class WorkComponent implements AfterViewInit {
         'XL Prepaid Registration is a service that enables the registration of new XL and Axis numbers using a biometric system with facial recognition.',
       stack: ['React.js', 'Next.js', 'Redux'],
       image: 'images/projects/XLPrepaidRegistrasi.png',
-      liveUrl: '',
+      liveUrl: 'https://registrasi.xlaxiata.co.id/',
       githubUrl: '',
     },
     {
@@ -97,21 +97,30 @@ export class WorkComponent implements AfterViewInit {
       liveUrl: '',
       githubUrl: '',
     },
+    {
+      num: '08',
+      title: 'Al-Quran App',
+      description:
+        'An Al-Quran app with several features, such as a Surah list, Ayah list, Surah settings, jump to Ayah, bookmarks, add to last read, share, and more.',
+      stack: ['Flutter', 'Bloc', 'GetIt', 'Hive', 'Go Router'],
+      image: 'images/projects/Al-Quran.png',
+      liveUrl: '',
+      githubUrl: 'https://github.com/ihsaninh/Alquran-flutter-bloc-cubit',
+    },
   ];
   currentProject = signal<Project>(this.allProject[0]);
 
   ngAfterViewInit(): void {
-    this.swiperRef()?.nativeElement.addEventListener(
-      'swiperslidechange',
-      (event: Event) => {
-        const swiperInstance = (
-          event.target as HTMLElement & { swiper: Swiper }
-        ).swiper;
-        const activeIndex = swiperInstance.realIndex;
-        this.currentProject.set(this.allProject[activeIndex]);
-      }
-    );
+    const swiperRef = this.swiperRef()?.nativeElement;
+    if (swiperRef) {
+      swiperRef.addEventListener('swiperslidechange', this.handleSlideChange);
+    }
   }
+  
+  private handleSlideChange = (event: Event) => {
+    const activeIndex = (event.target as HTMLElement & { swiper: Swiper }).swiper.realIndex;
+    this.currentProject.set(this.allProject[activeIndex]);
+  };
 
   onPrevSlide() {
     this.swiperRef()?.nativeElement.swiper.slidePrev();

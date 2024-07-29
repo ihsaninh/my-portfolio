@@ -1,15 +1,43 @@
 import { Component, signal } from '@angular/core';
 import { NgClass } from '@angular/common';
+import { NgIconComponent, provideIcons } from '@ng-icons/core';
+import {
+  simpleTailwindcss,
+  simpleAngular,
+  simpleReact,
+  simpleNodedotjs,
+  simpleFlutter,
+  simpleNextdotjs,
+  simpleRedux,
+  simpleAndroid,
+} from '@ng-icons/simple-icons';
 
-import { ResumeContentComponent } from "./resume-content/resume-content.component";
-import { ContentCardComponent } from "./content-card/content-card.component";
+import { ResumeContentComponent } from './resume-content/resume-content.component';
+import { ContentCardComponent } from './content-card/content-card.component';
 
 @Component({
   selector: 'app-resume',
   standalone: true,
-  imports: [NgClass, ResumeContentComponent, ContentCardComponent],
+  imports: [
+    NgClass,
+    ResumeContentComponent,
+    ContentCardComponent,
+    NgIconComponent,
+  ],
+  providers: [
+    provideIcons({
+      simpleTailwindcss,
+      simpleAngular,
+      simpleReact,
+      simpleNodedotjs,
+      simpleFlutter,
+      simpleNextdotjs,
+      simpleRedux,
+      simpleAndroid,
+    }),
+  ],
   templateUrl: './resume.component.html',
-  styleUrl: './resume.component.scss'
+  styleUrl: './resume.component.scss',
 })
 export class ResumeComponent {
   activeMenu = signal(0);
@@ -18,7 +46,18 @@ export class ResumeComponent {
     { id: 0, name: 'Experience' },
     { id: 1, name: 'Education' },
     { id: 2, name: 'Skills' },
-  ]
+  ];
+
+  skills: Skill[] = [
+    { name: 'React', icon: 'simpleReact' },
+    { name: 'Angular', icon: 'simpleAngular' },
+    { name: 'Next.js', icon: 'simpleNextdotjs' },
+    { name: 'Redux', icon: 'simpleRedux' },
+    { name: 'Javascript', icon: 'simpleNodedotjs' },
+    { name: 'TailwindCSS', icon: 'simpleTailwindcss' },
+    { name: 'Android', icon: 'simpleAndroid' },
+    { name: 'Flutter', icon: 'simpleFlutter' },
+  ];
 
   educationData: ResumeData[] = [
     {
@@ -33,7 +72,7 @@ export class ResumeComponent {
       startDate: '2016',
       endDate: '2019',
     },
-  ]
+  ];
 
   experienceData: ResumeData[] = [
     {
@@ -66,5 +105,5 @@ export class ResumeComponent {
       startDate: 'Oct 2017',
       endDate: 'Jan 2018',
     },
-  ]
+  ];
 }

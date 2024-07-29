@@ -1,4 +1,4 @@
-<section class="container mt-24">
+<section class="container mt-24" id="resume">
   <h2
     class="text-4xl font-bold relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg"
   >
@@ -14,17 +14,17 @@
       <!-- Resume Menu -->
       <div class="flex flex-col gap-4 mt-8">
         @for (menu of resumeMenus; track menu.id) {
-          <a
-            class="py-2 rounded-lg cursor-pointer"
-            [ngClass]="
-              menu.id === activeMenu()
-                ? 'bg-accent text-primary'
-                : 'text-white bg-secondary'
-            "
-            (click)="activeMenu.set(menu.id)"
-          >
-            <p class="text-center">{{ menu.name }}</p>
-          </a>
+        <a
+          class="py-2 rounded-lg cursor-pointer"
+          [ngClass]="
+            menu.id === activeMenu()
+              ? 'bg-accent text-primary'
+              : 'text-white bg-secondary'
+          "
+          (click)="activeMenu.set(menu.id)"
+        >
+          <p class="text-center">{{ menu.name }}</p>
+        </a>
         }
       </div>
     </div>
@@ -32,27 +32,48 @@
     <!-- Menu content -->
     <div class="w-2/3 mt-6">
       @if (activeMenu() === 0) {
-        <app-resume-content
-          title="My Experience"
-          description="Here is my experience that I have done."
-        >
-          <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
-            @for (experience of experienceData; track $index) {
-            <app-content-card [data]="experience"></app-content-card>
-            }
-          </div>
-        </app-resume-content>
+      <app-resume-content
+        title="My Experience"
+        description="Here is my experience that I have done."
+      >
+        <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
+          @for (experience of experienceData; track $index) {
+          <app-content-card [data]="experience"></app-content-card>
+          }
+        </div>
+      </app-resume-content>
       } @else if (activeMenu() === 1) {
-        <app-resume-content
-          title="My Education"
-          description="Here is my education that I have done."
+      <app-resume-content
+        title="My Education"
+        description="Here is my education that I have done."
+      >
+        <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
+          @for (education of educationData; track $index) {
+          <app-content-card [data]="education"></app-content-card>
+          }
+        </div>
+      </app-resume-content>
+      } @else if (activeMenu() === 2) {
+      <div class="min-h-[500px]">
+        <h3 class="text-3xl">My Skills</h3>
+        <p class="pt-4">Here are the skills I have mastered.</p>
+        <ul
+          class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 lg:gap-6 mt-6"
         >
-          <div class="grid grid-cols-2 gap-6 mt-6 max-h-96 overflow-y-scroll">
-            @for (education of educationData; track $index) {
-              <app-content-card [data]="education"></app-content-card>
-            }
-          </div>
-        </app-resume-content>
+          @for (skill of skills; track $index) {
+          <li class="flex items-center gap-2">
+            <div
+              class="w-full h-36 bg-secondary rounded-lg flex justify-center items-center group cursor-pointer"
+            >
+              <ng-icon
+                [name]="skill.icon"
+                class="text-6xl group-hover:text-accent transition-all duration-300"
+              ></ng-icon>
+            </div>
+          </li>
+          }
+        </ul>
+      </div>
       }
     </div>
   </div>

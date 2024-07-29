@@ -1,8 +1,10 @@
 <nav class="flex gap-8">
   @for (link of links; track $index) {
   <a
+    [href]="link.href"
     class="hover:text-accent transition-all cursor-pointer"
     [ngClass]="{ 'text-accent border-b-2 border-accent': link.isActive }"
+    (click)="setActiveLink(link)"
   >
     {{ link.name }}
   </a>
