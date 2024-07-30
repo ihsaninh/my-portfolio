@@ -33,21 +33,21 @@
         <div class="border border-white/20"></div>
         <div class="flex items-center gap-4">
           <button
-            class="w-16 h-16 rounded-full bg-white/5 flex justify-center items-center group"
+            class="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-white/5 flex justify-center items-center group"
             (click)="openLink(currentProject().liveUrl)"
           >
             <ng-icon
               name="featherArrowUpRight"
-              class="text-white text-3xl group-hover:text-accent"
+              class="text-white text-2xl lg:text-3xl group-hover:text-accent"
             ></ng-icon>
           </button>
           <button
-            class="w-16 h-16 rounded-full bg-white/5 flex justify-center items-center group text-white"
+            class="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-white/5 flex justify-center items-center group text-white"
             (click)="openLink(currentProject().githubUrl)"
           >
             <ng-icon
               name="faBrandGithub"
-              class="text-white text-3xl group-hover:text-accent"
+              class="text-white text-2xl lg:text-3xl group-hover:text-accent"
             ></ng-icon>
           </button>
         </div>
