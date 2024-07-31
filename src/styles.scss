@@ -5,6 +5,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    scroll-padding: 120px;
   }
   body {
     @apply font-primary bg-primary text-white leading-loose

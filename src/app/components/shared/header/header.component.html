@@ -4,7 +4,7 @@
       <!-- Logo -->
       <a href="#home" class="text-4xl font-medium block py-6">Ihsan</a>
 
-      <div class="flex items-center gap-8">
+      <div class="flex items-center">
         <!-- Hamburger Button -->
         <button #hamburger type="button" class="block absolute right-4 lg:hidden">
           <span class="hamburger-line transition duration-300 ease-in-out origin-top-left"></span>
@@ -16,7 +16,7 @@
         <nav
           class="hidden absolute py-5 bg-primary shadow-lg rounded-lg max-w-[250px] w-full right-4 top-full lg:block lg:static lg:bg-transparent lg:max-w-full lg:shadow-none lg:rounded-none"
           #navMenu>
-          <ul class="block px-8 lg:flex lg:gap-12">
+          <ul class="block lg:flex lg:gap-12">
             @for (link of links(); track $index) {
             <li class="group">
               <a [href]="link.href" class="text-base py-2 flex group-hover:text-accent"
