@@ -16,7 +16,7 @@
         <nav
           class="hidden absolute py-5 bg-primary shadow-lg rounded-lg max-w-[250px] w-full right-4 top-full lg:block lg:static lg:bg-transparent lg:max-w-full lg:shadow-none lg:rounded-none"
           #navMenu>
-          <ul class="block lg:flex lg:gap-12">
+          <ul class="block px-8 lg:px-0 lg:flex lg:gap-12">
             @for (link of links(); track $index) {
             <li class="group">
               <a [href]="link.href" class="text-base py-2 flex group-hover:text-accent"
