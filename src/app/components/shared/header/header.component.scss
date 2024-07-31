@@ -2,16 +2,18 @@
   @apply w-[30px] h-0.5 block my-2 bg-white/80;
 }
 
-.hamburger-active > span:nth-child(1) {
-  @apply rotate-45;
-}
+.hamburger-active {
+  > span:nth-child(1) {
+    @apply rotate-45;
+  }
 
-.hamburger-active > span:nth-child(2) {
-  @apply scale-0;
-}
+  > span:nth-child(2) {
+    @apply scale-0;
+  }
 
-.hamburger-active > span:nth-child(3) {
-  @apply -rotate-45;
+  > span:nth-child(3) {
+    @apply -rotate-45;
+  }
 }
 
 .navbar-fixed {
