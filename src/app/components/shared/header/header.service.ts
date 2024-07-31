@@ -3,7 +3,7 @@ import { Injectable, signal } from '@angular/core';
 @Injectable({
   providedIn: 'root',
 })
-export class NavService {
+export class HeaderService {
   private links = signal<Link[]>([
     { name: 'Home', isActive: true, href: '#home' },
     { name: 'Resume', isActive: false, href: '#resume' },

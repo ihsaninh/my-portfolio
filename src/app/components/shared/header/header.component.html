@@ -1,13 +1,34 @@
-<header class="py-6 lg:py-8 text-white">
-  <div class="container mx-auto flex justify-between items-center">
-    <a>
-      <h1 class="text-4xl font-medium">Ihsan</h1>
-    </a>
-    <div class="hidden lg:flex items-center gap-8">
-      <app-nav />
-      <a href="#contact" class="bg-accent px-6 py-1.5 text-primary rounded-full" (click)="onConnectClicked('#contact')">
-        Connect with me
-      </a>
+<header class="bg-transparent absolute top-0 left-0 w-full flex items-center z-10" #header>
+  <div class="container">
+    <div class="flex items-center justify-between relative">
+      <!-- Logo -->
+      <a href="#home" class="text-4xl font-medium block py-6">Ihsan</a>
+
+      <div class="flex items-center gap-8">
+        <!-- Hamburger Button -->
+        <button #hamburger type="button" class="block absolute right-4 lg:hidden">
+          <span class="hamburger-line transition duration-300 ease-in-out origin-top-left"></span>
+          <span class="hamburger-line transition duration-300 ease-in-out"></span>
+          <span class="hamburger-line transition duration-300 ease-in-out origin-bottom-left"></span>
+        </button>
+
+        <!-- Navigation Menu -->
+        <nav
+          class="hidden absolute py-5 bg-primary shadow-lg rounded-lg max-w-[250px] w-full right-4 top-full lg:block lg:static lg:bg-transparent lg:max-w-full lg:shadow-none lg:rounded-none"
+          #navMenu>
+          <ul class="block px-8 lg:flex lg:gap-12">
+            @for (link of links(); track $index) {
+            <li class="group">
+              <a [href]="link.href" class="text-base py-2 flex group-hover:text-accent"
+                [ngClass]="{ 'text-accent lg:border-b-2 lg:border-accent w-min': link.isActive }"
+                (click)="onConnectClicked(link.href)">
+                {{ link.name }}
+              </a>
+            </li>
+            }
+          </ul>
+        </nav>
+      </div>
     </div>
   </div>
 </header>

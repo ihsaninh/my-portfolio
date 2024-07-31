@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { NgIconComponent, provideIcons } from '@ng-icons/core';
 import { featherDownload } from '@ng-icons/feather-icons';
-import { NavService } from '../shared/nav/nav.service';
+import { HeaderService } from '../shared/header/header.service';
 
 @Component({
   selector: 'app-home',
@@ -12,9 +12,9 @@ import { NavService } from '../shared/nav/nav.service';
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
-  private navService = inject(NavService);
+  private headerService = inject(HeaderService);
 
   onConnectClicked(href: string): void {
-    this.navService.setActiveLink(href);
+    this.headerService.setActiveLink(href);
   }
 }
