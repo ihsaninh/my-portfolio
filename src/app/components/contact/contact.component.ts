@@ -10,7 +10,7 @@ import { SocialComponent } from '../home/social/social.component';
   styleUrl: './contact.component.scss',
 })
 export class ContactComponent {
-  formBuilder = inject(FormBuilder);
+  private formBuilder = inject(FormBuilder);
   contactForm = this.formBuilder.group({
     name: ['', Validators.required],
     email: ['', Validators.required],

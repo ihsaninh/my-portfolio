@@ -21,7 +21,7 @@
               ? 'bg-accent text-primary'
               : 'text-white bg-secondary'
           "
-          (click)="activeMenu.set(menu.id)"
+          (click)="onMenuClicked(menu.id)"
         >
           <p class="text-center text-sm lg:text-base">{{ menu.name }}</p>
         </a>
