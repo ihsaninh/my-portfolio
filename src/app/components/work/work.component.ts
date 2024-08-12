@@ -25,14 +25,14 @@ import { WorkService } from './work.service';
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class WorkComponent implements AfterViewInit {
-  private swiperRef = viewChild<ElementRef<SwiperContainer>>('swiper');
+  private swiperRef = viewChild.required<ElementRef<SwiperContainer>>('swiper');
   private workService = inject(WorkService);
 
   allProjects = this.workService.allProjects;
   currentProject = this.workService.currentProjectSignal;
 
   ngAfterViewInit(): void {
-    const swiperRef = this.swiperRef()?.nativeElement;
+    const swiperRef = this.swiperRef().nativeElement;
     if (swiperRef) {
       swiperRef.addEventListener('swiperslidechange', this.handleSlideChange);
     }
@@ -44,11 +44,11 @@ export class WorkComponent implements AfterViewInit {
   };
 
   onPrevSlide() {
-    this.swiperRef()?.nativeElement.swiper.slidePrev();
+    this.swiperRef().nativeElement.swiper.slidePrev();
   }
 
   onNextSlide() {
-    this.swiperRef()?.nativeElement.swiper.slideNext();
+    this.swiperRef().nativeElement.swiper.slideNext();
   }
 
   openLink(url: string) {
