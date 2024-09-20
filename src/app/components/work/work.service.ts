@@ -107,16 +107,16 @@ export class WorkService {
       liveUrl: '',
       githubUrl: '',
     },
-    {
-      num: '11',
-      title: 'Al-Quran App',
-      description:
-        'An Al-Quran app with several features, such as a Surah list, Ayah list, Surah settings, jump to Ayah, bookmarks, add to last read, share, and more.',
-      stack: ['Flutter', 'Bloc', 'GetIt', 'Hive', 'Go Router'],
-      image: 'images/projects/Al-Quran.png',
-      liveUrl: '',
-      githubUrl: 'https://github.com/ihsaninh/Alquran-flutter-bloc-cubit',
-    },
+    // {
+    //   num: '11',
+    //   title: 'Al-Quran App',
+    //   description:
+    //     'An Al-Quran app with several features, such as a Surah list, Ayah list, Surah settings, jump to Ayah, bookmarks, add to last read, share, and more.',
+    //   stack: ['Flutter', 'Bloc', 'GetIt', 'Hive', 'Go Router'],
+    //   image: 'images/projects/Al-Quran.png',
+    //   liveUrl: '',
+    //   githubUrl: 'https://github.com/ihsaninh/Alquran-flutter-bloc-cubit',
+    // },
   ];
 
   private currentProject = signal<Project>(this.projects[0]);
