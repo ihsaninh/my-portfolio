@@ -33,6 +33,9 @@ export default function Header() {
       const toggleMenu = () => {
         hamburger.classList.toggle('hamburger-active');
         navMenu.classList.toggle('hidden');
+
+        const expanded = hamburger.getAttribute('aria-expanded') === 'true';
+        hamburger.setAttribute('aria-expanded', (!expanded).toString());
       };
 
       hamburger.addEventListener('click', toggleMenu);
@@ -66,6 +69,9 @@ export default function Header() {
               ref={hamburgerRef}
               type="button"
               className="block absolute right-4 lg:hidden cursor-pointer"
+              aria-label="Toggle navigation menu"
+              aria-controls="main-nav"
+              aria-expanded="false"
             >
               <span className="hamburger-line transition duration-300 ease-in-out origin-top-left"></span>
               <span className="hamburger-line transition duration-300 ease-in-out"></span>
@@ -73,6 +79,7 @@ export default function Header() {
             </button>
 
             <nav
+              id="main-nav"
               ref={navMenuRef}
               className="hidden absolute py-5 bg-primary shadow-lg rounded-lg max-w-[250px] w-full right-4 top-full lg:block lg:static lg:bg-transparent lg:max-w-full lg:shadow-none lg:rounded-none"
             >
