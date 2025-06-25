@@ -84,12 +84,14 @@ export default function Work() {
 
               <div className="flex items-center gap-4">
                 <button
+                  aria-label="View live project"
                   className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-white/5 flex justify-center items-center group cursor-pointer"
                   onClick={() => openLink(currentProject.liveUrl)}
                 >
                   <FiArrowUp className="text-white text-2xl lg:text-3xl group-hover:text-accent" />
                 </button>
                 <button
+                  aria-label="View GitHub repository"
                   className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-white/5 flex justify-center items-center group text-white cursor-pointer"
                   onClick={() => openLink(currentProject.githubUrl)}
                 >
@@ -139,12 +141,14 @@ export default function Work() {
 
             <div className="flex gap-3 absolute right-0 bottom-[calc(50%_-_-20px)] lg:-bottom-6 z-20 w-full justify-between lg:w-max lg:justify-none">
               <button
+                aria-label="Previous project"
                 className="w-14 h-14 rounded-full bg-white/50 lg:bg-white/5 flex justify-center items-center group cursor-pointer"
                 onClick={handlePrev}
               >
                 <FaChevronLeft className="text-accent lg:text-white group-hover:text-accent font-bold" />
               </button>
               <button
+                aria-label="Next project"
                 className="w-14 h-14 rounded-full bg-white/50 lg:bg-white/5 flex justify-center items-center group cursor-pointer"
                 onClick={handleNext}
               >

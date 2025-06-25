@@ -12,9 +12,10 @@ export default function Social({ containerClass = '', iconStyle = '' }) {
             href={social.link}
             target="_blank"
             rel="noopener noreferrer"
+            aria-label={social.label}
             className={iconStyle}
           >
-            <Icon />
+            <Icon aria-hidden="true" />
           </Link>
         );
       })}
