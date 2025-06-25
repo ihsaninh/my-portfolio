@@ -7,8 +7,8 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const navMenuRef = useRef<HTMLElement>(null);
-
-  const { navLinks, setActiveLink } = useHeaderService();
+  
+  const { navLinks, setActiveLink, setActiveLinkByScroll } = useHeaderService();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,6 +24,44 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    const handleScrollSpy = () => {
+      let activeSection = null;
+
+      for (const link of navLinks) {
+        const element = document.querySelector(link.href);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
+            activeSection = link.href;
+            break;
+          }
+        }
+      }
+
+      if (activeSection) {
+        setActiveLinkByScroll(activeSection);
+      }
+    };
+
+    let ticking = false;
+    const throttledScrollSpy = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          handleScrollSpy();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', throttledScrollSpy);
+
+    handleScrollSpy();
+
+    return () => window.removeEventListener('scroll', throttledScrollSpy);
+  }, [navLinks, setActiveLinkByScroll]);
 
   useEffect(() => {
     const hamburger = hamburgerRef.current;
