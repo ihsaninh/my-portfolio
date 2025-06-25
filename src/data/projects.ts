@@ -5,10 +5,10 @@ export const projects: Project[] = [
       num: '01',
       title: 'XL SATU',
       description:
-        'XL SATU is a comprehensive product from XL Axiata that consists of fixed internet broadband services, which provide internet access through fiber optic cables connected to customers homes with speeds of up to 1Gbps, and shared prepaid data bonuses of up to 300GB that can be shared with up to 5 family members for internet access on smartphones when customers are outside their homes.',
+        'This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.',
       stack: ['React.js', 'Next.js', 'Flowbite', 'TailwindCSS'],
       image: '/images/projects/XLSatu.png',
-      liveUrl: 'https://satu.xl.co.id/',
+      liveUrl: 'https://mysatu.xl.co.id/',
       githubUrl: '',
     },
     {
@@ -35,7 +35,7 @@ export const projects: Project[] = [
       num: '04',
       title: 'XL Prioritas Apply',
       description:
-        'XL Prioritas Apply is a service that enables the buy the new XL Prioritas numbers both USIM or ESIM. Users can choose the number and quota package options.',
+        'XL Prioritas Apply is a digital onboarding platform that allows users to purchase new XL Prioritas numbers, supporting both physical USIM and eSIM options. Users can search and select their preferred mobile number, choose from a variety of quota packages, and seamlessly complete the registration process online.',
       stack: ['React.js', 'Next.js', 'Redux'],
       image: '/images/projects/XLPrioritas.png',
       liveUrl: 'https://prioritas.xl.co.id/',
@@ -56,7 +56,7 @@ export const projects: Project[] = [
       num: '06',
       title: 'XL Prepaid Registrasi',
       description:
-        'XL Prepaid Registration is a service that enables the registration of new XL and Axis numbers using a biometric system with facial recognition.',
+        'A secure registration system for new XL and AXIS prepaid numbers, utilizing biometric verification to ensure the user is genuine and their identity is valid. The platform captures a live facial photo and requires users to input their NIK (Nomor Induk Kependudukan). Both the face and NIK are cross-checked with the Dukcapil (Indonesian Civil Registry) to confirm identity accuracy and prevent fraud.',
       stack: ['React.js', 'Next.js', 'Redux'],
       image: '/images/projects/XLPrepaidRegistrasi.png',
       liveUrl: 'https://registrasi.xlaxiata.co.id/',
