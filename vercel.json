@@ -1,0 +1,15 @@
+{
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "ihsaninh.vercel.app"
+        }
+      ],
+      "destination": "https://www.ihsaninh.com/:path*",
+      "permanent": true
+    }
+  ]
+}
