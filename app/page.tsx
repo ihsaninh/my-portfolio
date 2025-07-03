@@ -1,17 +1,16 @@
-'use client';
+import Home from "@/src/components/home";
+import Resume from "@/src/components/resume";
+import Work from "@/src/components/work";
+import Contact from "@/src/components/contact";
 
-import Contact from '@/src/components/contact';
-import Home from '@/src/components/home';
-import Resume from '@/src/components/resume';
-import Work from '@/src/components/work';
+const sections = [Home, Resume, Work, Contact];
 
-export default function Index() {
+export default function IndexPage() {
   return (
-    <div>
-      <Home />
-      <Resume />
-      <Work />
-      <Contact />
-    </div>
+    <>
+      {sections.map((Section, index) => (
+        <Section key={index} />
+      ))}
+    </>
   );
 }
