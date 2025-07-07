@@ -24,8 +24,7 @@ export default function Resume() {
           className="lg:w-1/3"
         >
           <p className="pt-6">
-            Here is my experience, education, and skills that I have done. You
-            can check it out.
+            Here are my experience, education, and skills. Feel free to check them out.
           </p>
 
           <div className="flex flex-row lg:flex-col gap-4 mt-8 overflow-x-auto">
@@ -62,7 +61,7 @@ export default function Resume() {
               >
                 <ResumeContent
                   title="My Experience"
-                  description="Here is my experience that I have done."
+                  description="Here is an overview of the roles and responsibilities I've held."
                 >
                   <div className="grid lg:grid-cols-2 gap-6 mt-6 max-h-[500px] lg:max-h-96 overflow-y-scroll">
                     {experienceData.map((item, index) => (
@@ -83,7 +82,7 @@ export default function Resume() {
               >
                 <ResumeContent
                   title="My Education"
-                  description="Here is my education that I have done."
+                  description="Here is an overview of my academic background."
                 >
                   <div className="grid lg:grid-cols-2 gap-6 mt-6 max-h-[500px] lg:max-h-96 overflow-y-scroll">
                     {educationData.map((item, index) => (
@@ -104,12 +103,15 @@ export default function Resume() {
               >
                 <div className="min-h-[500px]">
                   <h3 className="text-2xl lg:text-3xl">My Skills</h3>
-                  <p className="pt-4">Here are the skills I have mastered.</p>
+                  <p className="pt-4">These are the tools and technologies I&apos;m proficient in.</p>
                   <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 lg:gap-6 mt-6">
                     {skills.map((skill, index) => (
-                      <li key={index} className="flex items-center gap-2">
-                        <div className="w-full h-36 bg-secondary rounded-lg flex justify-center items-center group cursor-pointer">
+                      <li key={index} className="flex items-center gap-2 group flex-col text-center cursor-pointer">
+                        <div className="w-full h-36 bg-secondary rounded-lg flex justify-center items-center flex-col gap-4 transition-all duration-300">
                           <skill.icon className="text-6xl group-hover:text-accent transition-all duration-300" />
+                          <p className="text-sm transition-all duration-300 group-hover:text-accent tracking-wider">
+                            {skill.name}
+                          </p>
                         </div>
                       </li>
                     ))}

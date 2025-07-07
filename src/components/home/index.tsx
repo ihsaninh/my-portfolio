@@ -39,8 +39,7 @@ export default function Home() {
             <span className="text-white">Software Engineer.</span>
           </h2>
           <p className="mb-9 text-white/80 leading-8 lg:max-w-screen-xl lg:px-24 text-sm lg:text-lg">
-            I am a Software Engineer specializing in frontend development, with over 5 years of experience working on
-            multiple projects for companies such as PT. XL Axiata, Axiata Digital Labs, and Meteor Inovasi Digital.
+            I&apos;m a Software Engineer with 5+ years of experience specializing in frontend development. I&apos;ve built and maintained user-centric web applications for companies including PT. XL Axiata, Axiata Digital Labs, and Meteor Inovasi Digital.
           </p>
         </div>
 
