@@ -13,7 +13,7 @@ export const projects: Project[] = [
     },
     {
       num: '02',
-      title: 'Axiata Game Token - Setargame',
+      title: 'Axiata Game Token',
       description:
         'Buy your favorite game tokens in single or bulk purchases through Web Game Token — making gaming top-ups quick and easy',
       stack: ['React.js', 'Next.js', 'Bootstrap'],
