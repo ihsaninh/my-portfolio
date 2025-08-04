@@ -1,10 +1,11 @@
 'use client';
 
-import React from 'react';
-import Image from 'next/image';
-import { FiDownload } from 'react-icons/fi';
-import { useHeaderService } from '@/src/hooks/useHeader';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
+import React from 'react';
+import { FiDownload } from 'react-icons/fi';
+
+import { useHeaderService } from '@/src/hooks/useHeader';
 
 export default function Home() {
   const { setActiveLink } = useHeaderService();

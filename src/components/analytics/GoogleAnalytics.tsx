@@ -1,4 +1,5 @@
 import Script from 'next/script';
+
 import { GA_MEASUREMENT_ID } from '@/src/lib/gtag';
 
 export default function GoogleAnalytics() {

@@ -1,9 +1,11 @@
-import { Outfit } from 'next/font/google';
 import './globals.css';
-import Header from '@/src/components/shared/Header';
-import Footer from '@/src/components/shared/Footer';
+
+import { Outfit } from 'next/font/google';
+
 import { AnalyticsTracker } from '@/src/components/analytics';
 import GoogleAnalytics from '@/src/components/analytics/GoogleAnalytics';
+import Footer from '@/src/components/shared/Footer';
+import Header from '@/src/components/shared/Header';
 import { metadata } from '@/src/lib/metadata';
 
 const outfit = Outfit({

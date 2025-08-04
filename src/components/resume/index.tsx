@@ -1,10 +1,12 @@
 'use client'
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import ResumeContent from './ResumeContent';
-import ContentCard from './ContentCard';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useState } from 'react';
+
 import { educationData, experienceData, resumeMenus, skills } from '@/src/data/resume';
+
+import ContentCard from './ContentCard';
+import ResumeContent from './ResumeContent';
 
 export default function Resume() {
   const [activeMenu, setActiveMenu] = useState<number>(0);

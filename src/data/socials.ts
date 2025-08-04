@@ -1,5 +1,5 @@
 import { IconType } from 'react-icons';
-import { FaEnvelope, FaLinkedin, FaInstagram, FaGithub } from 'react-icons/fa';
+import { FaEnvelope, FaGithub,FaInstagram, FaLinkedin } from 'react-icons/fa';
 
 export type Social = {
   icon: IconType;

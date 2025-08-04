@@ -1,20 +1,27 @@
 'use client';
 
 import 'swiper/css';
-import type { Swiper as SwiperType } from 'swiper';
-import { useState, useRef } from 'react';
+
+import { AnimatePresence, motion } from 'framer-motion';
 import Image from 'next/image';
+import { useRef, useState } from 'react';
+import { FaChevronLeft, FaChevronRight, FaGithub } from 'react-icons/fa';
+import { FiArrowUp } from 'react-icons/fi';
+import type { Swiper as SwiperClass } from 'swiper';
+import { Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { FiArrowUp } from 'react-icons/fi'; 
-import { FaGithub, FaChevronRight, FaChevronLeft } from 'react-icons/fa';
+
 import { projects } from '@/src/data/projects';
 import { Project } from '@/src/types/project';
-import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Work() {
-  const swiperRef = useRef<SwiperType | null>(null);
+  const swiperRef = useRef<SwiperClass | null>(null);
   const [allProjects] = useState<Project[]>(projects);
   const [currentProject, setCurrentProject] = useState<Project>(allProjects[0]);
+
+  const handleSwiperInit = (swiper: SwiperClass) => {
+    swiperRef.current = swiper;
+  };
 
   const handlePrev = () => {
     setCurrentProject((prev) => {
@@ -111,12 +118,11 @@ export default function Work() {
         >
           <div className="relative">
             <Swiper
-              onSwiper={(swiper) => {
-                swiperRef.current = swiper;
-              }}
+              onSwiper={handleSwiperInit}
               onSlideChange={(swiper) => {
                 setCurrentProject(allProjects[swiper.realIndex]);
               }}
+              modules={[Navigation]}
               navigation={true}
               spaceBetween={30}
               slidesPerView={1}

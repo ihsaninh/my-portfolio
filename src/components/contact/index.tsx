@@ -1,10 +1,11 @@
 'use client';
 
+import { zodResolver } from '@hookform/resolvers/zod';
+import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+
 import Social from './Social';
-import { motion } from 'framer-motion';
 
 const contactSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -67,6 +68,7 @@ export default function Contact() {
           <div className="flex flex-col gap-1">
             <label htmlFor="name">Your Name</label>
             <input
+              id="name"
               type="text"
               placeholder="Enter your name"
               className="bg-secondary rounded-xl py-4 px-6"
@@ -78,6 +80,7 @@ export default function Contact() {
           <div className="flex flex-col gap-1">
             <label htmlFor="email">Your Email</label>
             <input
+              id="email"
               type="text"
               placeholder="Enter your email"
               className="bg-secondary rounded-xl py-4 px-6"
@@ -89,6 +92,7 @@ export default function Contact() {
           <div className="flex flex-col gap-1">
             <label htmlFor="message">Write your message here</label>
             <textarea
+              id="message"
               rows={6}
               placeholder="Enter your message"
               className="bg-secondary rounded-xl py-4 px-6 resize-none"

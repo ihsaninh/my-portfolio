@@ -1,7 +1,8 @@
 'use client';
 
-import { useHeaderService } from '@/src/hooks/useHeader';
 import { useEffect, useRef } from 'react';
+
+import { useHeaderService } from '@/src/hooks/useHeader';
 
 export default function Header() {
   const headerRef = useRef<HTMLElement>(null);

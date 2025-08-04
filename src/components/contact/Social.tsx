@@ -1,5 +1,6 @@
-import { socials } from '@/src/data/socials';
 import Link from 'next/link';
+
+import { socials } from '@/src/data/socials';
 
 export default function Social({ containerClass = '', iconStyle = '' }) {
   return (

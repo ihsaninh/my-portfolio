@@ -1,5 +1,6 @@
+import { SiAngular, SiFlutter, SiNextdotjs, SiReact, SiRedux, SiTailwindcss, SiTypescript } from 'react-icons/si';
+
 import { ResumeData, ResumeMenu, Skill } from "../types/resume";
-import { SiReact, SiNextdotjs, SiAngular, SiRedux, SiTailwindcss, SiFlutter, SiTypescript } from 'react-icons/si';
 
 export const resumeMenus: ResumeMenu[] = [
   { id: 0, name: 'Experience' },
