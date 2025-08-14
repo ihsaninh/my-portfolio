@@ -150,7 +150,7 @@ export default function Home() {
             <p className="text-xs opacity-80">Years Experience</p>
           </li>
           <li className="rounded-2xl border border-slate-300 bg-slate-100 dark:border-white/10 dark:bg-white/5 px-5 py-3">
-            <p className="text-2xl font-semibold">20+</p>
+            <p className="text-2xl font-semibold">10+</p>
             <p className="text-xs opacity-80">Projects shipped</p>
           </li>
           <li className="rounded-2xl border border-slate-300 bg-slate-100 dark:border-white/10 dark:bg-white/5 px-5 py-3">

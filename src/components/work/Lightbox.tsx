@@ -86,12 +86,12 @@ export default function Lightbox({
             <button
               aria-label="Close lightbox"
               onClick={onClose}
-              className="absolute top-2 right-2 md:-top-12 md:right-0 z-20 rounded-full p-2 text-white bg-black/40 backdrop-blur ring-1 ring-white/20 transition hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+              className="absolute top-3 right-3 md:top-4 md:right-4 z-20 rounded-full p-2.5 text-white bg-black/40 backdrop-blur ring-1 ring-white/25 shadow-lg transition hover:bg-white/15 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
             >
               <FiX className="text-2xl" />
             </button>
 
-            <div className="relative h-[70vh] sm:h-[80vh] md:h-[85vh] w-full rounded-xl overflow-hidden bg-transparent md:bg-black/20 md:dark:bg-black/20">
+            <div className="relative h-[70vh] sm:h-[80vh] md:h-[85vh] w-full rounded-2xl overflow-hidden bg-transparent md:bg-black/20 md:dark:bg-black/20 ring-1 ring-white/15 shadow-2xl">
               <Image
                 src={project.image}
                 alt={project.title}
@@ -104,8 +104,17 @@ export default function Lightbox({
               <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent hidden md:block" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/50 to-transparent hidden md:block" />
 
-              <div className="absolute bottom-4 left-1/2 z-10 w-[90%] max-w-3xl -translate-x-1/2 text-center">
-                <div className="mx-auto inline-flex max-w-full flex-col items-center gap-1 rounded-xl bg-black/50 px-4 py-3 backdrop-blur-sm">
+              {/* Top label with index */}
+              <div className="absolute top-3 left-1/2 z-10 -translate-x-1/2">
+                <span className="inline-flex items-center gap-2 rounded-full bg-black/40 px-3 py-1.5 text-xs text-white/90 ring-1 ring-white/20 backdrop-blur">
+                  <span className="font-medium">{index + 1}</span>
+                  <span className="opacity-60">/</span>
+                  <span className="opacity-80">{projects.length}</span>
+                </span>
+              </div>
+
+              <div className="absolute bottom-4 left-1/2 z-10 w-[92%] max-w-3xl -translate-x-1/2 text-center">
+                <div className="mx-auto inline-flex max-w-full flex-col items-center gap-1 rounded-xl bg-black/45 px-4 py-3 backdrop-blur ring-1 ring-white/15">
                   <h3 className="truncate text-lg font-semibold text-white">
                     {project.title}
                   </h3>
@@ -119,7 +128,7 @@ export default function Lightbox({
                 <button
                   aria-label="Previous image"
                   onClick={onPrev}
-                  className="m-2 rounded-full bg-white/10 p-3 text-white backdrop-blur ring-1 ring-white/20 transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                  className="m-2 rounded-full bg-white/10 p-3.5 text-white backdrop-blur ring-1 ring-white/25 shadow-lg transition hover:bg-white/20 hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                 >
                   <FaChevronLeft className="text-2xl" />
                 </button>
@@ -128,11 +137,27 @@ export default function Lightbox({
                 <button
                   aria-label="Next image"
                   onClick={onNext}
-                  className="m-2 rounded-full bg-white/10 p-3 text-white backdrop-blur ring-1 ring-white/20 transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                  className="m-2 rounded-full bg-white/10 p-3.5 text-white backdrop-blur ring-1 ring-white/25 shadow-lg transition hover:bg-white/20 hover:scale-[1.03] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
                 >
                   <FaChevronRight className="text-2xl" />
                 </button>
               </div>
+
+              {/* Dots indicator */}
+              {projects.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 translate-y-full flex items-center gap-2">
+                  {projects.map((_, i) => (
+                    <span
+                      key={i}
+                      className={`h-1.5 w-1.5 rounded-full transition-all ${
+                        i === index
+                          ? "bg-white/90 w-3"
+                          : "bg-white/40 hover:bg-white/60"
+                      }`}
+                    />)
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         </motion.div>

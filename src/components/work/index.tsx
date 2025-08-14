@@ -165,7 +165,7 @@ export default function Work() {
                         alt={project.title}
                         width={800}
                         height={600}
-                        className="object-cover rounded-xl w-full h-full cursor-zoom-in select-none"
+                        className="object-contain lg:object-cover rounded-xl w-full h-full cursor-zoom-in select-none"
                         onClick={() => openLightbox(index)}
                       />
                       <div className="pointer-events-none absolute inset-0 rounded-xl bg-black/0 transition group-hover:bg-black/15" />
