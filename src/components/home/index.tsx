@@ -82,8 +82,8 @@ export default function Home() {
           >
             I build fast, accessible apps with Next.js, React, Angular, and
             React Native. 5+ years crafting delightful UIs for telco &
-            enterprise (PT. XL Axiata, Axiata Digital Labs, Meteor Inovasi
-            Digital).
+            enterprise (PT XLSMART Telecom Sejahtera Tbk, Axiata Digital Labs,
+            Meteor Inovasi Digital).
           </motion.p>
         </div>
 

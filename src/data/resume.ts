@@ -45,7 +45,7 @@ export const educationData: ResumeData[] = [
 export const experienceData: ResumeData[] = [
   {
     title: "Frontend Developer",
-    company: "PT XL Axiata Tbk.",
+    company: "PT XLSMART Telecom Sejahtera Tbk",
     startDate: "Oct 2023",
     endDate: "Present",
     descriptions: [
