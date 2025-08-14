@@ -18,9 +18,7 @@ export default function Resume() {
 
   return (
     <section className="container mt-12 lg:mt-24" id="resume">
-      <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg">
-        Resume
-      </h2>
+      <h2 className="section-title">Resume</h2>
 
       <div className="flex flex-col lg:flex-row gap-12 mt-6">
         <motion.div
@@ -31,7 +29,7 @@ export default function Resume() {
           className="lg:w-1/3"
         >
           <p className="pt-6">
-            Here are my experience, education, and skills. Feel free to check
+            Here are my experiences, educations, and skills. Feel free to check
             them out.
           </p>
 
@@ -68,7 +66,7 @@ export default function Resume() {
                 transition={{ duration: 0.4 }}
               >
                 <ResumeContent
-                  title="My Experience"
+                  title="My Experiences"
                   description="Here is an overview of the roles and responsibilities I've held."
                 >
                   <ExperienceTimeline items={experienceData} className="mt-6" />
@@ -85,7 +83,7 @@ export default function Resume() {
                 transition={{ duration: 0.4 }}
               >
                 <ResumeContent
-                  title="My Education"
+                  title="My Educations"
                   description="Here is an overview of my academic background."
                 >
                   <ExperienceTimeline items={educationData} className="mt-6" />

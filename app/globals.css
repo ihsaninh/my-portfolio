@@ -148,3 +148,30 @@
     mask-image: radial-gradient(55% 40% at 50% 0%, black 40%, transparent 90%);
   }
 }
+
+/* Shared section title styling */
+.section-title {
+  @apply relative inline-block text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -0.75rem; /* similar spacing to previous design */
+  height: 4px;
+  width: 56%;
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    rgb(var(--accent)) 0%,
+    rgb(var(--accent) / 0.7) 60%,
+    rgb(var(--accent) / 0.3) 100%
+  );
+  transition: width 400ms ease, opacity 300ms ease;
+}
+
+.section-title:hover::after,
+.section-title:focus-visible::after {
+  width: 100%;
+}

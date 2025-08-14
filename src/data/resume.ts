@@ -11,8 +11,8 @@ import {
 import { ResumeData, ResumeMenu, Skill } from "../types/resume";
 
 export const resumeMenus: ResumeMenu[] = [
-  { id: 0, name: "Experience" },
-  { id: 1, name: "Education" },
+  { id: 0, name: "Experiences" },
+  { id: 1, name: "Educations" },
   { id: 2, name: "Skills" },
 ];
 

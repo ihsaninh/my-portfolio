@@ -80,7 +80,7 @@ export default function Work() {
   return (
     <section className="container mt-12 lg:mt-24" id="work">
       <div className="relative">
-        <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg">
+        <h2 className="section-title">
           Work
         </h2>
       </div>

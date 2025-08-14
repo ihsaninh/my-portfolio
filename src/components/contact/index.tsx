@@ -73,9 +73,7 @@ export default function Contact() {
       >
         <motion.h2
           id="contact-title"
-          className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white relative inline-block
-                     after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1
-                     after:bg-accent after:rounded-lg"
+          className="section-title"
           variants={fadeLeft}
         >
           Contact

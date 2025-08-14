@@ -33,19 +33,20 @@ export default function ExperienceTimeline({
               className="rounded-2xl border border-slate-300 bg-slate-50 p-5 shadow-xl backdrop-blur flex flex-col gap-4 dark:border-white/5 dark:bg-white/5"
               style={{ marginLeft: offsetPx + 16 }}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-2">
                   <h4 className="text-lg lg:text-xl text-slate-900 dark:text-white">
                     {item.title}
                   </h4>
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-white/70">
-                    <HiOutlineBuildingOffice2 className="text-accent text-lg shrink-0" />
-                    <p className="text-sm">{item.company}</p>
-                  </div>
                 </div>
                 <span className="text-accent text-xs sm:text-sm whitespace-nowrap">
                   {item.startDate} - {item.endDate}
                 </span>
+              </div>
+
+              <div className="flex items-center gap-2 text-slate-600 dark:text-white/70">
+                <HiOutlineBuildingOffice2 className="text-accent text-lg shrink-0" />
+                <p className="text-sm">{item.company}</p>
               </div>
 
               {item.descriptions && item.descriptions.length > 0 && (
