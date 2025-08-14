@@ -1,154 +1,231 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
+import { AnimatePresence, motion } from "framer-motion";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 
-import { useHeaderService } from '@/src/hooks/useHeader';
+import { useHeaderService } from "@/src/hooks/useHeader";
+
+import BrandLogo from "./BrandLogo";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Header() {
-  const headerRef = useRef<HTMLElement>(null);
-  const hamburgerRef = useRef<HTMLButtonElement>(null);
-  const navMenuRef = useRef<HTMLElement>(null);
-  
   const { navLinks, setActiveLink, setActiveLinkByScroll } = useHeaderService();
+  const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (headerRef.current) {
-        if (window.scrollY > headerRef.current.offsetTop) {
-          headerRef.current.classList.add('navbar-fixed');
-        } else {
-          headerRef.current.classList.remove('navbar-fixed');
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    const handleScrollSpy = () => {
-      let activeSection = null;
-
+    let ticking = false;
+    const spy = () => {
+      let active: string | null = null;
       for (const link of navLinks) {
-        const element = document.querySelector(link.href);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          if (rect.top <= window.innerHeight / 2 && rect.bottom >= window.innerHeight / 2) {
-            activeSection = link.href;
-            break;
-          }
+        const el = document.querySelector(link.href) as HTMLElement | null;
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (
+          rect.top <= window.innerHeight * 0.35 &&
+          rect.bottom >= window.innerHeight * 0.35
+        ) {
+          active = link.href;
+          break;
         }
       }
-
-      if (activeSection) {
-        setActiveLinkByScroll(activeSection);
-      }
+      if (active) setActiveLinkByScroll(active);
     };
-
-    let ticking = false;
-    const throttledScrollSpy = () => {
+    const onScroll = () => {
       if (!ticking) {
         requestAnimationFrame(() => {
-          handleScrollSpy();
+          spy();
           ticking = false;
         });
         ticking = true;
       }
     };
-
-    window.addEventListener('scroll', throttledScrollSpy);
-
-    handleScrollSpy();
-
-    return () => window.removeEventListener('scroll', throttledScrollSpy);
+    spy();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, [navLinks, setActiveLinkByScroll]);
 
   useEffect(() => {
-    const hamburger = hamburgerRef.current;
-    const navMenu = navMenuRef.current;
-
-    if (hamburger && navMenu) {
-      const toggleMenu = () => {
-        hamburger.classList.toggle('hamburger-active');
-        navMenu.classList.toggle('hidden');
-
-        const expanded = hamburger.getAttribute('aria-expanded') === 'true';
-        hamburger.setAttribute('aria-expanded', (!expanded).toString());
-      };
-
-      hamburger.addEventListener('click', toggleMenu);
-
-      return () => {
-        hamburger.removeEventListener('click', toggleMenu);
-      };
-    }
+    const close = () => setOpen(false);
+    window.addEventListener("hashchange", close);
+    return () => window.removeEventListener("hashchange", close);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (!navRef.current) return;
+      if (!navRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
+  }, [open]);
+
+  const handleNavClick = (href: string) => (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    setActiveLink(href);
+    const el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setOpen(false);
+  };
 
   return (
     <header
-      ref={headerRef}
-      className="bg-transparent absolute top-0 left-0 w-full flex items-center z-10"
+      className={[
+        "sticky top-0 z-50 transition duration-300",
+        scrolled
+          ? "backdrop-blur bg-white/70 supports-[backdrop-filter]:bg-white/70 dark:bg-primary/50 dark:supports-[backdrop-filter]:bg-primary/50 shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.08)]"
+          : "bg-transparent shadow-none",
+      ].join(" ")}
+      aria-label="Primary header"
     >
       <div className="container">
-        <div className="flex items-center justify-between relative">
-          <a
+        <div className="flex h-16 items-center justify-between gap-3">
+          {/* Brand chip */}
+          <Link
             href="#home"
-            className="text-3xl lg:text-4xl font-medium block py-6"
-            onClick={(e) => {
-              e.preventDefault();
-              setActiveLink('#home');
-            }}
+            onClick={handleNavClick("#home")}
+            className="group inline-flex items-center gap-2"
+            aria-label="Go to home"
           >
-            Ihsan
-          </a>
+            <BrandLogo size="sm" />
+            <span className="text-sm font-medium text-slate-800 group-hover:text-slate-900 dark:text-white/70 dark:group-hover:text-white">
+              Ihsan Nurul Habib
+            </span>
+          </Link>
 
-          <div className="flex items-center">
-            <button
-              ref={hamburgerRef}
-              type="button"
-              className="block absolute right-4 lg:hidden cursor-pointer"
-              aria-label="Toggle navigation menu"
-              aria-controls="main-nav"
-              aria-expanded="false"
-            >
-              <span className="hamburger-line transition duration-300 ease-in-out origin-top-left"></span>
-              <span className="hamburger-line transition duration-300 ease-in-out"></span>
-              <span className="hamburger-line transition duration-300 ease-in-out origin-bottom-left"></span>
-            </button>
+          <nav className="hidden lg:block" aria-label="Main navigation">
+            <ul className="flex items-center gap-8">
+              {navLinks.map((link, i) => (
+                <li key={i} className="relative group">
+                  <a
+                    href={link.href}
+                    onClick={handleNavClick(link.href)}
+                    className={[
+                      "text-sm transition-colors",
+                      link.isActive
+                        ? "text-accent"
+                        : "text-slate-800 hover:text-slate-900 dark:text-white/80 dark:hover:text-white",
+                    ].join(" ")}
+                    tabIndex={0}
+                    onKeyDown={(e: React.KeyboardEvent) => {
+                      if (e.key === "Enter") handleNavClick(link.href)(e);
+                    }}
+                  >
+                    {link.name}
+                    <span
+                      className={[
+                        "absolute left-0 -bottom-1 h-[2px] bg-accent transition-all duration-300",
+                        link.isActive ? "w-full" : "w-0 group-hover:w-full",
+                      ].join(" ")}
+                      aria-hidden
+                    />
+                  </a>
+                </li>
+              ))}
+              <li>
+                <a
+                  href="/document/CV-Ihsan-Nurul-Habib.pdf"
+                  className="inline-flex items-center rounded-xl border border-slate-300 bg-slate-100 px-3 py-1.5 text-sm text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+                >
+                  Download CV
+                </a>
+              </li>
+              <li>
+                <ThemeToggle />
+              </li>
+            </ul>
+          </nav>
 
-            <nav
-              id="main-nav"
-              ref={navMenuRef}
-              className="hidden absolute py-5 bg-primary shadow-lg rounded-lg max-w-[250px] w-full right-4 top-full lg:block lg:static lg:bg-transparent lg:max-w-full lg:shadow-none lg:rounded-none"
-            >
-              <ul className="block px-8 lg:px-0 lg:flex lg:gap-12">
-                {navLinks.map((link, index) => (
-                  <li key={index} className="group relative">
-                    <a
-                      href={link.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setActiveLink(link.href);
-                      }}
-                      className={`relative inline-block text-base py-2 transition-colors duration-300 ${
-                        link.isActive ? 'text-accent' : 'text-white'
-                      }`}
-                    >
-                      {link.name}
-                      <span
-                        className={`absolute left-0 -bottom-0.5 h-[2px] bg-accent transition-all duration-300
-                          ${link.isActive ? 'w-full' : 'w-0 group-hover:w-full'}
-                        `}
-                      />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </nav>
-          </div>
+          <button
+            type="button"
+            className="lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-300 bg-slate-100 p-2 text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+            aria-label="Toggle navigation menu"
+            aria-controls="mobile-nav"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="relative block h-4 w-5">
+              <span
+                className={[
+                  "absolute left-0 top-0 block h-0.5 w-5 bg-slate-900 dark:bg-white transition-transform",
+                  open ? "translate-y-2 rotate-45" : "",
+                ].join(" ")}
+              />
+              <span
+                className={[
+                  "absolute left-0 top-2 block h-0.5 w-5 bg-slate-900 dark:bg-white transition-opacity",
+                  open ? "opacity-0" : "opacity-100",
+                ].join(" ")}
+              />
+              <span
+                className={[
+                  "absolute left-0 top-4 block h-0.5 w-5 bg-slate-900 dark:bg-white transition-transform",
+                  open ? "-translate-y-2 -rotate-45" : "",
+                ].join(" ")}
+              />
+            </span>
+          </button>
         </div>
       </div>
+
+      <AnimatePresence>
+        {open && (
+          <motion.nav
+            id="mobile-nav"
+            ref={navRef}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="lg:hidden"
+            aria-label="Mobile navigation"
+          >
+            <div className="container">
+              <div className="mt-2 rounded-2xl border border-slate-300 bg-slate-50 backdrop-blur shadow-xl dark:border-white/10 dark:bg-white/5">
+                <ul className="flex flex-col divide-y divide-slate-200 dark:divide-white/10">
+                  {navLinks.map((link, i) => (
+                    <li key={i}>
+                      <a
+                        href={link.href}
+                        onClick={handleNavClick(link.href)}
+                        className={[
+                          "block px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-md",
+                          link.isActive
+                            ? "text-accent"
+                            : "text-slate-800 hover:text-slate-900 dark:text-white/90 dark:hover:text-white",
+                        ].join(" ")}
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                  <li className="p-2">
+                    <a
+                      href="/document/CV-Ihsan-Nurul-Habib.pdf"
+                      className="block rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:bg-slate-200 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+                    >
+                      Download CV
+                    </a>
+                  </li>
+                  <li className="p-2">
+                    <ThemeToggle />
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

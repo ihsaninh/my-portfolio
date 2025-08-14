@@ -1,31 +1,11 @@
-import { IconType } from 'react-icons';
-import { FaEnvelope, FaGithub,FaInstagram, FaLinkedin } from 'react-icons/fa';
-
-export type Social = {
-  icon: IconType;
-  link: string;
-  label: string;
-};
+import { FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 
 export const socials = [
+  { label: "GitHub", link: "https://github.com/ihsaninh", icon: FiGithub },
   {
-    icon: FaEnvelope,
-    link: 'mailto:ihsan.inh@gmail.com',
-    label: 'Send email to ihsan.inh@gmail.com',
+    label: "LinkedIn",
+    link: "https://www.linkedin.com/in/ihsaninh",
+    icon: FiLinkedin,
   },
-  {
-    icon: FaLinkedin,
-    link: 'https://www.linkedin.com/in/ihsaninh/',
-    label: 'Visit LinkedIn profile',
-  },
-  {
-    icon: FaInstagram,
-    link: 'https://www.instagram.com/ihsan_inh/',
-    label: 'Visit Instagram profile',
-  },
-  {
-    icon: FaGithub,
-    link: 'https://github.com/ihsaninh',
-    label: 'Visit GitHub profile',
-  },
-];
+  { label: "Email", link: "mailto:ihsan.inh@gmail.com", icon: FiMail },
+] as const;

@@ -1,4 +1,4 @@
-import { IconType } from 'react-icons';
+import { IconType } from "react-icons";
 
 export interface ResumeMenu {
   id: number;
@@ -15,4 +15,5 @@ export interface ResumeData {
   company: string;
   startDate: string;
   endDate: string;
+  descriptions?: string[];
 }

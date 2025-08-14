@@ -1,23 +1,27 @@
-'use client';
+"use client";
 
-import 'swiper/css';
+import "swiper/css";
 
-import { AnimatePresence, motion } from 'framer-motion';
-import Image from 'next/image';
-import { useRef, useState } from 'react';
-import { FaChevronLeft, FaChevronRight, FaGithub } from 'react-icons/fa';
-import { FiArrowUp } from 'react-icons/fi';
-import type { Swiper as SwiperClass } from 'swiper';
-import { Navigation } from 'swiper/modules';
-import { Swiper, SwiperSlide } from 'swiper/react';
+import { AnimatePresence, motion } from "framer-motion";
+import Image from "next/image";
+import { useRef, useState } from "react";
+import { FaChevronLeft, FaChevronRight, FaGithub } from "react-icons/fa";
+import { FiArrowUp, FiZoomIn } from "react-icons/fi";
+import type { Swiper as SwiperClass } from "swiper";
+import { Navigation } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
-import { projects } from '@/src/data/projects';
-import { Project } from '@/src/types/project';
+import { projects } from "@/src/data/projects";
+import { Project } from "@/src/types/project";
+
+import Lightbox from "./Lightbox";
 
 export default function Work() {
   const swiperRef = useRef<SwiperClass | null>(null);
   const [allProjects] = useState<Project[]>(projects);
   const [currentProject, setCurrentProject] = useState<Project>(allProjects[0]);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const handleSwiperInit = (swiper: SwiperClass) => {
     swiperRef.current = swiper;
@@ -27,7 +31,8 @@ export default function Work() {
     setCurrentProject((prev) => {
       const currentIndex = allProjects.indexOf(prev);
       if (currentIndex === 0) return prev;
-      const newIndex = (currentIndex - 1 + allProjects.length) % allProjects.length;
+      const newIndex =
+        (currentIndex - 1 + allProjects.length) % allProjects.length;
       return allProjects[newIndex];
     });
     swiperRef.current?.slidePrev();
@@ -44,13 +49,38 @@ export default function Work() {
   };
 
   const openLink = (url: string) => {
-    window.open(url, '_blank');
+    window.open(url, "_blank");
+  };
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  };
+
+  const closeLightbox = () => setIsLightboxOpen(false);
+
+  const prevLightbox = () => {
+    setLightboxIndex((prev) => {
+      const newIndex = (prev - 1 + allProjects.length) % allProjects.length;
+      setCurrentProject(allProjects[newIndex]);
+      swiperRef.current?.slideTo(newIndex);
+      return newIndex;
+    });
+  };
+
+  const nextLightbox = () => {
+    setLightboxIndex((prev) => {
+      const newIndex = (prev + 1) % allProjects.length;
+      setCurrentProject(allProjects[newIndex]);
+      swiperRef.current?.slideTo(newIndex);
+      return newIndex;
+    });
   };
 
   return (
-    <section className="container mt-12 lg:mt-24 mx-auto" id="work">
+    <section className="container mt-12 lg:mt-24" id="work">
       <div className="relative">
-        <h2 className="text-3xl lg:text-4xl font-bold relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg">
+        <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-3 after:w-1/2 after:h-1 after:bg-accent after:rounded-lg">
           Work
         </h2>
       </div>
@@ -60,9 +90,9 @@ export default function Work() {
           <AnimatePresence mode="wait">
             <motion.div
               key={currentProject.title}
-              initial={{ opacity: 0, x: -40 }} 
+              initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}  
+              exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.5 }}
               className="flex flex-col gap-8"
             >
@@ -70,39 +100,41 @@ export default function Work() {
                 {currentProject.num}
               </div>
 
-              <h2 className="text-2xl lg:text-[42px] font-bold leading-none text-white group-hover:text-accent transition-all duration-500">
+              <h2 className="text-2xl lg:text-[42px] font-bold leading-none text-slate-900 dark:text-white group-hover:text-accent transition-all duration-500">
                 {currentProject.title}
               </h2>
 
-              <p className="text-white/80">{currentProject.description}</p>
+              <p className="text-slate-800 dark:text-white/80">
+                {currentProject.description}
+              </p>
 
-              <ul className="flex gap-4 flex-wrap">
+              <ul className="flex flex-wrap gap-3">
                 {currentProject.stack.map((tech, i) => (
                   <li
                     key={i}
-                    className="text-accent px-4 py-2 rounded-full text-sm cursor-pointer border-accent border tracking-wider"
+                    className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:text-slate-900 hover:bg-slate-200 transition dark:border-white/10 dark:bg-white/5 dark:text-white/85 dark:hover:text-white dark:hover:bg-white/10"
                   >
                     {tech}
                   </li>
                 ))}
               </ul>
 
-              <div className="border border-white/20" />
+              <div className="border border-slate-200 dark:border-white/20" />
 
               <div className="flex items-center gap-4">
                 <button
                   aria-label="View live project"
-                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-white/5 flex justify-center items-center group cursor-pointer"
+                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-full border border-slate-300 bg-slate-50 text-slate-700 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   onClick={() => openLink(currentProject.liveUrl)}
                 >
-                  <FiArrowUp className="text-white text-2xl lg:text-3xl group-hover:text-accent" />
+                  <FiArrowUp className="text-2xl lg:text-3xl group-hover:text-accent" />
                 </button>
                 <button
                   aria-label="View GitHub repository"
-                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-full bg-white/5 flex justify-center items-center group text-white cursor-pointer"
+                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-full border border-slate-300 bg-slate-50 text-slate-700 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
                   onClick={() => openLink(currentProject.githubUrl)}
                 >
-                  <FaGithub className="text-white text-2xl lg:text-3xl group-hover:text-accent" />
+                  <FaGithub className="text-2xl lg:text-3xl group-hover:text-accent" />
                 </button>
               </div>
             </motion.div>
@@ -112,7 +144,7 @@ export default function Work() {
         <motion.div
           initial={{ opacity: 0, x: 40 }}
           whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: 'easeOut', delay: 0.2 }}
+          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
           viewport={{ once: true }}
           className="w-full lg:w-1/2"
         >
@@ -131,14 +163,23 @@ export default function Work() {
               {allProjects.map((project, index) => (
                 <SwiperSlide key={index} className="w-full">
                   <div className="h-96 relative group flex justify-center items-center rounded-lg">
-                    <div className="relative w-full h-full rounded-lg">
+                    <div className="relative w-full h-full rounded-lg overflow-hidden">
                       <Image
                         src={project.image}
                         alt={project.title}
                         width={800}
                         height={600}
-                        className="object-cover rounded-xl overflow-hidden cursor-pointer"
+                        className="object-cover rounded-xl w-full h-full cursor-zoom-in select-none"
+                        onClick={() => openLightbox(index)}
                       />
+                      <div className="pointer-events-none absolute inset-0 rounded-xl bg-black/0 transition group-hover:bg-black/15" />
+                      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                        <div className="opacity-0 scale-95 transition-all duration-200 group-hover:opacity-100 group-hover:scale-100">
+                          <div className="rounded-full bg-white/80 p-3 text-slate-900 shadow-lg backdrop-blur dark:bg-white/20 dark:text-white">
+                            <FiZoomIn aria-hidden className="text-2xl" />
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </SwiperSlide>
@@ -148,22 +189,31 @@ export default function Work() {
             <div className="flex gap-3 absolute right-0 bottom-[calc(50%_-_-20px)] lg:-bottom-6 z-20 w-full justify-between lg:w-max lg:justify-none">
               <button
                 aria-label="Previous project"
-                className="w-14 h-14 rounded-full bg-white/50 lg:bg-white/5 flex justify-center items-center group cursor-pointer"
+                className="w-14 h-14 rounded-full border border-slate-300 bg-slate-50 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5"
                 onClick={handlePrev}
               >
-                <FaChevronLeft className="text-accent lg:text-white group-hover:text-accent font-bold" />
+                <FaChevronLeft className="text-accent lg:text-slate-700 dark:lg:text-white group-hover:text-accent font-bold" />
               </button>
               <button
                 aria-label="Next project"
-                className="w-14 h-14 rounded-full bg-white/50 lg:bg-white/5 flex justify-center items-center group cursor-pointer"
+                className="w-14 h-14 rounded-full border border-slate-300 bg-slate-50 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5"
                 onClick={handleNext}
               >
-                <FaChevronRight className="text-accent lg:text-white group-hover:text-accent font-bold" />
+                <FaChevronRight className="text-accent lg:text-slate-700 dark:lg:text-white group-hover:text-accent font-bold" />
               </button>
             </div>
           </div>
         </motion.div>
       </div>
+
+      <Lightbox
+        projects={allProjects}
+        index={lightboxIndex}
+        open={isLightboxOpen}
+        onClose={closeLightbox}
+        onPrev={prevLightbox}
+        onNext={nextLightbox}
+      />
     </section>
   );
 }

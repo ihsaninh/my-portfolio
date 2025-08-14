@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx}",
@@ -23,8 +24,8 @@ module.exports = {
         primary: "#1c1c22",
         secondary: "#27272c",
         accent: {
-          DEFAULT: "#00FF99",
-          hover: "#00E187",
+          DEFAULT: "rgb(var(--accent) / <alpha-value>)",
+          hover: "rgb(var(--accent-hover) / <alpha-value>)",
         },
       },
     },
