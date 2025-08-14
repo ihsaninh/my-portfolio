@@ -86,7 +86,7 @@ export default function Work() {
       </div>
 
       <div className="flex flex-col lg:flex-row lg:gap-[30px] mt-12">
-        <div className="w-full lg:w-1/2 flex flex-col lg:justify-between order-2 lg:order-none">
+        <div className="w-full lg:w-1/2 flex flex-col lg:justify-between order-2 lg:order-none mt-24 lg:mt-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentProject.title}
@@ -96,11 +96,7 @@ export default function Work() {
               transition={{ duration: 0.5 }}
               className="flex flex-col gap-8"
             >
-              <div className="hidden lg:text-8xl leading-none font-extrabold">
-                {currentProject.num}
-              </div>
-
-              <h2 className="text-2xl lg:text-[42px] font-bold leading-none text-slate-900 dark:text-white group-hover:text-accent transition-all duration-500">
+              <h2 className="text-3xl lg:text-[42px] font-bold leading-none text-slate-900 dark:text-white group-hover:text-accent transition-all duration-500">
                 {currentProject.title}
               </h2>
 
@@ -158,11 +154,11 @@ export default function Work() {
               navigation={true}
               spaceBetween={30}
               slidesPerView={1}
-              className="lg:h-[520px] -mb-16 lg:mb-12"
+              className="lg:h-[450px] -mb-16 lg:mb-12"
             >
               {allProjects.map((project, index) => (
                 <SwiperSlide key={index} className="w-full">
-                  <div className="h-96 relative group flex justify-center items-center rounded-lg">
+                  <div className="h-[450px] sm:h-[500px] lg:h-[450px] relative group flex justify-center items-center rounded-lg">
                     <div className="relative w-full h-full rounded-lg overflow-hidden">
                       <Image
                         src={project.image}
@@ -186,20 +182,42 @@ export default function Work() {
               ))}
             </Swiper>
 
-            <div className="flex gap-3 absolute right-0 bottom-[calc(50%_-_-20px)] lg:-bottom-6 z-20 w-full justify-between lg:w-max lg:justify-none">
+            {/* Navigation buttons - centered vertically on mobile, bottom positioned on desktop */}
+            <div className="absolute top-1/2 -translate-y-1/2 left-4 z-20 lg:hidden">
               <button
                 aria-label="Previous project"
                 className="w-14 h-14 rounded-full border border-slate-300 bg-slate-50 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5"
                 onClick={handlePrev}
               >
-                <FaChevronLeft className="text-accent lg:text-slate-700 dark:lg:text-white group-hover:text-accent font-bold" />
+                <FaChevronLeft className="text-accent group-hover:text-accent font-bold" />
+              </button>
+            </div>
+
+            <div className="absolute top-1/2 -translate-y-1/2 right-4 z-20 lg:hidden">
+              <button
+                aria-label="Next project"
+                className="w-14 h-14 rounded-full border border-slate-300 bg-slate-50 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5"
+                onClick={handleNext}
+              >
+                <FaChevronRight className="text-accent group-hover:text-accent font-bold" />
+              </button>
+            </div>
+
+            {/* Desktop navigation buttons */}
+            <div className="hidden lg:flex gap-3 absolute -bottom-18 right-0 z-20">
+              <button
+                aria-label="Previous project"
+                className="w-14 h-14 rounded-full border border-slate-300 bg-slate-50 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5"
+                onClick={handlePrev}
+              >
+                <FaChevronLeft className="text-slate-700 dark:text-white group-hover:text-accent font-bold" />
               </button>
               <button
                 aria-label="Next project"
                 className="w-14 h-14 rounded-full border border-slate-300 bg-slate-50 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5"
                 onClick={handleNext}
               >
-                <FaChevronRight className="text-accent lg:text-slate-700 dark:lg:text-white group-hover:text-accent font-bold" />
+                <FaChevronRight className="text-slate-700 dark:text-white group-hover:text-accent font-bold" />
               </button>
             </div>
           </div>

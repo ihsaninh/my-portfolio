@@ -30,9 +30,13 @@ export default function Home() {
   };
 
   return (
-    <section id="home" aria-labelledby="home-title" className="container relative">
+    <section
+      id="home"
+      aria-labelledby="home-title"
+      className="container relative"
+    >
       <motion.div
-        className="flex flex-col items-center py-12 lg:py-20"
+        className="flex flex-col items-center lg:py-12"
         variants={container}
         initial="hidden"
         animate="show"
