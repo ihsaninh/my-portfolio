@@ -167,12 +167,12 @@ export default function Home() {
           {[
             "Next.js",
             "React",
-            "Angular",
             "TypeScript",
-            "Tailwind CSS",
+            "Angular",
             "React Native",
+            "Tailwind CSS",
+            "Redux",
             "Flutter",
-            "Supabase",
           ].map((t) => (
             <li
               key={t}
