@@ -1,8 +1,8 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 import { FiExternalLink } from "react-icons/fi";
-import { AnimatePresence, motion } from "framer-motion";
 
 import { Certification } from "@/src/types/resume";
 
@@ -18,7 +18,6 @@ export default function CertificationsList({
   initialVisible = 6,
 }: Props) {
   const [expanded, setExpanded] = useState(false);
-  const visibleItems = expanded ? items : items.slice(0, initialVisible);
   const canToggle = items.length > initialVisible;
 
   return (
@@ -52,7 +51,9 @@ export default function CertificationsList({
                   </span>
                 </div>
 
-                <p className="text-sm text-slate-600 dark:text-white/70">{cert.company}</p>
+                <p className="text-sm text-slate-600 dark:text-white/70">
+                  {cert.company}
+                </p>
 
                 <div className="flex items-center justify-end">
                   {cert.credentialUrl && (
@@ -61,7 +62,9 @@ export default function CertificationsList({
                       target="_blank"
                       rel="noreferrer noopener"
                       title={
-                        cert.credentialId ? `ID: ${cert.credentialId}` : undefined
+                        cert.credentialId
+                          ? `ID: ${cert.credentialId}`
+                          : undefined
                       }
                       aria-label={
                         cert.credentialId
