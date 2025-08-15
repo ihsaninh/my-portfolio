@@ -96,7 +96,7 @@ export default function Contact() {
                   <p className="text-[11px] opacity-80">Years</p>
                 </li>
                 <li className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                  <p className="text-xl font-semibold">20+</p>
+                  <p className="text-xl font-semibold">10+</p>
                   <p className="text-[11px] opacity-80">Projects</p>
                 </li>
                 <li className="rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
