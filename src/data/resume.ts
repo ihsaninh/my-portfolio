@@ -8,11 +8,12 @@ import {
   SiTypescript,
 } from "react-icons/si";
 
-import { ResumeData, ResumeMenu, Skill } from "../types/resume";
+import { Certification, ResumeData, ResumeMenu, Skill } from "../types/resume";
 
 export const resumeMenus: ResumeMenu[] = [
   { id: 0, name: "Experiences" },
   { id: 1, name: "Educations" },
+  { id: 3, name: "Certifications" },
   { id: 2, name: "Skills" },
 ];
 
@@ -77,5 +78,74 @@ export const experienceData: ResumeData[] = [
       "Developed new features and improved existing functionalities to enhance user experience and meet project requirements.",
       "Implemented responsive design principles to ensure seamless user experiences across different devices for both web and mobile projects.",
     ],
+  },
+];
+
+export const certifications: Certification[] = [
+  {
+    title: "Frontend Developer (React)",
+    company: "HackerRank",
+    issuedDate: "May 2024",
+    credentialId: "261795A24119",
+    credentialUrl: "https://www.hackerrank.com/certificates/261795a24119",
+  },
+  {
+    title: "Belajar Membuat Aplikasi Back-End untuk Pemula",
+    company: "Dicoding Indonesia",
+    issuedDate: "March 2024",
+    credentialId: "KEXL181G4XG2",
+    credentialUrl: "https://www.dicoding.com/certificates/KEXL181G4XG2",
+  },
+  {
+    title: "Cloud Practitioner Essentials (Belajar Dasar AWS Cloud)",
+    company: "Dicoding Indonesia",
+    issuedDate: "March 2024",
+    credentialId: "6RPNVEYG5Z2M",
+    credentialUrl: "https://www.dicoding.com/certificates/6RPNVEYG5Z2M",
+  },
+  {
+    title: "Belajar Fundamental Aplikasi Android",
+    company: "Dicoding Indonesia",
+    issuedDate: "December 2022",
+    credentialId: "MEPJKN874X3V",
+    credentialUrl: "https://www.dicoding.com/certificates/MEPJKN874X3V",
+  },
+  {
+    title: "Memulai Pemrograman Dengan Kotlin",
+    company: "Dicoding Indonesia",
+    issuedDate: "May 2022",
+    credentialId: "NVP7KKWD4ZR0",
+    credentialUrl: "https://www.dicoding.com/certificates/NVP7KKWD4ZR0",
+  },
+  {
+    title: "Belajar Prinsip Pemrograman SOLID",
+    company: "Dicoding Academy",
+    issuedDate: "April 2022",
+    credentialId: "N9ZO73J0RZG5",
+    credentialUrl:
+      "https://drive.google.com/file/d/1gakvqpovMl9idjjv9Fe5liLg6ipVpxba/view",
+  },
+  {
+    title: "Pemrograman Kotlin : Pemula sampai Mahir",
+    company: "Udemy",
+    issuedDate: "April 2022",
+    credentialId: "UC-b18956dc-bb3f-4eac-960d-8155a802ba9c",
+    credentialUrl:
+      "https://www.udemy.com/certificate/UC-b18956dc-bb3f-4eac-960d-8155a802ba9c/",
+  },
+  {
+    title: "Google Cloud Platform Essentials",
+    company: "Qwiklabs",
+    issuedDate: "April 2019",
+    credentialId: "",
+    credentialUrl:
+      "https://google.qwiklabs.com/public_profiles/89cbefae-ede2-430c-90ee-c7b8a6d3a2dd",
+  },
+  {
+    title: "Certificate of Graduation - Full Stack Software Developer",
+    company: "Arkademy",
+    issuedDate: "August 2019",
+    credentialId: "ARK075",
+    credentialUrl: "",
   },
 ];

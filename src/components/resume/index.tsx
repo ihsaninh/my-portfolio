@@ -4,12 +4,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
 import {
+  certifications,
   educationData,
   experienceData,
   resumeMenus,
   skills,
 } from "@/src/data/resume";
 
+import CertificationsList from "./CertificationsList";
 import ExperienceTimeline from "./ExperienceTimeline";
 import ResumeContent from "./ResumeContent";
 
@@ -120,6 +122,23 @@ export default function Resume() {
                     ))}
                   </ul>
                 </div>
+              </motion.div>
+            )}
+
+            {activeMenu === 3 && (
+              <motion.div
+                key="certifications"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <ResumeContent
+                  title="My Certifications"
+                  description="Industry-recognized certificates and training I’ve completed."
+                >
+                  <CertificationsList items={certifications} className="mt-6" />
+                </ResumeContent>
               </motion.div>
             )}
           </AnimatePresence>

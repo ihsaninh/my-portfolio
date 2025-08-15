@@ -17,3 +17,11 @@ export interface ResumeData {
   endDate: string;
   descriptions?: string[];
 }
+
+export interface Certification {
+  title: string;
+  company: string;
+  issuedDate: string;
+  credentialId?: string;
+  credentialUrl?: string;
+}
