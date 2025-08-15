@@ -1,0 +1,126 @@
+---
+title: Building a Scalable Design System with Tailwind
+date: 2025-03-15
+tags: [Design System, Tailwind, UI, DX]
+cover: /images/blog/placeholder-3.svg
+description: Semantic tokens, composable components, and a pragmatic adoption path for a design system that scales.
+excerpt: Semantic tokens, utility‑first styling, and consistent components for teams of any size.
+---
+
+Summary: This guide shows how to build a design system that is consistent, maintainable, and ready to scale—using Tailwind as an accelerator, not the goal. We focus on semantic tokens, a clean component architecture, and a gradual adoption strategy.
+
+## Primary Goals
+
+- Consistent visuals across pages and products.
+- Faster delivery without sacrificing quality.
+- Stable component contracts that are easy to test and adopt.
+
+## Core Architecture
+
+1) Design Tokens (single source of truth)
+- Start with color, spacing, radius, shadows, and typography scales.
+- Derive brand tokens into semantic tokens (e.g., `--color-bg-default`, `--color-text-muted`, `--color-primary`).
+- Store them as CSS variables in `:root` and `.dark` for theming.
+
+```css
+:root {
+  --color-bg-default: white;
+  --color-text-default: #0f172a; /* slate-900 */
+  --color-primary: #22c55e;      /* green-500 */
+}
+.dark {
+  --color-bg-default: #0b1220;
+  --color-text-default: #e2e8f0; /* slate-200 */
+  --color-primary: #22c55e;
+}
+```
+
+2) Map to Tailwind
+- Tailwind 4 lets you use CSS variables directly: `bg-[--color-bg-default]`, `text-[--color-text-default]`.
+- Define realistic scales (spacing, radius, shadows) to keep the UI cohesive and JIT efficient.
+
+3) Component Layers
+- Primitives: `Button`, `Card`, `Input`, `Chip` (small, composable).
+- Patterns: `Modal`, `FormGroup`, `Dropdown` (compose 2–3 primitives).
+- Templates: `AuthLayout`, `DashboardShell` (page scaffolds).
+
+## Designing Components That Scale
+
+- Keep APIs small and clear: `variant`, `size`, `state` (loading/disabled).
+- Prefer composition over inheritance: compose Tailwind utilities with slots (`icon`, `label`).
+- Accessibility first: role/aria, consistent focus rings, 44px touch targets.
+
+Button sketch (conceptual):
+
+```tsx
+type ButtonProps = {
+  variant?: "primary" | "secondary" | "ghost";
+  size?: "sm" | "md" | "lg";
+  loading?: boolean;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+export function Button({ variant = "primary", size = "md", loading, className, ...props }: ButtonProps) {
+  const base = "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[--color-primary] disabled:opacity-60 disabled:cursor-not-allowed";
+  const variants = {
+    primary: "bg-[--color-primary] text-white hover:brightness-95",
+    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-white/10 dark:text-white dark:hover:bg-white/15",
+    ghost: "bg-transparent text-[--color-text-default] hover:bg-black/5 dark:hover:bg-white/10",
+  } as const;
+  const sizes = { sm: "h-9 px-3 text-sm", md: "h-10 px-4 text-sm", lg: "h-11 px-5 text-base" } as const;
+  return (
+    <button className={[base, variants[variant], sizes[size], className].filter(Boolean).join(" ")} aria-busy={loading || undefined} {...props} />
+  );
+}
+```
+
+## Theming and Contrast
+
+- Use `next-themes` to toggle `.dark` on `<html>`.
+- Validate contrast (WCAG ≥ 4.5:1 for body text) and keep focus rings consistent.
+- Store light/dark palettes in semantic tokens—not inside components.
+
+## Typography, Spacing, Rhythm
+
+- Use a consistent spacing scale (e.g., multiples of 4) and a clear typographic ramp.
+- Avoid arbitrary margins; rely on Tailwind utilities for vertical rhythm.
+
+## Docs, Quality, Performance
+
+- Docs: a catalog of components with recommended variants and examples. Storybook/Docs helps a lot.
+- Quality: pre-commit lint + typecheck; `eslint-plugin-tailwindcss` for class validation.
+- Performance: limit unscannable dynamic classes; leverage icon tree-shaking; avoid overlapping utilities.
+
+## Gradual Adoption Strategy
+
+- Start with high-impact components (Button, Card) or new pages.
+- Provide adapters from old → new styles to enable a smooth migration.
+- Communicate best practices and anti-patterns in documentation.
+
+## Suggested Folder Structure
+
+```
+src/styles/tokens.css      # CSS variables (brand → semantic tokens)
+tailwind.config.js         # extend scales + token integration
+src/components/ui/*        # primitives
+src/components/patterns/*  # patterns
+src/docs/*                 # documentation & playground
+```
+
+## Anti‑patterns to Avoid
+
+- Hardcoding hex colors in JSX (use semantic tokens instead).
+- Creating page-specific variants (weakens contracts and maintainability).
+- Duplicating utilities that bloat classnames and cause inconsistency.
+
+## Implementation Checklist
+
+1) Tokens complete and verified for light/dark.
+2) Core primitives cover all states (hover/focus/active/disabled).
+3) Usage examples available in docs/playground.
+4) Lint + typecheck green; PR template encourages consistency.
+5) Minimal manual visual checks for key components.
+
+---
+
+A scalable design system is built on semantic tokens, composable components with clear APIs, and disciplined processes. Tailwind accelerates execution—but consistency comes from strong architecture and documentation.
+

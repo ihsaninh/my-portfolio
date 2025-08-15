@@ -76,8 +76,16 @@
   inset: 0;
   pointer-events: none;
   z-index: -10;
-  background-image: radial-gradient(circle, rgba(2, 6, 23, 0.035) 1px, transparent 1px),
-    repeating-linear-gradient(135deg, rgba(2, 6, 23, 0.018) 0 2px, transparent 2px 8px),
+  background-image: radial-gradient(
+      circle,
+      rgba(2, 6, 23, 0.035) 1px,
+      transparent 1px
+    ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(2, 6, 23, 0.018) 0 2px,
+      transparent 2px 8px
+    ),
     linear-gradient(rgba(2, 6, 23, 0.04) 1px, transparent 1px),
     linear-gradient(90deg, rgba(2, 6, 23, 0.04) 1px, transparent 1px),
     radial-gradient(
@@ -96,7 +104,8 @@
       rgba(148, 163, 184, 0)
     );
   background-size: 14px 14px, auto, 24px 24px, 24px 24px, auto, auto, auto;
-  background-position: top left, top left, top left, top left, center, center, center;
+  background-position: top left, top left, top left, top left, center, center,
+    center;
   -webkit-mask-image: radial-gradient(
     60% 45% at 50% 0%,
     black 40%,
@@ -105,12 +114,17 @@
   mask-image: radial-gradient(60% 45% at 50% 0%, black 40%, transparent 80%);
 }
 .dark .app-bg {
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.015) 0 2px, transparent 2px 8px),
-    linear-gradient(
-      rgba(255, 255, 255, 0.025) 1px,
+  background-image: radial-gradient(
+      circle,
+      rgba(255, 255, 255, 0.035) 1px,
       transparent 1px
     ),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.015) 0 2px,
+      transparent 2px 8px
+    ),
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
     radial-gradient(
       60% 40% at 50% 0%,
@@ -174,4 +188,102 @@
 .section-title:hover::after,
 .section-title:focus-visible::after {
   width: 100%;
+}
+
+/* Minimal typography for MDX content */
+.mdx-content {
+  @apply leading-relaxed text-slate-800 dark:text-white/85;
+}
+.mdx-content > * + * {
+  margin-top: 1rem;
+}
+.mdx-content h2 {
+  @apply text-2xl lg:text-3xl font-semibold tracking-tight leading-snug text-slate-900 dark:text-white mt-10;
+}
+.mdx-content h3 {
+  @apply text-xl lg:text-2xl font-semibold tracking-tight leading-snug text-slate-900 dark:text-white mt-8;
+}
+.mdx-content p {
+  @apply text-base leading-7;
+}
+.mdx-content li {
+  @apply leading-7;
+}
+.mdx-content ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.mdx-content ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.mdx-content li + li {
+  margin-top: 0.25rem;
+}
+.mdx-content code:not(pre code) {
+  @apply rounded-md px-1.5 py-0.5 text-sm bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-white/90;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+}
+/* Prism theme for MDX code blocks (rehype-prism-plus) */
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #abb2bf;
+  background: none;
+  text-shadow: none;
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9rem;
+  direction: ltr;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  line-height: 1.6;
+  -moz-tab-size: 2;
+  -o-tab-size: 2;
+  tab-size: 2;
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+.mdx-content pre[class*="language-"] {
+  @apply rounded-xl p-4 overflow-auto border border-slate-200/60 dark:border-white/10;
+  background: #282c34; /* One Dark background */
+}
+.dark .mdx-content pre[class*="language-"] {
+  background: #1e1f25;
+}
+.mdx-content :not(pre) > code[class*="language-"] {
+  @apply rounded px-1.5 py-0.5 text-sm;
+  background: #282c34;
+  color: #e6e6e6;
+}
+
+/* Prism Tokens */
+.token.comment, .token.prolog, .token.doctype, .token.cdata { color: #5c6370; }
+.token.punctuation { color: #abb2bf; }
+.token.property, .token.tag, .token.constant, .token.symbol, .token.deleted { color: #e06c75; }
+.token.boolean, .token.number { color: #d19a66; }
+.token.selector, .token.attr-name, .token.string, .token.char, .token.builtin, .token.inserted { color: #98c379; }
+.token.operator, .token.entity, .token.url { color: #56b6c2; }
+.token.atrule, .token.keyword { color: #c678dd; }
+.token.function, .token.class-name { color: #61afef; }
+.token.regex, .token.important, .token.variable { color: #e5c07b; }
+.token.bold { font-weight: 700; }
+.token.italic { font-style: italic; }
+.token.entity { cursor: help; }
+
+/* Line highlight (using data-line) */
+pre[class*="language-"][data-line] {
+  position: relative;
+  padding-left: 2.5rem;
+}
+pre[class*="language-"] .line-highlight {
+  background: rgba(255, 255, 255, 0.06);
+  border-left: 3px solid rgb(var(--accent));
+  margin-left: -1rem;
+  margin-right: -1rem;
 }

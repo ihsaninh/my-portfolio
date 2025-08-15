@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, mock } from 'bun:test';
+
 import Social from '../../../src/components/contact/Social';
 
 // Mock React Icons

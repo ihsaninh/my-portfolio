@@ -4,5 +4,6 @@ export const NavLinks: NavLink[] = [
   { name: 'Home', isActive: true, href: '#home' },
   { name: 'Resume', isActive: false, href: '#resume' },
   { name: 'Work', isActive: false, href: '#work' },
+  { name: 'Blog', isActive: false, href: '#blog' },
   { name: 'Contact', isActive: false, href: '#contact' },
 ];

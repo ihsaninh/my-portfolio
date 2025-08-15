@@ -1,6 +1,6 @@
 import "./globals.css";
 
-import { Outfit } from "next/font/google";
+import { Outfit, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import { AnalyticsTracker } from "@/src/components/analytics";
@@ -11,6 +11,11 @@ import { metadata } from "@/src/lib/metadata";
 
 const outfit = Outfit({
   variable: "--font-outfit",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-mono",
   subsets: ["latin"],
 });
 
@@ -26,7 +31,7 @@ export default function RootLayout({
       <head>
         <GoogleAnalytics />
       </head>
-      <body className={`${outfit.className}`}>
+      <body className={`${outfit.className} ${jetbrainsMono.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
