@@ -54,7 +54,7 @@ export default function RootLayout({
           <div aria-hidden className="app-bg" />
           <div className="flex flex-col min-h-screen">
             <Header />
-            <main className="py-8 mt-16 lg:mt-24">{children}</main>
+            <main className="py-8 mt-0 lg-mt-8">{children}</main>
             <Footer />
           </div>
         </ThemeProvider>
