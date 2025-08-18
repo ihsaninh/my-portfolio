@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+
 import { skills } from "@/src/data/resume";
 
 export default function Skills() {
