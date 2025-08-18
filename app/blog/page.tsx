@@ -38,7 +38,7 @@ export default function BlogPage() {
   const posts = getAllPostsMeta();
   return (
     <section className="container">
-      <h1 className="section-title">All Blog</h1>
+      <h1 className="section-title">Blog Posts</h1>
       <BlogListAnimated posts={posts} />
     </section>
   );
