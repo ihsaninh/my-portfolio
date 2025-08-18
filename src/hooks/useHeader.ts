@@ -1,23 +1,26 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState } from "react";
 
-import { NavLinks } from '../data/navLinks';
-import { NavLink } from '../types/navLink';
+import { NavLinks } from "../data/navLinks";
+import { NavLink } from "../types/navLink";
 
 export const useHeaderService = () => {
   const [links, setLinks] = useState<NavLink[]>(NavLinks);
 
-  const setActiveLink = useCallback((href: string) => {
-    const updatedLinks = links.map((link: NavLink) => ({
-      ...link,
-      isActive: link.href === href,
-    }));
-    setLinks(updatedLinks);
-    scrollToSection(href);
-  }, [links]);
+  const setActiveLink = useCallback(
+    (href: string) => {
+      const updatedLinks = links.map((link: NavLink) => ({
+        ...link,
+        isActive: link.href === href,
+      }));
+      setLinks(updatedLinks);
+      scrollToSection(href);
+    },
+    [links]
+  );
 
   const setActiveLinkByScroll = useCallback((href: string) => {
-    setLinks(prevLinks => {
-      const currentActiveLink = prevLinks.find(link => link.isActive);
+    setLinks((prevLinks) => {
+      const currentActiveLink = prevLinks.find((link) => link.isActive);
       if (currentActiveLink?.href === href) {
         return prevLinks;
       }
@@ -32,7 +35,7 @@ export const useHeaderService = () => {
   const scrollToSection = (href: string) => {
     const element = document.querySelector(href);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
   };
 
