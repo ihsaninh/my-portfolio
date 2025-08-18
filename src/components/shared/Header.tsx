@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { useHeaderService } from "@/src/hooks/useHeader";
@@ -14,6 +15,9 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+  const isBlog = pathname.startsWith("/blog");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -23,6 +27,7 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
+    if (!isHome) return; // Only run scroll spy on the homepage
     let ticking = false;
     const spy = () => {
       let active: string | null = null;
@@ -52,7 +57,21 @@ export default function Header() {
     spy();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [navLinks, setActiveLinkByScroll]);
+  }, [navLinks, setActiveLinkByScroll, isHome]);
+
+  // Ensure correct active state when on /blog
+  useEffect(() => {
+    if (isBlog) {
+      setActiveLinkByScroll("#blog");
+    }
+  }, [isBlog, setActiveLinkByScroll]);
+
+  // When on home with a hash (e.g. /#blog), set active immediately
+  useEffect(() => {
+    if (!isHome) return;
+    const hash = window.location.hash;
+    if (hash) setActiveLinkByScroll(hash);
+  }, [isHome, setActiveLinkByScroll]);
 
   useEffect(() => {
     const close = () => setOpen(false);
@@ -71,6 +90,8 @@ export default function Header() {
   }, [open]);
 
   const handleNavClick = (href: string) => (e: React.SyntheticEvent) => {
+    // Only intercept clicks for in-page anchors on the homepage
+    if (!isHome) return;
     e.preventDefault();
     setActiveLink(href);
     const el = document.querySelector(href);
@@ -92,8 +113,8 @@ export default function Header() {
         <div className="flex h-16 items-center justify-between gap-3">
           {/* Brand chip */}
           <Link
-            href="#home"
-            onClick={handleNavClick("#home")}
+            href={isHome ? "#home" : "/#home"}
+            onClick={isHome ? handleNavClick("#home") : undefined}
             className="group inline-flex items-center gap-2"
             aria-label="Go to home"
           >
@@ -105,33 +126,41 @@ export default function Header() {
 
           <nav className="hidden lg:block" aria-label="Main navigation">
             <ul className="flex items-center gap-8">
-              {navLinks.map((link, i) => (
+              {navLinks.map((link, i) => {
+                const isBlogLink = link.name.toLowerCase() === "blog";
+                const hrefFinal = isBlogLink
+                  ? (isHome ? "#blog" : "/blog")
+                  : (isHome ? link.href : `/${link.href}`);
+                const active = isBlogLink
+                  ? (isBlog || (isHome && link.isActive))
+                  : link.isActive;
+                return (
                 <li key={i} className="relative group">
-                  <a
-                    href={link.href}
-                    onClick={handleNavClick(link.href)}
+                  <Link
+                    href={hrefFinal}
+                    onClick={isHome ? (isBlogLink ? handleNavClick("#blog") : handleNavClick(link.href)) : undefined}
                     className={[
                       "text-sm transition-colors",
-                      link.isActive
+                      active
                         ? "text-accent"
                         : "text-slate-800 hover:text-slate-900 dark:text-white/80 dark:hover:text-white",
                     ].join(" ")}
                     tabIndex={0}
                     onKeyDown={(e: React.KeyboardEvent) => {
-                      if (e.key === "Enter") handleNavClick(link.href)(e);
+                      if (e.key === "Enter" && isHome && !isBlogLink) handleNavClick(link.href)(e);
                     }}
                   >
                     {link.name}
                     <span
                       className={[
                         "absolute left-0 -bottom-1 h-[2px] bg-accent transition-all duration-300",
-                        link.isActive ? "w-full" : "w-0 group-hover:w-full",
+                        active ? "w-full" : "w-0 group-hover:w-full",
                       ].join(" ")}
                       aria-hidden
                     />
-                  </a>
+                  </Link>
                 </li>
-              ))}
+              );})}
               <li>
                 <a
                   href="/document/CV-Ihsan-Nurul-Habib.pdf"

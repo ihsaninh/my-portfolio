@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'bun:test';
+
 import Footer from '../../../src/components/shared/Footer';
 
 describe('Footer Component', () => {

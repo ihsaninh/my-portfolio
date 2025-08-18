@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 
 import Social from "../contact/Social";
@@ -11,13 +10,7 @@ export default function Footer() {
 
   return (
     <footer className="relative mt-12 lg:mt-24">
-      <motion.div
-        className="container"
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.15 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+      <div className="container">
         <div className="rounded-2xl border border-slate-300 bg-slate-50 backdrop-blur px-6 py-8 md:px-8 md:py-10 dark:border-white/10 dark:bg-white/5">
           <div className="grid gap-8 md:grid-cols-3 md:items-center">
             <div className="flex items-center gap-3">
@@ -86,7 +79,7 @@ export default function Footer() {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </footer>
   );
 }

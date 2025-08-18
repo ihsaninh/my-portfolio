@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+
 import Header from '../../../src/components/shared/Header';
 
 // Mock the useHeaderService hook
