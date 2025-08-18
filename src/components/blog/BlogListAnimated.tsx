@@ -42,11 +42,11 @@ export default function BlogListAnimated({ posts }: { posts: Post[] }) {
           key={post.slug}
           whileHover={{ y: -2, scale: 1.01 }}
           transition={{ type: "spring", stiffness: 260, damping: 18 }}
-          className="group h-full"
+          className="group h-full transform-gpu"
         >
           <Link
             href={`/blog/${post.slug}`}
-            className="block h-full rounded-2xl border border-slate-300 bg-slate-50 shadow-xl backdrop-blur overflow-hidden dark:border-white/10 dark:bg-white/5"
+            className="block h-full rounded-2xl border border-slate-300 bg-slate-50 shadow-lg md:shadow-xl md:backdrop-blur overflow-hidden dark:border-white/10 dark:bg-white/5"
           >
             {post.cover && (
               <div className="relative w-full h-48">

@@ -3,13 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
-import {
-  certifications,
-  educationData,
-  experienceData,
-  resumeMenus,
-  skills,
-} from "@/src/data/resume";
+import { certifications, educationData, experienceData, resumeMenus } from "@/src/data/resume";
 
 import CertificationsList from "./CertificationsList";
 import ExperienceTimeline from "./ExperienceTimeline";
@@ -94,38 +88,6 @@ export default function Resume() {
             )}
 
             {activeMenu === 2 && (
-              <motion.div
-                key="skills"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
-              >
-                <div>
-                  <h3 className="text-2xl lg:text-3xl">My Skills</h3>
-                  <p className="pt-4">
-                    These are the tools and technologies I&apos;m proficient in.
-                  </p>
-                  <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 lg:gap-6 mt-6">
-                    {skills.map((skill, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center gap-2 group flex-col text-center cursor-pointer"
-                      >
-                        <div className="w-full h-36 rounded-xl border border-slate-300 bg-slate-50 shadow-xl backdrop-blur dark:border-white/10 dark:bg-white/5 flex justify-center items-center flex-col gap-4 transition-all duration-300">
-                          <skill.icon className="text-6xl text-slate-800 dark:text-white group-hover:text-accent transition-all duration-300" />
-                          <p className="text-sm text-slate-700 dark:text-white transition-all duration-300 group-hover:text-accent tracking-wider">
-                            {skill.name}
-                          </p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-            )}
-
-            {activeMenu === 3 && (
               <motion.div
                 key="certifications"
                 initial={{ opacity: 0, y: 20 }}

@@ -89,12 +89,12 @@ export default function Home() {
 
         <motion.div
           variants={fadeUp}
-          className="mt-8 flex flex-col sm:flex-row items-center gap-4"
+          className="mt-8 flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-4"
         >
           <a
             href="#contact"
             onClick={handleConnectClick}
-            className="bg-accent text-primary px-6 py-2 rounded-xl shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm lg:text-base text-primary shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60 whitespace-nowrap"
           >
             Connect with me
           </a>
@@ -102,10 +102,10 @@ export default function Home() {
           <a
             href="/document/CV-Ihsan-Nurul-Habib.pdf"
             download
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-6 py-2 text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10 group"
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-6 text-sm lg:text-base text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10 group whitespace-nowrap"
             aria-label="Download CV as PDF"
           >
-            <span className="text-sm lg:text-base">Download CV</span>
+            <span>Download CV</span>
             <FiDownload className="text-lg transition-transform duration-300 group-hover:-rotate-12" />
           </a>
         </motion.div>
