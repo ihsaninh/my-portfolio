@@ -7,14 +7,15 @@ import { mdxComponents } from "@/mdx-components";
 import BlogPostLayout from "@/src/components/blog/BlogPostLayout";
 import { getAllPostSlugs, getPostBySlug } from "@/src/lib/mdx";
 
-type Params = { params: { slug: string } };
+type Params = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
   return getAllPostSlugs().map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Params) {
-  const post = getPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
   if (!post) return {};
   const { meta } = post;
   return {
@@ -29,7 +30,8 @@ export async function generateMetadata({ params }: Params) {
 }
 
 export default async function BlogPostPage({ params }: Params) {
-  const post = getPostBySlug(params.slug);
+  const { slug } = await params;
+  const post = getPostBySlug(slug);
   if (!post) return notFound();
   const { meta, content } = post;
   const components = mdxComponents;

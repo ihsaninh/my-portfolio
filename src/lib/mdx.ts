@@ -9,6 +9,7 @@ export type BlogFrontmatter = {
   tags?: string[];
   cover?: string;
   description?: string;
+  readingTime?: string;
 };
 
 const BLOGS_DIR = path.join(process.cwd(), "src", "blogs");
@@ -26,7 +27,10 @@ export function getPostBySlug(
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, "utf8");
   const { data, content } = matter(raw);
-  const meta = { ...(data as BlogFrontmatter), slug };
+  const words = content.trim().split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(1, Math.ceil(words / 200));
+  const readingTime = `${minutes} min read`;
+  const meta = { ...(data as BlogFrontmatter), readingTime, slug };
   return { meta, content };
 }
 

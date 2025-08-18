@@ -48,7 +48,7 @@ export default function BlogPostLayout({
       </header>
 
       {cover ? (
-        <div className="relative mt-6 w-full h-60 lg:h-80 overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10">
+        <div className="relative mt-6 w-full h-80 md:h-96 lg:h-[30rem] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
           <Image
             src={cover}
             alt={title}

@@ -1,0 +1,256 @@
+---
+title: "Next.js Clean Commits with Husky + Commitlint"
+date: 2025-08-18
+excerpt: Build guardrails that keep your codebase healthy, your CI green, and your commit history meaningful.
+tags: ["Nextjs", "Husky", "Commitlint", "GIT", "Tooling"]
+description: Build guardrails that keep your codebase healthy, your CI green, and your commit history meaningful.
+cover: /images/blog/clean-commits-conventional.svg
+---
+
+You've probably been there: rushing to push code before a deadline, only to realize later that you've committed poorly formatted code, forgotten to run tests, or written commit messages that look like "fixed stuff" or "asdfgh". Sound familiar?
+
+The solution? **Pre-commit hooks and commitlint** - your automated guardians that ensure code quality and consistent commit messages before anything reaches your repository.
+
+In this comprehensive guide, you'll learn how to set up a bulletproof pre-commit workflow in your Next.js project that will:
+
+- Automatically format your code with Prettier
+- Catch linting errors with ESLint
+- Enforce consistent commit message conventions
+- Run type checks and tests before commits
+- Save your team hours of code review time
+
+Let's dive in and transform your development workflow forever.
+
+## Step 1: Initialize Your Next.js Project (If You Haven't Already)
+
+First things first, let's make sure you have a Next.js project ready:
+
+```bash
+npx create-next-app@latest my-awesome-project --typescript --tailwind --eslint
+cd my-awesome-project
+```
+
+**Pro tip**: Always start with TypeScript enabled. Your future self will thank you when debugging complex state management or API integrations.
+
+## Step 2: Install and Configure Husky for Git Hooks
+
+Husky is the most popular tool for managing Git hooks in JavaScript projects. It makes setting up pre-commit hooks incredibly simple.
+
+### Install Husky:
+
+```bash
+npm install --save-dev husky
+npx husky install
+```
+
+### Add Husky to your package.json scripts:
+
+```json
+{
+  "scripts": {
+    "prepare": "husky install"
+  }
+}
+```
+
+**Why this matters**: The `prepare` script ensures that anyone who clones your repository will automatically have Git hooks enabled. No more "it works on my machine" situations.
+
+### Create your first pre-commit hook:
+
+```bash
+npx husky add .husky/pre-commit "npm run lint-staged"
+```
+
+**Example result**: You'll now see a `.husky/pre-commit` file in your project. This script runs every time someone tries to commit code.
+
+## Step 3: Set Up Lint-Staged for Efficient Code Processing
+
+Lint-staged runs linters only on staged files, making your pre-commit checks blazingly fast even in large codebases.
+
+### Install lint-staged:
+
+```bash
+npm install --save-dev lint-staged
+```
+
+### Configure lint-staged in your package.json:
+
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"],
+    "*.{json,css,md}": ["prettier --write"]
+  }
+}
+```
+
+### Add the lint-staged script:
+
+```json
+{
+  "scripts": {
+    "lint-staged": "lint-staged"
+  }
+}
+```
+
+**Real-world example**: When you commit a file like `components/Button.tsx`, lint-staged will:
+
+1. Run ESLint with auto-fix on that specific file
+2. Format it with Prettier
+3. Stage the fixed version automatically
+
+This means you'll never commit unformatted or linting-error-prone code again.
+
+## Step 4: Install and Configure Commitlint
+
+Commitlint ensures your commit messages follow a consistent convention, making your Git history readable and your changelog generation automatic.
+
+### Install commitlint and conventional config:
+
+```bash
+npm install --save-dev @commitlint/cli @commitlint/config-conventional
+```
+
+### Create commitlint configuration:
+
+Create a `commitlint.config.js` file in your project root:
+
+```javascript
+module.exports = {
+  extends: ["@commitlint/config-conventional"],
+  rules: {
+    "type-enum": [
+      2,
+      "always",
+      [
+        "feat", // New feature
+        "fix", // Bug fix
+        "docs", // Documentation
+        "style", // Formatting changes
+        "refactor", // Code refactoring
+        "test", // Adding tests
+        "chore", // Maintenance tasks
+        "ci", // CI/CD changes
+        "perf", // Performance improvements
+        "build", // Build system changes
+      ],
+    ],
+    "subject-max-length": [2, "always", 72],
+    "subject-case": [2, "always", "lower-case"],
+  },
+};
+```
+
+### Add commitlint to your commit-msg hook:
+
+```bash
+npx husky add .husky/commit-msg 'npx --no-install commitlint --edit "$1"'
+```
+
+**Examples of good commit messages**:
+
+- `feat: add user authentication with NextAuth.js`
+- `fix: resolve hydration error in product listing`
+- `docs: update API documentation for user endpoints`
+
+**Examples of bad commit messages** (that will be rejected):
+
+- `fixed stuff` ❌
+- `Update` ❌
+- `FEAT: ADD NEW FEATURE` ❌ (wrong case)
+
+## Step 5: Enhance Your Setup with TypeScript and Testing Checks
+
+Let's make your pre-commit hooks even more powerful by adding TypeScript checking and test validation.
+
+### Update your lint-staged configuration:
+
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "bash -c 'npm run type-check'"
+    ],
+    "*.{json,css,md}": ["prettier --write"]
+  }
+}
+```
+
+### Add type-checking script to package.json:
+
+```json
+{
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  }
+}
+```
+
+### Optional: Add test running (for critical files):
+
+If you want to run tests on specific files:
+
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write",
+      "jest --findRelatedTests --passWithNoTests"
+    ]
+  }
+}
+```
+
+**Pro tip**: Be careful with test running in pre-commit hooks. For large test suites, consider running only unit tests or critical tests to avoid slow commits.
+
+## Step 6: Create a Comprehensive Configuration Example
+
+Here's what your complete `package.json` should look like with all configurations:
+
+```json
+{
+  "name": "my-awesome-nextjs-project",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "type-check": "tsc --noEmit",
+    "prepare": "husky install",
+    "lint-staged": "lint-staged"
+  },
+  "dependencies": {
+    "next": "14.0.0",
+    "react": "^18",
+    "react-dom": "^18"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^17.7.1",
+    "@commitlint/config-conventional": "^17.7.0",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.0.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^14.0.1"
+  }
+}
+```
+
+## Conclusion
+
+Clean commit workflows aren’t about policing; they’re about speed and clarity. By running quick local checks with Husky and standardizing language with Commitlint, you catch avoidable issues before they ever reach your continuous integration (CI) pipeline. This transforms your commit history from a chaotic mess into a reliable, readable story of your project's development.
+
+By implementing these tools, you're not just improving your project—you're future-proofing it. You’ll save your team from frustrating code reviews, keep your main branch green, and ensure every commit adds value, not just noise.
+
+```
+
+```

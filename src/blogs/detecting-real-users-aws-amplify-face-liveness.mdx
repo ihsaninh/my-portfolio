@@ -27,18 +27,6 @@ The technology works by analyzing multiple biometric indicators in real-time:
 
 AWS Amplify's Face Liveness leverages Amazon Rekognition's advanced machine learning models, trained on millions of samples to detect even the most sophisticated spoofing attempts including high-resolution photos, video replays, and 3D masks.
 
-## Why Next.js App Router Changes Everything
-
-The introduction of Next.js 13's App Router revolutionized how we build React applications, particularly for security-sensitive features like biometric authentication. Unlike the traditional Pages Router, App Router provides:
-
-**Server Components by Default**: Critical for security operations where you want to minimize client-side exposure of sensitive authentication logic.
-
-**Enhanced API Routes**: More robust error handling and middleware support for authentication flows.
-
-**Streaming and Suspense**: Better user experience during biometric verification processes, which can take several seconds to complete.
-
-**Improved Bundle Optimization**: Smaller client bundles mean faster load times for camera-heavy components.
-
 ## Step-by-Step Implementation Guide
 
 Let me walk you through the exact implementation process I followed, based on AWS's official documentation:
@@ -333,18 +321,8 @@ Create the custom-policies.json file for your Lambda function:
 ]
 ```
 
-## The Future of Biometric Authentication
+## Conclusion
 
-Face liveness detection represents just the beginning of sophisticated biometric authentication. As we move forward, we're seeing integration with:
+Face liveness detection is a pragmatic leap forward in biometric security. It closes the gap left by basic facial recognition by confirming there’s a real, live human behind the camera, not a photo, replay, or mask. Implemented with AWS Amplify and Rekognition, it’s practical to ship today without handling raw biometrics yourself.
 
-**Multi-modal Biometrics**: Combining face, voice, and behavioral biometrics for even stronger security.
-
-**Continuous Authentication**: Real-time verification throughout user sessions, not just at login.
-
-**Privacy-Preserving Technologies**: Using federated learning and homomorphic encryption to verify identity without exposing biometric data.
-
-## Taking Action: Your Next Steps
-
-Implementing face liveness detection in your Next.js application transforms your security posture from reactive to proactive. You're not just preventing fraud; you're building user trust and regulatory compliance into your product's foundation.
-
-Start with the basic implementation I've shared, then gradually add the advanced features based on your specific use case. Remember, the key to successful biometric authentication lies not just in the technology, but in creating a seamless user experience that doesn't feel intrusive.
+Looking ahead, the strongest solutions will blend multiple signals (face, voice, behavior), verify continuously when risk is high, and preserve privacy by design. Your goal is not only to block fraud but to earn user trust with a secure, respectful experience.

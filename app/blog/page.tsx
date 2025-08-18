@@ -1,10 +1,38 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 import { getAllPostsMeta } from "@/src/lib/mdx";
 
-export const metadata = {
-  title: "Blog",
+export const metadata: Metadata = {
+  title: "Blog – Next.js, Tooling, and Engineering Guides",
+  description:
+    "Practical articles on modern web development: Next.js and React, performance, testing, tooling, cloud, UX, accessibility, architecture, and more.",
+  alternates: { canonical: "/blog" },
+  keywords: [
+    "Next.js",
+    "React",
+    "Husky",
+    "Commitlint",
+    "AWS Amplify",
+    "Face Liveness",
+    "Design System",
+    "Frontend",
+    "Web Development",
+  ],
+  openGraph: {
+    title: "Blog – Next.js, Tooling, and Engineering Guides",
+    description:
+      "Practical articles on modern web development: Next.js/React, performance, testing, tooling, cloud, UX, accessibility, architecture, and more.",
+    url: "/blog",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog – Next.js, Tooling, and Engineering Guides",
+    description:
+      "Practical articles on modern web development: Next.js/React, performance, testing, tooling, cloud, UX, accessibility, architecture, and more.",
+  },
 };
 
 export default function BlogPage() {
@@ -32,16 +60,34 @@ export default function BlogPage() {
               </div>
             )}
             <div className="p-5 flex flex-col gap-3">
-              <p className="text-xs text-slate-500 dark:text-white/60">
-                {new Date(post.date).toLocaleDateString()}
+              <p className="text-xs text-slate-500 dark:text-white/60 flex items-center gap-2">
+                <span>{new Date(post.date).toLocaleDateString()}</span>
+                {post.readingTime && (
+                  <>
+                    <span aria-hidden>•</span>
+                    <span>{post.readingTime}</span>
+                  </>
+                )}
               </p>
-              <h3 className="text-lg lg:text-xl text-slate-900 dark:text-white group-hover:text-accent transition">
+              <h3 className="text-lg lg:text-xl text-slate-900 dark:text-white group-hover:text-accent transition line-clamp-2">
                 {post.title}
               </h3>
-              {post.excerpt ? (
-                <p className="text-sm text-slate-700 dark:text-white/75">
-                  {post.excerpt}
+              {post.description || post.excerpt ? (
+                <p className="text-sm text-slate-700 dark:text-white/75 line-clamp-3">
+                  {post.description || post.excerpt}
                 </p>
+              ) : null}
+              {post.tags?.length ? (
+                <ul className="mt-1 flex flex-wrap gap-2">
+                  {post.tags.slice(0, 3).map((t) => (
+                    <li
+                      key={t}
+                      className="rounded-full border border-slate-300 bg-white/70 px-2 py-0.5 text-[10px] text-slate-700 dark:border-white/10 dark:bg-white/10 dark:text-white/75"
+                    >
+                      {t}
+                    </li>
+                  ))}
+                </ul>
               ) : null}
             </div>
           </Link>
