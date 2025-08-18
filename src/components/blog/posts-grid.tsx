@@ -9,9 +9,11 @@ type PostLike = {
   title: string;
   date: string;
   excerpt?: string;
+  description?: string;
   tags?: string[];
   cover?: string;
   externalUrl?: string;
+  readingTime?: string;
 };
 
 function PostCard({ post }: { post: PostLike }) {
@@ -22,7 +24,7 @@ function PostCard({ post }: { post: PostLike }) {
       href={href}
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
-      className="group rounded-2xl border border-slate-300 bg-slate-50 shadow-xl backdrop-blur overflow-hidden dark:border-white/10 dark:bg-white/5"
+      className="block h-full rounded-2xl border border-slate-300 bg-slate-50 shadow-xl backdrop-blur overflow-hidden dark:border-white/10 dark:bg-white/5"
     >
       {post.cover && (
         <div className="relative w-full h-48">
@@ -38,47 +40,76 @@ function PostCard({ post }: { post: PostLike }) {
       )}
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-500 dark:text-white/60">
-            {new Date(post.date).toLocaleDateString()}
+          <p className="text-xs text-slate-500 dark:text-white/60 flex items-center gap-2">
+            <span>{new Date(post.date).toLocaleDateString()}</span>
+            {post.readingTime && (
+              <>
+                <span aria-hidden>•</span>
+                <span>{post.readingTime}</span>
+              </>
+            )}
           </p>
-          {post.tags?.length ? (
-            <ul className="flex flex-wrap gap-2">
-              {post.tags.slice(0, 3).map((t) => (
-                <li
-                  key={t}
-                  className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] text-slate-800 dark:border-white/10 dark:bg-white/10 dark:text-white/85"
-                >
-                  {t}
-                </li>
-              ))}
-            </ul>
-          ) : null}
         </div>
         <h3 className="text-lg lg:text-xl text-slate-900 dark:text-white group-hover:text-accent transition">
           {post.title}
         </h3>
-        {post.excerpt ? (
+        {post.description || post.excerpt ? (
           <p className="text-sm text-slate-700 dark:text-white/75">
-            {post.excerpt}
+            {post.description || post.excerpt}
           </p>
         ) : null}
-        <div className="text-sm text-accent">Read more →</div>
+        {post.tags?.length ? (
+          <ul className="mt-1 flex flex-wrap gap-2">
+            {post.tags.slice(0, 3).map((t) => (
+              <li
+                key={t}
+                className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[10px] text-slate-800 dark:border-white/10 dark:bg-white/10 dark:text-white/85"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
     </Link>
   );
 }
 
 export default function PostsGrid({ posts }: { posts: PostLike[] }) {
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.05,
+      },
+    },
+  } as const;
+
+  const item = {
+    hidden: { opacity: 0, y: 16 },
+    show: { opacity: 1, y: 0 },
+  } as const;
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
+      variants={container}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.2 }}
       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
     >
       {posts.map((p) => (
-        <PostCard key={p.slug} post={p} />
+        <motion.div
+          variants={item}
+          key={p.slug}
+          whileHover={{ y: -2, scale: 1.01 }}
+          transition={{ type: "spring", stiffness: 260, damping: 18 }}
+          className="group h-full"
+        >
+          <PostCard post={p} />
+        </motion.div>
       ))}
     </motion.div>
   );

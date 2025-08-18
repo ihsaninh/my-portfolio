@@ -6,6 +6,7 @@ type Props = {
   date?: string;
   tags?: string[];
   cover?: string;
+  readingTime?: string;
   children: React.ReactNode;
 };
 
@@ -14,24 +15,33 @@ export default function BlogPostLayout({
   date,
   tags,
   cover,
+  readingTime,
   children,
 }: Props) {
   return (
     <section className="container">
-      <div className="mb-6">
+      <div className="mb-6 bp-fade-up-050">
         <Link href="/blog" className="text-sm text-accent hover:underline">
           ← Back to Blog
         </Link>
       </div>
 
       <header className="flex flex-col gap-3">
-        <h1 className="text-3xl lg:text-5xl font-bold tracking-tight leading-snug text-slate-900 dark:text-white">
+        <h1 className="text-3xl lg:text-5xl font-bold tracking-tight leading-snug text-slate-900 dark:text-white bp-fade-up-100">
           {title}
         </h1>
-        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-white/70">
-          {date ? (
-            <time dateTime={date}>{new Date(date).toLocaleDateString()}</time>
-          ) : null}
+        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-white/70 bp-fade-up-150">
+          <p className="flex items-center gap-2">
+            {date ? (
+              <time dateTime={date}>{new Date(date).toLocaleDateString()}</time>
+            ) : null}
+            {readingTime ? (
+              <>
+                {date ? <span aria-hidden>•</span> : null}
+                <span>{readingTime}</span>
+              </>
+            ) : null}
+          </p>
           {tags?.length ? (
             <ul className="flex flex-wrap gap-2">
               {tags.map((t) => (
@@ -48,7 +58,7 @@ export default function BlogPostLayout({
       </header>
 
       {cover ? (
-        <div className="relative mt-6 w-full h-80 md:h-96 lg:h-[30rem] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
+        <div className="relative mt-6 w-full h-80 md:h-96 lg:h-[30rem] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 bp-scale-in-200">
           <Image
             src={cover}
             alt={title}
@@ -60,7 +70,7 @@ export default function BlogPostLayout({
         </div>
       ) : null}
 
-      <article className="mdx-content mt-8">{children}</article>
+      <article className="mdx-content mt-8 bp-fade-up-250">{children}</article>
     </section>
   );
 }

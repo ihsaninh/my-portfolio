@@ -41,6 +41,7 @@ export default async function BlogPostPage({ params }: Params) {
       date={meta.date}
       tags={meta.tags}
       cover={meta.cover}
+      readingTime={meta.readingTime}
     >
       <MDXRemote
         source={content}
