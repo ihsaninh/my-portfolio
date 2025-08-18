@@ -1,18 +1,19 @@
 import BlogSection from "@/src/components/blog";
-import Contact from "@/src/components/contact";
 import Home from "@/src/components/home";
-import Resume from "@/src/components/resume";
-import Skills from "@/src/components/skills";
-import Work from "@/src/components/work";
-
-const sections = [Home, Resume, Skills, Work, BlogSection, Contact];
+import ContactSection from "@/src/components/lazy/ContactSection";
+import ResumeSection from "@/src/components/lazy/ResumeSection";
+import SkillsSection from "@/src/components/lazy/SkillsSection";
+import WorkSection from "@/src/components/lazy/WorkSection";
 
 export default function IndexPage() {
   return (
     <>
-      {sections.map((Section, index) => (
-        <Section key={index} />
-      ))}
+      <Home />
+      <ResumeSection />
+      <SkillsSection />
+      <WorkSection />
+      <BlogSection />
+      <ContactSection />
     </>
   );
 }

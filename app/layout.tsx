@@ -41,6 +41,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
         <GoogleAnalytics />
       </head>
       <body className={`${outfit.className} ${jetbrainsMono.variable}`}>

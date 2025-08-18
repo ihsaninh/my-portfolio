@@ -4,6 +4,9 @@ import rehypePrism from "rehype-prism-plus";
 
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
 };
 
 const withMDX = createMDX({

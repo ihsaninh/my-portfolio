@@ -43,10 +43,11 @@ export default function Home() {
       >
         <motion.div variants={fadeUp}>
           <Image
-            src="/images/profile.jpeg"
+            src="/images/profile.webp"
             alt="Portrait of Ihsan Nurul Habib"
             width={240}
             height={240}
+            sizes="(min-width: 1024px) 240px, 160px"
             className="w-40 h-40 lg:w-60 lg:h-60 rounded-full object-cover ring-2 ring-slate-200 dark:ring-white/10 shadow-xl"
             priority
           />

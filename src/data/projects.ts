@@ -7,7 +7,7 @@ export const projects: Project[] = [
     description:
       "This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.",
     stack: ["React.js", "Next.js", "Flowbite", "TailwindCSS"],
-    image: "/images/projects/XLSatu.png",
+    image: "/images/projects/XLSatu.webp",
     liveUrl: "https://mysatu.xl.co.id/",
     githubUrl: "",
   },
@@ -17,7 +17,7 @@ export const projects: Project[] = [
     description:
       "Buy your favorite game tokens in single or bulk purchases through Web Game Token — making gaming top-ups quick and easy",
     stack: ["React.js", "Next.js", "Bootstrap"],
-    image: "/images/projects/GameToken.png",
+    image: "/images/projects/GameToken.webp",
     liveUrl: "https://setargame.id/",
     githubUrl: "",
   },
@@ -27,7 +27,7 @@ export const projects: Project[] = [
     description:
       "NewXlife is an employee management app for XL Axiata, featuring attendance tracking, daily health reporting, WFO assessments, shuttle car reservations, a Family Member menu, and more.",
     stack: ["Angular", "Typescript", "TailwindCSS", "Material UI"],
-    image: "/images/projects/NewXlife.png",
+    image: "/images/projects/NewXlife.webp",
     liveUrl: "https://www.newxlife.xl.co.id/en/",
     githubUrl: "",
   },
@@ -37,7 +37,7 @@ export const projects: Project[] = [
     description:
       "eMr is a platform Job Requisition platform for manpower request, monitoring recruitment progress, management employement contract, controlling MR, and more.",
     stack: ["Angular", "Typescript", "TailwindCSS", "Material UI"],
-    image: "/images/projects/Emr.png",
+    image: "/images/projects/Emr.webp",
     liveUrl: "https://www.newxlife.xl.co.id/en/",
     githubUrl: "",
   },
@@ -47,7 +47,7 @@ export const projects: Project[] = [
     description:
       "XL Prioritas Apply is a digital onboarding platform that allows users to purchase new XL Prioritas numbers, supporting both physical USIM and eSIM options. Users can search and select their preferred mobile number, choose from a variety of quota packages, and seamlessly complete the registration process online.",
     stack: ["React.js", "Next.js", "Redux"],
-    image: "/images/projects/XLPrioritas.png",
+    image: "/images/projects/XLPrioritas.webp",
     liveUrl: "https://prioritas.xl.co.id/",
     githubUrl: "",
   },
@@ -57,7 +57,7 @@ export const projects: Project[] = [
     description:
       "Axiapp is an Android app developed by PT PT XLSMART Telecom Sejahtera Tbk for indirect channel partners like Device Chain Stores, Online, Traditional, Modern Retail, and Direct Channels. Users can claim and redeem points earned from sales and use these points at listed merchants.",
     stack: ["React.js", "Next.js", "Redux", "MUI"],
-    image: "/images/projects/Axiapp.png",
+    image: "/images/projects/Axiapp.webp",
     liveUrl:
       "https://play.google.com/store/apps/details?id=id.co.xlaxiata.axiapp&hl=id",
     githubUrl: "",
@@ -68,7 +68,7 @@ export const projects: Project[] = [
     description:
       "A secure registration system for new XL and AXIS prepaid numbers, utilizing biometric verification to ensure the user is genuine and their identity is valid. The platform captures a live facial photo and requires users to input their NIK (Nomor Induk Kependudukan). Both the face and NIK are cross-checked with the Dukcapil (Indonesian Civil Registry) to confirm identity accuracy and prevent fraud.",
     stack: ["React.js", "Next.js", "Redux"],
-    image: "/images/projects/XLPrepaidRegistrasi.png",
+    image: "/images/projects/XLPrepaidRegistrasi.webp",
     liveUrl: "https://registrasi.xlaxiata.co.id/",
     githubUrl: "",
   },
@@ -78,7 +78,7 @@ export const projects: Project[] = [
     description:
       "Spesial Untukmu is an application that offers surprises when you enter your XL or Axis number. Get exclusive deals and rewards tailored to you.",
     stack: ["React.js", "Next.js", "Redux"],
-    image: "/images/projects/SpesialUntukmu.png",
+    image: "/images/projects/SpesialUntukmu.webp",
     liveUrl: "https://spesialuntukmu.xlaxiata.co.id/",
     githubUrl: "",
   },
@@ -88,7 +88,7 @@ export const projects: Project[] = [
     description:
       "BoostPreneur is an application that can be used by agents Boost in me-register merchant (BoostSpot). Boost agent can use this application to validate and register candidates for strategic partners that are intended as BoostSpot.",
     stack: ["React Native", "Javascript", "Redux"],
-    image: "/images/projects/BoostPreneur.png",
+    image: "/images/projects/BoostPreneur.webp",
     liveUrl: "",
     githubUrl: "",
   },
@@ -98,7 +98,7 @@ export const projects: Project[] = [
     description:
       "BoostPenjual is an application that can increase revenue by making you digitally connected to various existing suppliers. That way, you can sell a variety of products including digital products.",
     stack: ["React Native", "Javascript", "Redux"],
-    image: "/images/projects/BoostPenjual.png",
+    image: "/images/projects/BoostPenjual.webp",
     liveUrl:
       "https://play.google.com/store/apps/details?id=com.dialog.boost.merchant.android",
     githubUrl: "",
@@ -109,7 +109,7 @@ export const projects: Project[] = [
     description:
       "Trex is a PPOB application that sells pulsa, data packages, game topups, and various kinds of bills such as PLN, BPJS, and pay TV.",
     stack: ["React Native", "Typescript", "Zustand", "Tamagui"],
-    image: "/images/projects/Trex.png",
+    image: "/images/projects/Trex.webp",
     liveUrl: "",
     githubUrl: "",
   },
@@ -119,7 +119,7 @@ export const projects: Project[] = [
     description:
       "An Al-Quran app with several features, such as a Surah list, Ayah list, Surah settings, jump to Ayah, bookmarks, add to last read, share, and more.",
     stack: ["Flutter", "Bloc", "GetIt", "Hive", "Go Router"],
-    image: "/images/projects/Al-Quran.png",
+    image: "/images/projects/Al-Quran.webp",
     liveUrl: "",
     githubUrl: "https://github.com/ihsaninh/Alquran-flutter-bloc-cubit",
   },
