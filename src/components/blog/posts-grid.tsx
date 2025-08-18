@@ -24,7 +24,7 @@ function PostCard({ post }: { post: PostLike }) {
       href={href}
       target={isExternal ? "_blank" : undefined}
       rel={isExternal ? "noopener noreferrer" : undefined}
-      className="block h-full rounded-2xl border border-slate-300 bg-slate-50 shadow-xl backdrop-blur overflow-hidden dark:border-white/10 dark:bg-white/5"
+      className="block h-full rounded-2xl border border-slate-300 bg-slate-50 shadow-lg md:shadow-xl md:backdrop-blur overflow-hidden dark:border-white/10 dark:bg-white/5"
     >
       {post.cover && (
         <div className="relative w-full h-48">
@@ -106,7 +106,7 @@ export default function PostsGrid({ posts }: { posts: PostLike[] }) {
           key={p.slug}
           whileHover={{ y: -2, scale: 1.01 }}
           transition={{ type: "spring", stiffness: 260, damping: 18 }}
-          className="group h-full"
+          className="group h-full transform-gpu"
         >
           <PostCard post={p} />
         </motion.div>

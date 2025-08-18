@@ -13,8 +13,7 @@ import { Certification, ResumeData, ResumeMenu, Skill } from "../types/resume";
 export const resumeMenus: ResumeMenu[] = [
   { id: 0, name: "Experiences" },
   { id: 1, name: "Educations" },
-  { id: 3, name: "Certifications" },
-  { id: 2, name: "Skills" },
+  { id: 2, name: "Certifications" },
 ];
 
 export const skills: Skill[] = [
@@ -33,13 +32,21 @@ export const educationData: ResumeData[] = [
     title: "Fullstack Developer",
     company: "Arkademy (Pijar Camp)",
     startDate: "2019",
-    endDate: "2019",
+    endDate: "",
+    descriptions: [
+      "Completed a 1.5‑month intensive coding bootcamp focused on full‑stack development.",
+      "Built hands‑on projects with React, React Native, and Express.js; practiced version control, API design, and deployment.",
+    ],
   },
   {
     title: "Teknik Komputer & Jaringan",
     company: "SMK Negeri 2 Bogor",
     startDate: "2016",
     endDate: "2019",
+    descriptions: [
+      "Vocational high school major in Computer and Network Engineering.",
+      "Covered computer networking, network security, system administration and servers, with practical labs and troubleshooting of wired/wireless networks.",
+    ],
   },
 ];
 

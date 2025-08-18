@@ -30,7 +30,7 @@ export default function BlogPostLayout({
         <h1 className="text-3xl lg:text-5xl font-bold tracking-tight leading-snug text-slate-900 dark:text-white bp-fade-up-100">
           {title}
         </h1>
-        <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-white/70 bp-fade-up-150">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4 text-sm text-slate-600 dark:text-white/70 bp-fade-up-150">
           <p className="flex items-center gap-2">
             {date ? (
               <time dateTime={date}>{new Date(date).toLocaleDateString()}</time>
@@ -43,7 +43,7 @@ export default function BlogPostLayout({
             ) : null}
           </p>
           {tags?.length ? (
-            <ul className="flex flex-wrap gap-2">
+            <ul className="flex flex-wrap gap-2 mt-1 md:mt-0">
               {tags.map((t) => (
                 <li
                   key={t}

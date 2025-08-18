@@ -59,14 +59,12 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, [navLinks, setActiveLinkByScroll, isHome]);
 
-  // Ensure correct active state when on /blog
   useEffect(() => {
     if (isBlog) {
       setActiveLinkByScroll("#blog");
     }
   }, [isBlog, setActiveLinkByScroll]);
 
-  // When on home with a hash (e.g. /#blog), set active immediately
   useEffect(() => {
     if (!isHome) return;
     const hash = window.location.hash;
@@ -90,7 +88,6 @@ export default function Header() {
   }, [open]);
 
   const handleNavClick = (href: string) => (e: React.SyntheticEvent) => {
-    // Only intercept clicks for in-page anchors on the homepage
     if (!isHome) return;
     e.preventDefault();
     setActiveLink(href);
@@ -111,7 +108,6 @@ export default function Header() {
     >
       <div className="container">
         <div className="flex h-16 items-center justify-between gap-3">
-          {/* Brand chip */}
           <Link
             href={isHome ? "#home" : "/#home"}
             onClick={isHome ? handleNavClick("#home") : undefined}
@@ -129,38 +125,50 @@ export default function Header() {
               {navLinks.map((link, i) => {
                 const isBlogLink = link.name.toLowerCase() === "blog";
                 const hrefFinal = isBlogLink
-                  ? (isHome ? "#blog" : "/blog")
-                  : (isHome ? link.href : `/${link.href}`);
+                  ? isHome
+                    ? "#blog"
+                    : "/blog"
+                  : isHome
+                  ? link.href
+                  : `/${link.href}`;
                 const active = isBlogLink
-                  ? (isBlog || (isHome && link.isActive))
+                  ? isBlog || (isHome && link.isActive)
                   : link.isActive;
                 return (
-                <li key={i} className="relative group">
-                  <Link
-                    href={hrefFinal}
-                    onClick={isHome ? (isBlogLink ? handleNavClick("#blog") : handleNavClick(link.href)) : undefined}
-                    className={[
-                      "text-sm transition-colors",
-                      active
-                        ? "text-accent"
-                        : "text-slate-800 hover:text-slate-900 dark:text-white/80 dark:hover:text-white",
-                    ].join(" ")}
-                    tabIndex={0}
-                    onKeyDown={(e: React.KeyboardEvent) => {
-                      if (e.key === "Enter" && isHome && !isBlogLink) handleNavClick(link.href)(e);
-                    }}
-                  >
-                    {link.name}
-                    <span
+                  <li key={i} className="relative group">
+                    <Link
+                      href={hrefFinal}
+                      onClick={
+                        isHome
+                          ? isBlogLink
+                            ? handleNavClick("#blog")
+                            : handleNavClick(link.href)
+                          : undefined
+                      }
                       className={[
-                        "absolute left-0 -bottom-1 h-[2px] bg-accent transition-all duration-300",
-                        active ? "w-full" : "w-0 group-hover:w-full",
+                        "text-sm transition-colors",
+                        active
+                          ? "text-accent"
+                          : "text-slate-800 hover:text-slate-900 dark:text-white/80 dark:hover:text-white",
                       ].join(" ")}
-                      aria-hidden
-                    />
-                  </Link>
-                </li>
-              );})}
+                      tabIndex={0}
+                      onKeyDown={(e: React.KeyboardEvent) => {
+                        if (e.key === "Enter" && isHome && !isBlogLink)
+                          handleNavClick(link.href)(e);
+                      }}
+                    >
+                      {link.name}
+                      <span
+                        className={[
+                          "absolute left-0 -bottom-1 h-[2px] bg-accent transition-all duration-300",
+                          active ? "w-full" : "w-0 group-hover:w-full",
+                        ].join(" ")}
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                );
+              })}
               <li>
                 <a
                   href="/document/CV-Ihsan-Nurul-Habib.pdf"

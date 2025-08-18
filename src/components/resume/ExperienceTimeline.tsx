@@ -40,7 +40,7 @@ export default function ExperienceTimeline({
                   </h4>
                 </div>
                 <span className="text-accent text-xs sm:text-sm whitespace-nowrap">
-                  {item.startDate} - {item.endDate}
+                  {item.startDate} {item.endDate ? ` - ${item.endDate}` : ""}
                 </span>
               </div>
 
