@@ -6,9 +6,9 @@ import { ThemeProvider } from "next-themes";
 
 import { AnalyticsTracker } from "@/src/components/analytics";
 import GoogleAnalytics from "@/src/components/analytics/GoogleAnalytics";
+import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
 import Footer from "@/src/components/shared/Footer";
 import Header from "@/src/components/shared/Header";
-import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
 
 const outfit = Outfit({
   variable: "--font-outfit",
