@@ -5,17 +5,26 @@ export default function Pagination({
   current,
   totalPages,
   basePath = "/blog",
+  queryParam,
 }: {
   current: number;
   totalPages: number;
   basePath?: string;
+  queryParam?: string; // if provided, build links as basePath?queryParam=n
 }) {
-  const prevHref = current - 1 <= 1 ? basePath : `${basePath}/page/${current - 1}`;
-  const nextHref = `${basePath}/page/${current + 1}`;
+  const pageHref = (n: number) =>
+    queryParam
+      ? n <= 1
+        ? basePath
+        : `${basePath}?${queryParam}=${n}`
+      : n <= 1
+        ? basePath
+        : `${basePath}/page/${n}`;
+
+  const prevHref = pageHref(current - 1);
+  const nextHref = pageHref(current + 1);
   const isFirst = current === 1;
   const isLast = current === totalPages;
-
-  const pageHref = (n: number) => (n === 1 ? basePath : `${basePath}/page/${n}`);
 
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 

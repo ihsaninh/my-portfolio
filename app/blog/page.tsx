@@ -9,16 +9,27 @@ import { BLOG_PAGE_SIZE } from "@/src/lib/constants";
 import { getAllPostsMeta } from "@/src/lib/mdx";
 import { getBlogPageMetadata } from "@/src/lib/seo";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const all = getAllPostsMeta();
-  const totalPages = Math.max(1, Math.ceil(all.length / BLOG_PAGE_SIZE));
-  return getBlogPageMetadata({ page: 1, totalPages });
+type SearchProps = { searchParams?: Promise<{ page?: string }> };
+
+export async function generateMetadata({
+  searchParams,
+}: SearchProps): Promise<Metadata> {
+  const sp = await searchParams;
+  const p = Math.max(1, Number(sp?.page ?? "1"));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(getAllPostsMeta().length / BLOG_PAGE_SIZE)
+  );
+  return getBlogPageMetadata({ page: p, totalPages });
 }
 
-export default function BlogPage() {
+export default async function BlogPage({ searchParams }: SearchProps) {
+  const sp = await searchParams;
   const all = getAllPostsMeta();
   const totalPages = Math.max(1, Math.ceil(all.length / BLOG_PAGE_SIZE));
-  const posts = all.slice(0, BLOG_PAGE_SIZE);
+  const current = Math.max(1, Number(sp?.page ?? "1"));
+  const start = (current - 1) * BLOG_PAGE_SIZE;
+  const posts = all.slice(start, start + BLOG_PAGE_SIZE);
   return (
     <section className="container">
       <ScrollToTop />
@@ -33,7 +44,12 @@ export default function BlogPage() {
       </div>
       <h1 className="section-title">Blog Posts</h1>
       <BlogListAnimated posts={posts} />
-      <Pagination current={1} totalPages={totalPages} basePath="/blog" />
+      <Pagination
+        current={current}
+        totalPages={totalPages}
+        basePath="/blog"
+        queryParam="page"
+      />
     </section>
   );
 }
