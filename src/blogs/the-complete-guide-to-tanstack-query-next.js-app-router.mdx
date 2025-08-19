@@ -1,0 +1,267 @@
+---
+title: "The Complete Guide to TanStack Query in Next.js App Router"
+description: "Learn how to integrate TanStack Query (formerly React Query) in Next.js with the App Router for efficient server-state management, including data fetching, caching, and mutations."
+excerpt: "Integrate TanStack Query with Next.js App Router for caching, mutations, and smooth server‑state management."
+date: 2025-08-19
+author: "Ihsan Nurul Habib"
+cover: "/images/blog/tanstack-query-nextjs.svg"
+tags:
+  ["Next.js", "TanStack Query", "React Query", "App Router", "Data Fetching"]
+---
+
+If you're building modern web applications with Next.js, you know how crucial data management is. Fetching, caching, and updating data from a server is at the core of almost every application. This is where TanStack Query (formerly known as React Query) shines, especially with the introduction of the App Router in Next.js.
+
+TanStack Query is not just a data-fetching library. It's a powerful server-state manager that gives you full control over asynchronous data without writing complex logic. Forget messy `useState` and `useEffect` hooks to manage loading, error, and data states.
+
+In this guide, we'll dive deep into how to integrate TanStack Query in the Next.js App Router, from setup to practical examples.
+
+## Why TanStack Query?
+
+Before we get into the implementation, let's understand why TanStack Query is a top choice for many developers:
+
+- **Smart Caching:** Automatically caches data and serves it again when needed, making the application feel instantaneous.
+- **Background Refetching:** Updates stale data in the background, ensuring users always see the most recent information.
+- **Automatic State Management:** Manages `isLoading`, `isError`, `isSuccess`, and `data` states for you.
+- **Optimistic Updates:** Provides a super-fast user experience by updating the UI before the server response is received.
+- **Performance:** Reduces the number of network requests with deduplication and caching.
+
+With the App Router, where Server Components are first-class citizens, the way we manage client-side state has changed slightly. Let's set up our project.
+
+## Step 1: Installation
+
+First, add TanStack Query to your Next.js project.
+
+```bash
+npm i @tanstack/react-query
+```
+
+## Step 2: Setting Up the Provider for App Router
+
+Unlike the Pages Router, which has a centralized `_app.tsx` file, in the App Router, we need to create our own provider component that runs on the client-side (`'use client'`).
+
+### Create a QueryClient Singleton
+
+It's important to create only one instance of `QueryClient` during the application's lifecycle so that the cache can be shared.
+
+Create a new file at `src/lib/query-client.ts`:
+
+```typescript
+// src/lib/query-client.ts
+import { QueryClient } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
+
+export default queryClient;
+```
+
+### Create the Provider Component
+
+Next, create a component that will provide the `QueryClient` to your entire application.
+
+Create a new file at `src/components/shared/Providers.tsx`:
+
+```tsx
+// src/components/shared/Providers.tsx
+"use client";
+
+import React from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import queryClient from "@/lib/query-client";
+
+function Providers({ children }: React.PropsWithChildren) {
+  return (
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+  );
+}
+
+export default Providers;
+```
+
+### Integrate into the Root Layout
+
+Finally, wrap your application with this `Providers` component in `app/layout.tsx`.
+
+```tsx
+// app/layout.tsx
+import Providers from "@/components/shared/Providers";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
+```
+
+With that, our basic setup is complete! Now let's use it.
+
+## Step 3: Fetching Data with `useQuery`
+
+`useQuery` is the primary hook for fetching and caching data. Let's create an example to fetch a list of blog posts.
+
+```tsx
+// app/blog/page.tsx
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+
+async function getPosts() {
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts");
+  if (!res.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return res.json();
+}
+
+export default function BlogPage() {
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["posts"],
+    queryFn: getPosts,
+  });
+
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+
+  if (isError) {
+    return <span>Error: {error.message}</span>;
+  }
+
+  return (
+    <ul>
+      {data.map((post: any) => (
+        <li key={post.id}>{post.title}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+- `queryKey`: A unique key for this query. TanStack Query uses this for caching.
+- `queryFn`: An asynchronous function that returns the data.
+
+## Step 4: Handling Dynamic Params
+
+What if we want to fetch a single post based on a `slug` or `id` from the URL? We can use `useParams` from `next/navigation` and include it in the `queryKey`.
+
+```tsx
+// app/blog/[id]/page.tsx
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+
+async function getPostById(id: string) {
+  const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`);
+  if (!res.ok) {
+    throw new Error("Network response was not ok");
+  }
+  return res.json();
+}
+
+export default function PostDetailPage() {
+  const params = useParams();
+  const { id } = params;
+
+  const { data, isLoading, isError } = useQuery({
+    // Add the `id` to the queryKey
+    queryKey: ["post", id],
+    queryFn: () => getPostById(id as string),
+    enabled: !!id, // Only run the query if the `id` is available
+  });
+
+  if (isLoading) return <div>Loading post...</div>;
+  if (isError) return <div>Failed to load post.</div>;
+
+  return (
+    <div>
+      <h1>{data.title}</h1>
+      <p>{data.body}</p>
+    </div>
+  );
+}
+```
+
+By including the `id` in the `queryKey`, TanStack Query automatically differentiates the cache for each post page and fetches the correct data.
+
+## Step 5: Mutating Data with `useMutation`
+
+For `CREATE`, `UPDATE`, or `DELETE` operations, we use `useMutation`. This hook gives us a `mutate` function to trigger the operation.
+
+Let's create an example to add a new post.
+
+```tsx
+// app/blog/CreatePost.tsx
+"use client";
+
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
+
+async function createPost(newPost: { title: string; body: string }) {
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
+    method: "POST",
+    body: JSON.stringify(newPost),
+    headers: {
+      "Content-type": "application/json; charset=UTF-8",
+    },
+  });
+  return res.json();
+}
+
+export function CreatePostForm() {
+  const queryClient = useQueryClient();
+  const [title, setTitle] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => {
+      // Invalidate the 'posts' cache to refetch the post list
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      console.log("Post created successfully!");
+    },
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate({ title, body: "A new post body" });
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Post title"
+        disabled={mutation.isPending}
+      />
+      <button type="submit" disabled={mutation.isPending}>
+        {mutation.isPending ? "Creating..." : "Create Post"}
+      </button>
+      {mutation.isError && <p>Error: {mutation.error.message}</p>}
+    </form>
+  );
+}
+```
+
+The key to this example is `queryClient.invalidateQueries({ queryKey: ['posts'] })`. After the mutation succeeds, we tell TanStack Query that the data associated with the `['posts']` key is now invalid. This will automatically trigger a refetch for any component using `useQuery` with that key, keeping your UI perfectly in sync.
+
+## Conclusion
+
+TanStack Query is an incredible tool for server-state management in Next.js applications. With the App Router, its integration remains simple and powerful. By handling caching, background updates, and state management automatically, you can focus on what matters most: building great features.
+
+You have learned how to:
+
+1.  Set up the `QueryClientProvider` for the App Router.
+2.  Fetch data with `useQuery`.
+3.  Handle dynamic parameters in the `queryKey`.
+4.  Create, update, or delete data with `useMutation` and keep the UI in sync.
+
+By mastering these patterns, you are ready to build fast, reliable, and user-friendly Next.js applications.
