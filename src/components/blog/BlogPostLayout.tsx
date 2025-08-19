@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { FiArrowLeft } from "react-icons/fi";
 
 type Props = {
   title: string;
@@ -21,8 +22,12 @@ export default function BlogPostLayout({
   return (
     <section className="container">
       <div className="mb-6 bp-fade-up-050">
-        <Link href="/blog" className="text-sm text-accent hover:underline">
-          ← Back to Blog
+        <Link
+          href="/blog"
+          className="group inline-flex items-center gap-2 text-sm text-accent hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+        >
+          <FiArrowLeft className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+          <span>Back to Blog</span>
         </Link>
       </div>
 
@@ -58,7 +63,7 @@ export default function BlogPostLayout({
       </header>
 
       {cover ? (
-        <div className="relative mt-6 w-full h-80 md:h-96 lg:h-[30rem] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 bp-scale-in-200">
+        <div className="relative mt-6 w-full h-80 md:h-96 lg:h-[35rem] overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5 bp-scale-in-200">
           <Image
             src={cover}
             alt={title}

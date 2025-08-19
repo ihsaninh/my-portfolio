@@ -225,6 +225,24 @@
   font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, "Liberation Mono", "Courier New", monospace;
 }
+
+.mdx-content table {
+  @apply w-full my-4 border-collapse border border-slate-200 dark:border-white/20;
+}
+.mdx-table-wrapper {
+  @apply overflow-x-auto;
+}
+.mdx-content th,
+.mdx-content td {
+  @apply border border-slate-200 dark:border-white/20 p-3;
+}
+.mdx-content th {
+  @apply bg-slate-100 dark:bg-white/10 font-semibold text-left;
+}
+.mdx-content tr:nth-child(even) {
+  @apply bg-slate-50 dark:bg-white/5;
+}
+
 /* Prism theme for MDX code blocks (rehype-prism-plus) */
 code[class*="language-"],
 pre[class*="language-"] {
@@ -329,6 +347,30 @@ pre[class*="language-"] .line-highlight {
   border-left: 3px solid rgb(var(--accent));
   margin-left: -1rem;
   margin-right: -1rem;
+}
+
+/* Copy code button for MDX code blocks */
+.code-block {
+  @apply relative;
+}
+.code-copy-btn {
+  @apply absolute right-2 top-2 z-10 text-xs rounded-md px-2 py-1 border transition cursor-pointer;
+  @apply bg-white/80 text-slate-700 border-slate-200;
+}
+.dark .code-copy-btn {
+  @apply bg-white/10 text-white/80 border-white/10;
+}
+.code-block .code-copy-btn {
+  @apply opacity-0 group-hover:opacity-100;
+}
+.code-copy-btn .state-copied {
+  display: none;
+}
+.code-copy-btn[data-copied="true"] .state-default {
+  display: none;
+}
+.code-copy-btn[data-copied="true"] .state-copied {
+  display: inline;
 }
 
 /* Blog post detail animations (CSS-only, server-safe) */

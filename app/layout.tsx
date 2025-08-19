@@ -8,6 +8,7 @@ import { AnalyticsTracker } from "@/src/components/analytics";
 import GoogleAnalytics from "@/src/components/analytics/GoogleAnalytics";
 import Footer from "@/src/components/shared/Footer";
 import Header from "@/src/components/shared/Header";
+import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -57,6 +58,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AnalyticsTracker />
+          <CopyCodeClient />
           <div aria-hidden className="app-bg" />
           <div className="flex flex-col min-h-screen">
             <Header />

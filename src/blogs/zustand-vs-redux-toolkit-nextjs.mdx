@@ -1,0 +1,212 @@
+---
+title: "Zustand vs. Redux Toolkit in the Next.js App Router: A Developer's Guide"
+description: "A deep dive into two of the most popular state management libraries for React. Which one is the right choice for your Next.js project? Let's find out."
+excerpt: "A deep dive into Zustand and Redux Toolkit to help you choose the right state management library for your Next.js App Router project."
+date: "2025-08-19"
+author: "Ihsan Nurul Habib"
+cover: "/images/blog/zustand-vs-redux-toolkit-nextjs.svg"
+tags: ["Next.js", "Zustand", "Redux Toolkit", "State Management", "App Router"]
+---
+
+State management is a critical piece of any modern web application. As your Next.js application grows, passing props down through multiple levels of components becomes cumbersome and inefficient. This is where a dedicated state management library comes in.
+
+For years, Redux has been the go-to solution for complex applications. With the introduction of Redux Toolkit, much of the infamous boilerplate was abstracted away, making it more developer-friendly. However, a new wave of simpler, more minimalistic libraries has emerged, and Zustand is leading the pack.
+
+So, which one should you choose for your next project using the Next.js App Router? Let's compare them head-to-head.
+
+## What is Redux Toolkit?
+
+Redux Toolkit (RTK) is the official, opinionated, "batteries-included" toolset for efficient Redux development. It simplifies most Redux tasks, prevents common mistakes, and makes it easier to write good Redux applications.
+
+### Core Concepts
+
+- **Store:** A single, centralized object that holds the entire state of your application.
+- **Slices:** A collection of Redux reducer logic and actions for a single feature in your app. You create slices using the `createSlice` function.
+- **Reducers:** Pure functions that take the current state and an action, and return a new state.
+- **Provider:** You wrap your entire application with a `<Provider>` component to make the Redux store available to all components.
+
+### Setting up Redux Toolkit in Next.js
+
+With the App Router, you need to create a client-side `Provider` component, as the Redux store is only available on the client.
+
+```tsx
+"use client";
+
+import { Provider } from "react-redux";
+import { store } from "./store";
+
+export function ReduxProvider({ children }: { children: React.ReactNode }) {
+  return <Provider store={store}>{children}</Provider>;
+}
+```
+
+Then, you wrap your `RootLayout` with this provider:
+
+```tsx
+import { ReduxProvider } from "@/src/store/provider";
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <ReduxProvider>{children}</ReduxProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### Usage Example
+
+First, you define a "slice" which contains your reducer logic and actions.
+
+```tsx
+// src/store/counter-slice.ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+interface CounterState {
+  value: number;
+}
+
+const initialState: CounterState = {
+  value: 0,
+};
+
+export const counterSlice = createSlice({
+  name: 'counter',
+  initialState,
+  reducers: {
+    increment: (state) => {
+      state.value += 1;
+    },
+    decrement: (state) => {
+      state.value -= 1;
+    },
+  },
+});
+
+export const { increment, decrement } = counterSlice.actions;
+export default counterSlice.reducer;
+```
+
+Then, you can use the `useSelector` and `useDispatch` hooks in your client components to interact with the store.
+
+```tsx
+// app/components/redux-counter.tsx
+"use client";
+
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState, AppDispatch } from '@/src/store/store';
+import { increment, decrement } from '@/src/store/counter-slice';
+
+export function ReduxCounter() {
+  const count = useSelector((state: RootState) => state.counter.value);
+  const dispatch: AppDispatch = useDispatch();
+
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={() => dispatch(increment())}>Increment</button>
+      <button onClick={() => dispatch(decrement())}>Decrement</button>
+    </div>
+  );
+}
+```
+
+As you can see, it involves a few more files and concepts, which is typical of Redux's structured nature.
+
+
+## What is Zustand?
+
+Zustand is a small, fast, and scalable state-management solution. It's based on a simplified flux-like pattern and uses hooks as its primary interface. It's un-opinionated and aims to have as little boilerplate as possible.
+
+### Core Concepts
+
+- **Store:** You create a store by calling the `create` function. This returns a hook that you can use in any component.
+- **Actions:** Actions are just functions that modify the state. You define them directly inside your store.
+
+### Setting up Zustand in Next.js
+
+Zustand's setup is remarkably simple. You create a store and then import the hook wherever you need it.
+
+```tsx
+import { create } from "zustand";
+
+interface CounterState {
+  count: number;
+  increment: () => void;
+  decrement: () => void;
+}
+
+export const useCounterStore = create<CounterState>((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 })),
+}));
+```
+
+That's it. There's no need for a provider. You can now use this hook directly in any **client component**.
+
+```tsx
+"use client";
+
+import { useCounterStore } from "@/src/store/counter-store";
+
+export function Counter() {
+  const { count, increment, decrement } = useCounterStore();
+
+  return (
+    <div>
+      <p>{count}</p>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decrement</button>
+    </div>
+  );
+}
+```
+
+## Head-to-Head Comparison
+
+<div className="mdx-table-wrapper">
+| Feature              | Redux Toolkit                                                      | Zustand                                                      |
+| -------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------ |
+| **Philosophy**       | Opinionated, structured, predictable                               | Minimalistic, un-opinionated, flexible                       |
+| **Boilerplate**      | Moderate (significantly less than classic Redux)                   | Almost none                                                  |
+| **App Router Setup** | Requires a client-side Provider wrapper                            | No provider needed, feels more native to the component model |
+| **Bundle Size**      | Larger (~8kb for RTK + React-Redux)                                | Very small (~1kb)                                            |
+| **DevTools**         | Excellent, with time-travel debugging via Redux DevTools Extension | Basic support via Redux DevTools middleware                  |
+| **Data Fetching**    | Built-in solution with RTK Query                                   | None. Typically paired with TanStack Query or SWR.           |
+</div>
+
+## When to Choose Which?
+
+### Choose Redux Toolkit if:
+
+- You are building a large-scale application with complex, intertwined state.
+- Your team is already experienced with the Redux ecosystem.
+- You need powerful middleware capabilities for things like logging, crash reporting, or handling asynchronous actions in a specific way.
+- Time-travel debugging is a must-have feature for your development workflow.
+
+### Choose Zustand if:
+
+- You prefer simplicity and minimal boilerplate.
+- You are working on a small to medium-sized project.
+- Your global state is relatively simple.
+- You want a solution that integrates seamlessly with the Next.js App Router without the need for context providers.
+- You are already using a dedicated data fetching library like TanStack Query and just need a simple way to manage UI state.
+
+## Conclusion
+
+Both Redux Toolkit and Zustand are excellent choices for state management in Next.js.
+
+**Redux Toolkit** remains a powerful and robust solution for large, complex applications where a structured and predictable state container is essential. Its rich ecosystem and powerful DevTools are hard to beat.
+
+**Zustand**, on the other hand, offers a breath of fresh air. Its simplicity, minimal API, and seamless integration with the Next.js App Router make it an incredibly attractive option, especially for new projects where you want to move fast and keep things light.
+
+For many developers starting with the App Router, **Zustand's "provider-less" nature might be the deciding factor**. It feels more aligned with the modern React paradigm of co-locating state with the components that use it.
+
+The best choice, as always, depends on your specific needs and the requirements of your project.

@@ -35,6 +35,11 @@ export function getPostBySlug(
 }
 
 export function getAllPostsMeta(): (BlogFrontmatter & { slug: string })[] {
+  const toTime = (d: unknown): number => {
+    const t = new Date(d as any).getTime();
+    return Number.isNaN(t) ? 0 : t;
+  };
+
   return getAllPostSlugs()
     .map((slug) => getPostBySlug(slug))
     .filter(
@@ -42,5 +47,5 @@ export function getAllPostsMeta(): (BlogFrontmatter & { slug: string })[] {
         Boolean(p)
     )
     .map((p) => p.meta)
-    .sort((a, b) => (a.date > b.date ? -1 : 1));
+    .sort((a, b) => toTime(b.date) - toTime(a.date));
 }
