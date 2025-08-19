@@ -18,11 +18,11 @@ export default function ExperienceTimeline({
       className={`relative overflow-visible ${className ?? ""}`}
       aria-label="Experience timeline"
     >
+      <span
+        className="pointer-events-none absolute top-0 bottom-0 w-px bg-slate-300 dark:bg-white/10"
+        style={{ left: offsetPx }}
+      />
       <ul className="relative flex flex-col gap-8">
-        <span
-          className="pointer-events-none absolute top-0 bottom-0 w-px bg-slate-300 dark:bg-white/10"
-          style={{ left: offsetPx }}
-        />
         {items.map((item, idx) => (
           <li key={idx} className="relative">
             <span

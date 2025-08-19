@@ -12,7 +12,7 @@ const container: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+    transition: { staggerChildren: 0.08 },
   },
 };
 
@@ -41,7 +41,7 @@ export default function Home() {
         initial="hidden"
         animate="show"
       >
-        <motion.div variants={fadeUp}>
+        <div>
           <Image
             src="/images/profile.webp"
             alt="Portrait of Ihsan Nurul Habib"
@@ -49,9 +49,8 @@ export default function Home() {
             height={240}
             sizes="(min-width: 1024px) 240px, 160px"
             className="w-40 h-40 lg:w-60 lg:h-60 rounded-full object-cover ring-2 ring-slate-200 dark:ring-white/10 shadow-xl"
-            priority
           />
-        </motion.div>
+        </div>
 
         <motion.div
           variants={fadeUp}
@@ -62,11 +61,7 @@ export default function Home() {
         </motion.div>
 
         <div className="text-center mt-6">
-          <motion.h1
-            id="home-title"
-            variants={fadeUp}
-            className="h1 leading-snug"
-          >
+          <h1 id="home-title" className="h1 leading-snug">
             <span className="text-slate-900 dark:text-white/90">
               Hello, I&apos;m{" "}
             </span>
@@ -75,7 +70,7 @@ export default function Home() {
             <span className="text-slate-900 dark:text-white/90">
               Software Engineer — Frontend & Mobile
             </span>
-          </motion.h1>
+          </h1>
 
           <motion.p
             variants={fadeUp}
