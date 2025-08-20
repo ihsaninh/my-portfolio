@@ -1,23 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Zustand vs Redux Toolkit × Next.js cover">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="From useEffect to use() — React 19 cover">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0b1220"/>
       <stop offset="100%" stop-color="#111827"/>
     </linearGradient>
-    <radialGradient id="glowLeft" cx="35%" cy="40%" r="55%">
+    <radialGradient id="glowBlue" cx="30%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowCyan" cx="70%" cy="65%" r="60%">
       <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.18"/>
       <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glowRight" cx="65%" cy="60%" r="55%">
-      <stop offset="0%" stop-color="#f97316" stop-opacity="0.18"/>
-      <stop offset="100%" stop-color="#f97316" stop-opacity="0"/>
-    </radialGradient>
   </defs>
 
+  <!-- background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <rect width="1200" height="630" fill="url(#glowLeft)"/>
-  <rect width="1200" height="630" fill="url(#glowRight)"/>
+  <rect width="1200" height="630" fill="url(#glowBlue)"/>
+  <rect width="1200" height="630" fill="url(#glowCyan)"/>
 
   <!-- subtle grid -->
   <g opacity="0.10" stroke="#94a3b8" stroke-width="1">
@@ -36,9 +37,13 @@
     <path d="M1050 70 V590"/>
   </g>
 
-  <!-- centered title block -->
+  <!-- centered title block (safe margin for object-cover) -->
   <g fill="#e2e8f0" font-family="Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', Helvetica, Arial">
-    <text x="600" y="300" text-anchor="middle" font-size="46" font-weight="800">Zustand vs Redux Toolkit × Next.js</text>
-    <text x="600" y="342" text-anchor="middle" font-size="22" opacity="0.9">App Router • Minimal hooks vs structured slices</text>
+    <!-- main title -->
+    <text x="600" y="300" text-anchor="middle" font-size="56" font-weight="800">From useEffect to use()</text>
+    <!-- subtitle -->
+    <text x="600" y="350" text-anchor="middle" font-size="24" opacity="0.9">React 19 • Simpler data fetching and context</text>
   </g>
+
+  
 </svg>
