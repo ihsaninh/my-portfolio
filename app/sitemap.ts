@@ -6,6 +6,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://ihsaninh.com";
 
   const posts = getAllPostsMeta();
+  const toDate = (d?: string) => (d ? new Date(d) : new Date());
+  const latestPost = posts[0];
+  const latestModified = latestPost ? toDate(latestPost.date) : new Date();
 
   const routes: MetadataRoute.Sitemap = [
     {
@@ -16,7 +19,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: posts.length > 0 ? new Date(posts[0].date) : new Date(),
+      lastModified: latestModified,
       changeFrequency: "weekly",
       priority: 0.8,
     },

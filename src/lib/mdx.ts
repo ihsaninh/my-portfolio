@@ -30,7 +30,11 @@ export function getPostBySlug(
   const words = content.trim().split(/\s+/).filter(Boolean).length;
   const minutes = Math.max(1, Math.ceil(words / 200));
   const readingTime = `${minutes} min read`;
-  const meta = { ...(data as BlogFrontmatter), readingTime, slug };
+  const meta = {
+    ...(data as BlogFrontmatter),
+    readingTime,
+    slug,
+  };
   return { meta, content };
 }
 

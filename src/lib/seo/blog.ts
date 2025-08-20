@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
-export const BLOG_TITLE_BASE = "Blog – Next.js, Tooling, and Engineering Guides";
+export const BLOG_TITLE_BASE =
+  "Blog – Next.js, Tooling, and Engineering Guides";
 export const BLOG_DESC_BASE =
   "Practical articles on modern web development: Next.js/React, performance, testing, tooling, cloud, UX, accessibility, architecture, and more.";
 
@@ -29,4 +30,3 @@ export function getBlogPageMetadata({
     twitter: { card: "summary_large_image", title, description },
   };
 }
-

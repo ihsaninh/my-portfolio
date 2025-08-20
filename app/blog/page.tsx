@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Script from "next/script";
 import { FiArrowLeft } from "react-icons/fi";
 
 import BlogListAnimated from "@/src/components/blog/BlogListAnimated";
@@ -8,6 +9,7 @@ import ScrollToTop from "@/src/components/shared/ScrollToTop";
 import { BLOG_PAGE_SIZE } from "@/src/lib/constants";
 import { getAllPostsMeta } from "@/src/lib/mdx";
 import { getBlogPageMetadata } from "@/src/lib/seo";
+import { breadcrumbJsonLd } from "@/src/lib/seo";
 
 type SearchProps = { searchParams?: Promise<{ page?: string }> };
 
@@ -32,6 +34,18 @@ export default async function BlogPage({ searchParams }: SearchProps) {
   const posts = all.slice(start, start + BLOG_PAGE_SIZE);
   return (
     <section className="container">
+      <Script
+        id="ld-breadcrumb-blog"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(
+            breadcrumbJsonLd([
+              { name: "Home", item: "https://ihsaninh.com/" },
+              { name: "Blog", item: "https://ihsaninh.com/blog" },
+            ])
+          ),
+        }}
+      />
       <ScrollToTop />
       <div className="mb-6 bp-fade-up-050">
         <Link
