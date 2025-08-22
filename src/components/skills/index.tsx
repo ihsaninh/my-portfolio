@@ -39,9 +39,7 @@ export default function Skills() {
             className="group cursor-default"
             title={skill.name}
           >
-            <div
-              className="relative w-full h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-lg md:shadow-xl dark:border-white/10 dark:bg-white/5 transform-gpu transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus-within:shadow-2xl"
-            >
+            <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-lg md:shadow-xl dark:border-white/10 dark:bg-white/5 transform-gpu transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl focus-within:shadow-2xl">
               {/* Accent top border */}
               <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] rounded-t-2xl bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent))]/70 to-transparent opacity-70" />
 

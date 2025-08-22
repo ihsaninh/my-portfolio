@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 
+export type ArticleOpenGraph = Omit<
+  Extract<NonNullable<Metadata["openGraph"]>, { type: "article" }>,
+  "images"
+> & {
+  images?: { url: string }[];
+};
+
 export function ensureAbsoluteUrl(input: string, origin: string): string {
   if (!input) return input;
   if (/^https?:\/\//i.test(input)) return input;
@@ -15,7 +22,7 @@ export function buildPostOpenGraph(params: {
   authorName?: string;
   published: string;
   modified?: string;
-}): NonNullable<Metadata["openGraph"]> {
+}): ArticleOpenGraph {
   const {
     title,
     description,
@@ -31,7 +38,7 @@ export function buildPostOpenGraph(params: {
     title,
     description,
     url,
-    type: "article",
+    type: "article" as const,
     publishedTime: published,
     modifiedTime: modified || published,
     authors: [authorName],

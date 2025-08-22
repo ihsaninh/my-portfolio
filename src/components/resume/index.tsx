@@ -3,11 +3,16 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
-import { certifications, educationData, experienceData, resumeMenus } from "@/src/data/resume";
+import {
+  certifications,
+  educationData,
+  experienceData,
+  resumeMenus,
+} from "@/src/data/resume";
 
 import CertificationsList from "./CertificationsList";
-import ExperienceTimeline from "./ExperienceTimeline";
 import ResumeContent from "./ResumeContent";
+import Timeline from "./Timeline";
 
 export default function Resume() {
   const [activeMenu, setActiveMenu] = useState<number>(0);
@@ -65,7 +70,7 @@ export default function Resume() {
                   title="My Experiences"
                   description="Here is an overview of the roles and responsibilities I've held."
                 >
-                  <ExperienceTimeline items={experienceData} className="mt-6" />
+                  <Timeline items={experienceData} className="mt-6" />
                 </ResumeContent>
               </motion.div>
             )}
@@ -82,7 +87,7 @@ export default function Resume() {
                   title="My Educations"
                   description="Here is an overview of my academic background."
                 >
-                  <ExperienceTimeline items={educationData} className="mt-6" />
+                  <Timeline items={educationData} className="mt-6" />
                 </ResumeContent>
               </motion.div>
             )}
@@ -97,7 +102,7 @@ export default function Resume() {
               >
                 <ResumeContent
                   title="My Certifications"
-                  description="Industry-recognized certificates and training I’ve completed."
+                  description="Industry-recognized certificates and training I've completed."
                 >
                   <CertificationsList items={certifications} className="mt-6" />
                 </ResumeContent>

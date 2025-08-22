@@ -1,45 +1,56 @@
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
+import { GlobalRegistrator } from "@happy-dom/global-registrator";
+import { mock } from "bun:test";
+import React from "react";
 
-// Register Happy-DOM globally
 GlobalRegistrator.register();
 
-// Global test setup for Bun test
 global.ResizeObserver = class ResizeObserver {
   observe() {}
   unobserve() {}
   disconnect() {}
 };
 
-// Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+global.IntersectionObserver = class IntersectionObserver
+  implements IntersectionObserver
+{
   root = null;
-  rootMargin = '';
-  thresholds = [];
-  
-  constructor() {}
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-  takeRecords() { return []; }
-} as any;
+  rootMargin = "";
+  thresholds: readonly number[] = [];
 
-// Mock matchMedia
-Object.defineProperty(window, 'matchMedia', {
+  constructor(
+    callback: IntersectionObserverCallback,
+    options?: IntersectionObserverInit
+  ) {
+    void callback;
+    void options;
+  }
+  observe(target: Element): void {
+    void target;
+  }
+  unobserve(target: Element): void {
+    void target;
+  }
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+};
+
+Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: () => {}, // deprecated
-    removeListener: () => {}, // deprecated
+    addListener: () => {},
+    removeListener: () => {},
     addEventListener: () => {},
     removeEventListener: () => {},
     dispatchEvent: () => {},
   }),
 });
 
-// Mock requestAnimationFrame globally to prevent conflicts
-Object.defineProperty(global, 'requestAnimationFrame', {
+Object.defineProperty(global, "requestAnimationFrame", {
   value: (cb: FrameRequestCallback) => {
     setTimeout(cb, 0);
     return 1;
@@ -47,20 +58,56 @@ Object.defineProperty(global, 'requestAnimationFrame', {
   writable: true,
 });
 
-Object.defineProperty(global, 'cancelAnimationFrame', {
+Object.defineProperty(global, "cancelAnimationFrame", {
   value: (id: number) => {
     clearTimeout(id);
   },
   writable: true,
 });
 
-// Mock scrollTo globally
-Object.defineProperty(window, 'scrollTo', {
+Object.defineProperty(window, "scrollTo", {
   value: () => {},
   writable: true,
 });
 
-// Mock Element.prototype.scrollIntoView
-if (typeof Element !== 'undefined') {
+if (typeof Element !== "undefined") {
   Element.prototype.scrollIntoView = () => {};
 }
+
+
+// Global mock for next/image to prevent boolean prop warnings (fill, priority)
+mock.module("next/image", () => ({
+  default: (
+    props: React.ComponentPropsWithoutRef<"img"> & {
+      fill?: boolean;
+      priority?: boolean;
+    }
+  ) => {
+    const {
+      src,
+      alt,
+      width,
+      height,
+      className,
+      fill,
+      priority,
+      style,
+      ...rest
+    } = props;
+    const imgStyle = { ...(style || {}) } as React.CSSProperties;
+    void fill;
+    const elProps: React.ImgHTMLAttributes<HTMLImageElement> & {
+      "data-priority"?: string;
+    } = {
+      ...rest,
+      src,
+      alt,
+      className,
+      style: imgStyle,
+      "data-priority": String(!!priority),
+    };
+    if (typeof width === "number") elProps.width = width;
+    if (typeof height === "number") elProps.height = height;
+    return React.createElement("img", elProps);
+  },
+}));

@@ -8,7 +8,11 @@ type Props = {
   once?: boolean;
 };
 
-export default function LazyOnView({ children, rootMargin = "200px", once = true }: Props) {
+export default function LazyOnView({
+  children,
+  rootMargin = "200px",
+  once = true,
+}: Props) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -32,4 +36,3 @@ export default function LazyOnView({ children, rootMargin = "200px", once = true
 
   return <div ref={ref}>{visible ? children : null}</div>;
 }
-

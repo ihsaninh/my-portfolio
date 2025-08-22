@@ -2,6 +2,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'bun:test';
 
 import Footer from '../../../src/components/shared/Footer';
+import { socials } from '../../../src/data/socials';
 
 describe('Footer Component', () => {
   afterEach(() => {
@@ -9,148 +10,110 @@ describe('Footer Component', () => {
   });
 
   describe('Basic Rendering', () => {
-    it('renders without crashing', () => {
+    it('renders the footer landmark', () => {
       render(<Footer />);
-      const footerContainer = screen.getByText(/Copyright/);
-      expect(footerContainer).toBeTruthy();
+      const footer = screen.getByRole('contentinfo');
+      expect(footer).toBeTruthy();
     });
 
-    it('renders copyright text with current year', () => {
+    it('shows © current year and author', () => {
       render(<Footer />);
-      const currentYear = new Date().getFullYear();
-      const copyrightText = screen.getByText(`Copyright © ${currentYear} Ihsan Nurul Habib`);
-      expect(copyrightText).toBeTruthy();
+      const year = new Date().getFullYear();
+      expect(screen.getByText(new RegExp(`©\\s*${year}`))).toBeTruthy();
+      expect(screen.getAllByText(/Ihsan Nurul Habib/).length).toBeGreaterThan(0);
     });
 
-    it('has proper container structure', () => {
+    it('has container and card structure', () => {
       const { container } = render(<Footer />);
-      const footerContainer = container.querySelector('.container');
-      expect(footerContainer).toBeTruthy();
-      expect(footerContainer?.classList.contains('mt-12')).toBe(true);
-      expect(footerContainer?.classList.contains('lg:mt-24')).toBe(true);
-      expect(footerContainer?.classList.contains('mb-8')).toBe(true);
-      expect(footerContainer?.classList.contains('flex')).toBe(true);
-      expect(footerContainer?.classList.contains('gap-4')).toBe(true);
-      expect(footerContainer?.classList.contains('flex-col')).toBe(true);
+      const wrapper = container.querySelector('footer');
+      expect(wrapper?.classList.contains('mt-12')).toBe(true);
+      expect(wrapper?.classList.contains('lg:mt-24')).toBe(true);
+
+      const cont = container.querySelector('.container');
+      expect(cont).toBeTruthy();
+
+      const card = container.querySelector('.rounded-2xl');
+      expect(card).toBeTruthy();
+      expect(card?.classList.contains('border')).toBe(true);
     });
 
-    it('renders separator border', () => {
+    it('renders horizontal separator', () => {
       const { container } = render(<Footer />);
-      const separator = container.querySelector('.border');
+      const separator = container.querySelector('.h-px');
       expect(separator).toBeTruthy();
-      expect(separator?.classList.contains('border-white/20')).toBe(true);
+      expect(separator?.classList.contains('bg-slate-200')).toBe(true);
     });
   });
 
-  describe('Text Content', () => {
-    it('displays copyright symbol', () => {
+  describe('Navigation and Links', () => {
+    it('renders footer navigation with expected links', () => {
       render(<Footer />);
-      const copyrightElement = screen.getByText(/©/);
-      expect(copyrightElement).toBeTruthy();
+      const nav = screen.getByRole('navigation', { name: 'Footer' });
+      expect(nav).toBeTruthy();
+
+      expect(screen.getByRole('link', { name: 'Work' }).getAttribute('href')).toBe('#work');
+      expect(screen.getByRole('link', { name: 'About' }).getAttribute('href')).toBe('#about');
+      expect(screen.getByRole('link', { name: 'Blog' }).getAttribute('href')).toBe('#blog');
+      expect(screen.getByRole('link', { name: 'Contact' }).getAttribute('href')).toBe('#contact');
     });
 
-    it('displays author name', () => {
+    it('renders social links', () => {
       render(<Footer />);
-      const authorName = screen.getByText(/Ihsan Nurul Habib/);
-      expect(authorName).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'GitHub' })).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'LinkedIn' })).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'Email' })).toBeTruthy();
     });
 
-    it('has proper text styling', () => {
-      const { container } = render(<Footer />);
-      const copyrightText = container.querySelector('p');
-      expect(copyrightText).toBeTruthy();
-      expect(copyrightText?.classList.contains('text-white')).toBe(true);
-      expect(copyrightText?.classList.contains('text-center')).toBe(true);
-      expect(copyrightText?.classList.contains('text-sm')).toBe(true);
-      expect(copyrightText?.classList.contains('lg:text-base')).toBe(true);
-    });
-  });
-
-  describe('Dynamic Year', () => {
-    it('updates year dynamically', () => {
-      // Mock Date to test different years
-      const originalDate = Date;
-      const mockDate = class extends Date {
-        constructor() {
-          super();
-          return new originalDate('2025-01-01');
-        }
-        static getFullYear() {
-          return 2025;
-        }
-        getFullYear() {
-          return 2025;
-        }
-      };
-      
-      global.Date = mockDate as any;
-      
+    it('renders the correct number of social links', () => {
       render(<Footer />);
-      const copyrightText = screen.getByText(/Copyright © 2025 Ihsan Nurul Habib/);
-      expect(copyrightText).toBeTruthy();
-      
-      // Restore original Date
-      global.Date = originalDate;
+      const links = [
+        screen.getByRole('link', { name: 'GitHub' }),
+        screen.getByRole('link', { name: 'LinkedIn' }),
+        screen.getByRole('link', { name: 'Email' }),
+      ];
+      expect(links.length).toBe(socials.length);
     });
 
-    it('handles year change correctly', () => {
-      // Test with current year
-      const currentYear = new Date().getFullYear();
+    it('social links open in new tab with safe rel', () => {
       render(<Footer />);
-      
-      const copyrightElement = screen.getByText(new RegExp(`Copyright © ${currentYear}`));
-      expect(copyrightElement).toBeTruthy();
-      
-      // Verify the full text
-      expect(copyrightElement.textContent).toBe(`Copyright © ${currentYear} Ihsan Nurul Habib`);
+      for (const label of ['GitHub', 'LinkedIn', 'Email']) {
+        const link = screen.getByRole('link', { name: label });
+        expect(link.getAttribute('target')).toBe('_blank');
+        expect(link.getAttribute('rel')).toContain('noopener');
+        expect(link.getAttribute('rel')).toContain('noreferrer');
+      }
+    });
+
+    it('renders back to top link', () => {
+      render(<Footer />);
+      const backToTop = screen.getByRole('link', { name: 'Back to top' });
+      expect(backToTop).toBeTruthy();
+      expect(backToTop.getAttribute('href')).toBe('#home');
     });
   });
 
   describe('Accessibility', () => {
-    it('has semantic HTML structure', () => {
-      const { container } = render(<Footer />);
-      
-      // Check for proper container structure
-      const mainContainer = container.querySelector('.container');
-      expect(mainContainer).toBeTruthy();
-      
-      // Check for paragraph element
-      const paragraph = container.querySelector('p');
-      expect(paragraph).toBeTruthy();
-      
-      // Check for border separator
-      const border = container.querySelector('.border');
-      expect(border).toBeTruthy();
-    });
-
-    it('has readable text content', () => {
+    it('contains readable text and structure', () => {
       render(<Footer />);
-      const copyrightText = screen.getByText(/Copyright/);
-      
-      // Ensure text is not empty and contains expected content
-      expect(copyrightText.textContent).toContain('Copyright');
-      expect(copyrightText.textContent).toContain('Ihsan Nurul Habib');
-      expect(copyrightText.textContent).toContain(new Date().getFullYear().toString());
+      const year = new Date().getFullYear();
+      const copyright = screen.getByText(new RegExp(`©\\s*${year}`));
+      expect(copyright).toBeTruthy();
+      expect(copyright.textContent).toMatch(/Ihsan Nurul Habib/);
     });
   });
 
-  describe('Responsive Design', () => {
-    it('has responsive margin classes', () => {
-      const { container } = render(<Footer />);
-      const footerContainer = container.querySelector('.container');
-      
-      // Check for responsive margin classes
-      expect(footerContainer?.classList.contains('mt-12')).toBe(true);
-      expect(footerContainer?.classList.contains('lg:mt-24')).toBe(true);
+  describe('Content Details', () => {
+    it('shows job title under the brand name', () => {
+      render(<Footer />);
+      expect(
+        screen.getByText('Software Engineer — Frontend & Mobile')
+      ).toBeTruthy();
     });
 
-    it('has responsive text size classes', () => {
-      const { container } = render(<Footer />);
-      const copyrightText = container.querySelector('p');
-      
-      // Check for responsive text size classes
-      expect(copyrightText?.classList.contains('text-sm')).toBe(true);
-      expect(copyrightText?.classList.contains('lg:text-base')).toBe(true);
+    it('shows technology stack and location', () => {
+      render(<Footer />);
+      expect(screen.getByText(/Built with Next\.js & Tailwind/)).toBeTruthy();
+      expect(screen.getByText(/Based\s+in\s+Bogor,\s*ID/)).toBeTruthy();
     });
   });
 });

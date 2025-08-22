@@ -10,7 +10,7 @@ export default function Pagination({
   current: number;
   totalPages: number;
   basePath?: string;
-  queryParam?: string; // if provided, build links as basePath?queryParam=n
+  queryParam?: string;
 }) {
   const pageHref = (n: number) =>
     queryParam
@@ -18,8 +18,8 @@ export default function Pagination({
         ? basePath
         : `${basePath}?${queryParam}=${n}`
       : n <= 1
-        ? basePath
-        : `${basePath}/page/${n}`;
+      ? basePath
+      : `${basePath}/page/${n}`;
 
   const prevHref = pageHref(current - 1);
   const nextHref = pageHref(current + 1);

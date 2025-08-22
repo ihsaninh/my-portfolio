@@ -3,7 +3,7 @@ import { FiArrowRight } from "react-icons/fi";
 
 import { getAllPostsMeta } from "@/src/lib/mdx";
 
-import PostsGrid from "./posts-grid";
+import PostsGrid from "./PostsGrid";
 
 export default function BlogSection() {
   const posts = getAllPostsMeta().slice(0, 3);

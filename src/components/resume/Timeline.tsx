@@ -5,14 +5,10 @@ import { ResumeData } from "@/src/types/resume";
 interface Props {
   items: ResumeData[];
   className?: string;
-  offsetPx?: number; // horizontal offset for line and dot
+  offsetPx?: number;
 }
 
-export default function ExperienceTimeline({
-  items,
-  className,
-  offsetPx = 24,
-}: Props) {
+export default function Timeline({ items, className, offsetPx = 24 }: Props) {
   return (
     <div
       className={`relative overflow-visible ${className ?? ""}`}

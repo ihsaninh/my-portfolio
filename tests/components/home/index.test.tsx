@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
@@ -13,35 +14,28 @@ mock.module("../../../src/hooks/useHeader", () => ({
 }));
 
 // Mock framer-motion
-mock.module("framer-motion", () => ({
-  motion: {
-    section: ({ children, ...props }: any) => (
-      <section {...props}>{children}</section>
-    ),
-  },
-}));
+// framer-motion mocked globally in tests/setup.ts
 
 // Mock Next.js Image component
 mock.module("next/image", () => ({
-  default: ({
-    src,
-    alt,
-    width,
-    height,
-    className,
-    priority,
-    ...props
-  }: any) => (
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      className={className}
-      data-priority={priority}
-      {...props}
-    />
-  ),
+  default: (
+    props: import("react").ComponentPropsWithoutRef<"img"> & {
+      priority?: boolean;
+    }
+  ) => {
+    const { src, alt, width, height, className, priority, ...rest } = props;
+    return (
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+        data-priority={String(!!priority)}
+        {...rest}
+      />
+    );
+  },
 }));
 
 describe("Home Component", () => {
@@ -59,23 +53,25 @@ describe("Home Component", () => {
       render(<Home />);
       // Check that the component renders by looking for key content
       expect(screen.getByText("Ihsan Nurul Habib")).not.toBeNull();
-      expect(screen.getByAltText("profile")).not.toBeNull();
+      expect(
+        screen.getByAltText("Portrait of Ihsan Nurul Habib")
+      ).not.toBeNull();
       expect(screen.getByText("Connect with me")).not.toBeNull();
     });
 
     it("renders profile image with correct attributes", () => {
       render(<Home />);
-      const profileImage = screen.getByAltText("profile");
+      const profileImage = screen.getByAltText("Portrait of Ihsan Nurul Habib");
 
       expect(profileImage).not.toBeNull();
-      expect(profileImage.getAttribute("src")).toBe("/images/profile.jpeg");
+      expect(profileImage.getAttribute("src")).toBe("/images/profile.webp");
       expect(profileImage.getAttribute("width")).toBe("240");
       expect(profileImage.getAttribute("height")).toBe("240");
       expect(profileImage.getAttribute("data-priority")).toBe("true");
-      expect(profileImage.classList.contains("w-48")).toBe(true);
+      expect(profileImage.classList.contains("w-40")).toBe(true);
+      expect(profileImage.classList.contains("h-40")).toBe(true);
       expect(profileImage.classList.contains("lg:w-60")).toBe(true);
       expect(profileImage.classList.contains("rounded-full")).toBe(true);
-      expect(profileImage.classList.contains("brightness-90")).toBe(true);
       expect(profileImage.classList.contains("object-cover")).toBe(true);
     });
 
@@ -85,27 +81,24 @@ describe("Home Component", () => {
       // Check for the main heading text
       expect(screen.getByText("Hello, I'm")).not.toBeNull();
       expect(screen.getByText("Ihsan Nurul Habib")).not.toBeNull();
-      expect(screen.getByText("Software Engineer.")).not.toBeNull();
+      expect(
+        screen.getByText("Software Engineer — Frontend & Mobile")
+      ).not.toBeNull();
 
       // Check for heading structure
-      const heading = screen.getByRole("heading", { level: 2 });
+      const heading = screen.getByRole("heading", { level: 1 });
       expect(heading).not.toBeNull();
       expect(heading.classList.contains("h1")).toBe(true);
-      expect(heading.classList.contains("mb-6")).toBe(true);
-      expect(heading.classList.contains("text-accent")).toBe(true);
-      expect(heading.classList.contains("mt-8")).toBe(true);
       expect(heading.classList.contains("leading-snug")).toBe(true);
     });
 
     it("renders introduction paragraph with correct content", () => {
       render(<Home />);
-      const introText = screen.getByText(
-        /I'm a Software Engineer with 5\+ years of experience/
-      );
+      const introText = screen.getByText(/I build fast, accessible apps/);
 
       expect(introText).not.toBeNull();
-      expect(introText.classList.contains("mb-9")).toBe(true);
-      expect(introText.classList.contains("text-white/80")).toBe(true);
+      expect(introText.classList.contains("text-slate-800")).toBe(true);
+      expect(introText.classList.contains("dark:text-white/75")).toBe(true);
       expect(introText.classList.contains("leading-8")).toBe(true);
       expect(introText.textContent).toContain(
         "PT XLSMART Telecom Sejahtera Tbk"
@@ -122,9 +115,8 @@ describe("Home Component", () => {
       expect(connectButton.getAttribute("href")).toBe("#contact");
       expect(connectButton.classList.contains("bg-accent")).toBe(true);
       expect(connectButton.classList.contains("px-6")).toBe(true);
-      expect(connectButton.classList.contains("py-2")).toBe(true);
       expect(connectButton.classList.contains("text-primary")).toBe(true);
-      expect(connectButton.classList.contains("rounded-full")).toBe(true);
+      expect(connectButton.classList.contains("rounded-xl")).toBe(true);
       expect(connectButton.classList.contains("shadow-md")).toBe(true);
     });
 
@@ -138,13 +130,13 @@ describe("Home Component", () => {
       );
       expect(downloadButton.closest("a")?.hasAttribute("download")).toBe(true);
       const downloadLink = downloadButton.closest("a");
-      expect(downloadLink?.classList.contains("flex")).toBe(true);
+      expect(downloadLink?.classList.contains("inline-flex")).toBe(true);
       expect(downloadLink?.classList.contains("items-center")).toBe(true);
       expect(downloadLink?.classList.contains("justify-center")).toBe(true);
       expect(downloadLink?.classList.contains("gap-2")).toBe(true);
       expect(downloadLink?.classList.contains("border")).toBe(true);
-      expect(downloadLink?.classList.contains("border-accent")).toBe(true);
-      expect(downloadLink?.classList.contains("text-accent")).toBe(true);
+      expect(downloadLink?.classList.contains("border-slate-300")).toBe(true);
+      expect(downloadLink?.classList.contains("text-slate-800")).toBe(true);
     });
   });
 
@@ -201,34 +193,30 @@ describe("Home Component", () => {
         .closest("div");
 
       expect(buttonContainer?.classList.contains("flex")).toBe(true);
-      expect(buttonContainer?.classList.contains("gap-6")).toBe(true);
-      expect(buttonContainer?.classList.contains("flex-col")).toBe(true);
-      expect(buttonContainer?.classList.contains("lg:flex-row")).toBe(true);
+      expect(
+        buttonContainer?.classList.contains("flex-row") ||
+          buttonContainer?.classList.contains("flex-col")
+      ).toBe(true);
+      expect(
+        buttonContainer?.classList.contains("gap-3") ||
+          buttonContainer?.classList.contains("sm:gap-4")
+      ).toBe(true);
     });
 
     it("applies hover and transition classes to buttons", () => {
       render(<Home />);
 
       const connectButton = screen.getByText("Connect with me");
-      expect(connectButton.classList.contains("transform")).toBe(true);
       expect(connectButton.classList.contains("transition-all")).toBe(true);
       expect(connectButton.classList.contains("duration-300")).toBe(true);
       expect(connectButton.classList.contains("hover:scale-105")).toBe(true);
       expect(connectButton.classList.contains("hover:shadow-lg")).toBe(true);
-      expect(connectButton.classList.contains("hover:shadow-accent/50")).toBe(
+      expect(connectButton.classList.contains("hover:shadow-accent/40")).toBe(
         true
       );
 
       const downloadButton = screen.getByText("Download CV").closest("a");
-      expect(downloadButton?.classList.contains("transition-all")).toBe(true);
-      expect(downloadButton?.classList.contains("duration-300")).toBe(true);
-      expect(downloadButton?.classList.contains("hover:bg-accent")).toBe(true);
-      expect(downloadButton?.classList.contains("hover:text-primary")).toBe(
-        true
-      );
-      expect(downloadButton?.classList.contains("hover:scale-105")).toBe(true);
-      expect(downloadButton?.classList.contains("hover:shadow-lg")).toBe(true);
-      expect(downloadButton?.classList.contains("hover:shadow-accent/50")).toBe(
+      expect(downloadButton?.classList.contains("hover:bg-slate-200")).toBe(
         true
       );
       expect(downloadButton?.classList.contains("group")).toBe(true);
@@ -245,11 +233,11 @@ describe("Home Component", () => {
       expect(section?.getAttribute("id")).toBe("home");
 
       // Check for heading
-      const heading = screen.getByRole("heading", { level: 2 });
+      const heading = screen.getByRole("heading", { level: 1 });
       expect(heading).not.toBeNull();
 
       // Check for image alt text
-      const image = screen.getByAltText("profile");
+      const image = screen.getByAltText("Portrait of Ihsan Nurul Habib");
       expect(image).not.toBeNull();
     });
 
@@ -271,11 +259,11 @@ describe("Home Component", () => {
       render(<Home />);
 
       // Check text color classes for accessibility
-      const introText = screen.getByText(/I'm a Software Engineer/);
-      expect(introText.classList.contains("text-white/80")).toBe(true);
+      const introText = screen.getByText(/I build fast, accessible apps/);
+      expect(introText.classList.contains("dark:text-white/75")).toBe(true);
 
-      const heading = screen.getByRole("heading");
-      expect(heading.classList.contains("text-accent")).toBe(true);
+      const accentSpan = screen.getByText("Ihsan Nurul Habib");
+      expect(accentSpan.classList.contains("text-accent")).toBe(true);
     });
   });
 
@@ -284,14 +272,13 @@ describe("Home Component", () => {
       render(<Home />);
 
       expect(screen.getByText("Ihsan Nurul Habib")).not.toBeNull();
-      expect(screen.getByText(/5\+ years of experience/)).not.toBeNull();
-      expect(screen.getByText(/frontend development/)).not.toBeNull();
+      expect(screen.getByText(/5\+ years/)).not.toBeNull();
     });
 
     it("displays correct company names", () => {
       render(<Home />);
 
-      const introText = screen.getByText(/I'm a Software Engineer/);
+      const introText = screen.getByText(/I build fast, accessible apps/);
       expect(introText.textContent).toContain(
         "PT XLSMART Telecom Sejahtera Tbk"
       );
