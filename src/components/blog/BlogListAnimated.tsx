@@ -1,9 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { formatDateUTC } from "@/src/lib/date";
 import Image from "next/image";
 import Link from "next/link";
+
+import { formatDateUTC } from "@/src/lib/date";
 
 type Post = {
   slug: string;
