@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { formatDateUTC } from "@/src/lib/date";
 
 type PostLike = {
   slug: string;
@@ -41,7 +42,7 @@ function PostCard({ post }: { post: PostLike }) {
       <div className="p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <p className="text-xs text-slate-500 dark:text-white/60 flex items-center gap-2">
-            <span>{new Date(post.date).toLocaleDateString()}</span>
+            <span>{formatDateUTC(post.date)}</span>
             {post.readingTime && (
               <>
                 <span aria-hidden>•</span>
