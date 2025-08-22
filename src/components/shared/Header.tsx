@@ -27,7 +27,7 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    if (!isHome) return; // Only run scroll spy on the homepage
+    if (!isHome) return;
     let ticking = false;
     const spy = () => {
       let active: string | null = null;
@@ -99,7 +99,7 @@ export default function Header() {
   return (
     <header
       className={[
-        "sticky top-0 z-50 transition duration-300",
+        "sticky top-0 z-50 transition duration-300 isolate transform-gpu will-change-transform",
         scrolled
           ? "backdrop-blur bg-white/70 supports-[backdrop-filter]:bg-white/70 dark:bg-primary/50 dark:supports-[backdrop-filter]:bg-primary/50 shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.08)]"
           : "bg-transparent shadow-none",
