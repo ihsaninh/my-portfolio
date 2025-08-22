@@ -1,12 +1,11 @@
 import "./globals.css";
 
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Metadata } from "next";
 import { JetBrains_Mono, Outfit } from "next/font/google";
-import Script from "next/script";
 import { ThemeProvider } from "next-themes";
 
-import { AnalyticsTracker } from "@/src/components/analytics";
-import GoogleAnalytics from "@/src/components/analytics/GoogleAnalytics";
 import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
 import Footer from "@/src/components/shared/Footer";
 import Header from "@/src/components/shared/Header";
@@ -64,13 +63,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://www.google-analytics.com" />
-        <GoogleAnalytics />
-        <Script
+        <script
           id="ld-person"
           type="application/ld+json"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(
               personJsonLd({
@@ -85,10 +80,9 @@ export default function RootLayout({
             ),
           }}
         />
-        <Script
+        <script
           id="ld-website"
           type="application/ld+json"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(
               websiteJsonLd({
@@ -107,7 +101,6 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <AnalyticsTracker />
           <CopyCodeClient />
           <div aria-hidden className="app-bg" />
           <div className="flex flex-col min-h-screen">
@@ -115,6 +108,8 @@ export default function RootLayout({
             <main className="py-8 mt-0 lg:mt-8">{children}</main>
             <Footer />
           </div>
+          <Analytics />
+          <SpeedInsights />
         </ThemeProvider>
       </body>
     </html>
