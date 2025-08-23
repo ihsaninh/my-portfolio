@@ -80,9 +80,7 @@ export default function Work() {
   return (
     <section className="container mt-12 lg:mt-24" id="work">
       <div className="relative">
-        <h2 className="section-title">
-          Work
-        </h2>
+        <h2 className="section-title">Work</h2>
       </div>
 
       <div className="flex flex-col lg:flex-row lg:gap-[30px] mt-12">
@@ -105,9 +103,9 @@ export default function Work() {
               </p>
 
               <ul className="flex flex-wrap gap-3">
-                {currentProject.stack.map((tech, i) => (
+                {currentProject.stack.map((tech) => (
                   <li
-                    key={i}
+                    key={tech}
                     className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:text-slate-900 hover:bg-slate-200 transition dark:border-white/10 dark:bg-white/5 dark:text-white/85 dark:hover:text-white dark:hover:bg-white/10"
                   >
                     {tech}
@@ -157,7 +155,7 @@ export default function Work() {
               className="lg:h-[450px] -mb-16 lg:mb-12"
             >
               {allProjects.map((project, index) => (
-                <SwiperSlide key={index} className="w-full">
+                <SwiperSlide key={project.title} className="w-full">
                   <div className="h-[450px] sm:h-[500px] lg:h-[450px] relative group flex justify-center items-center rounded-lg">
                     <div className="relative w-full h-full rounded-lg overflow-hidden">
                       <Image

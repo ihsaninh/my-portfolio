@@ -8,8 +8,7 @@ import Pagination from "@/src/components/blog/Pagination";
 import ScrollToTop from "@/src/components/shared/ScrollToTop";
 import { BLOG_PAGE_SIZE } from "@/src/lib/constants";
 import { getAllPostsMeta } from "@/src/lib/mdx";
-import { getBlogPageMetadata } from "@/src/lib/seo";
-import { breadcrumbJsonLd } from "@/src/lib/seo";
+import { breadcrumbJsonLd, getBlogPageMetadata } from "@/src/lib/seo";
 
 type SearchProps = { searchParams?: Promise<{ page?: string }> };
 
@@ -25,7 +24,9 @@ export async function generateMetadata({
   return getBlogPageMetadata({ page: p, totalPages });
 }
 
-export default async function BlogPage({ searchParams }: SearchProps) {
+export default async function BlogPage({
+  searchParams,
+}: Readonly<SearchProps>) {
   const sp = await searchParams;
   const all = getAllPostsMeta();
   const totalPages = Math.max(1, Math.ceil(all.length / BLOG_PAGE_SIZE));

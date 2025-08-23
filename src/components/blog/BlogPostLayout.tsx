@@ -4,14 +4,14 @@ import { FiArrowLeft } from "react-icons/fi";
 
 import { formatDateUTC } from "@/src/lib/date";
 
-type Props = {
+interface Props {
   title: string;
   date?: string;
   tags?: string[];
   cover?: string;
   readingTime?: string;
   children: React.ReactNode;
-};
+}
 
 export default function BlogPostLayout({
   title,
@@ -20,7 +20,7 @@ export default function BlogPostLayout({
   cover,
   readingTime,
   children,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <section className="container">
       <div className="mb-6 bp-fade-up-050">
@@ -39,9 +39,7 @@ export default function BlogPostLayout({
         </h1>
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-4 text-sm text-slate-600 dark:text-white/70 bp-fade-up-150">
           <p className="flex items-center gap-2">
-            {date ? (
-              <time dateTime={date}>{formatDateUTC(date)}</time>
-            ) : null}
+            {date ? <time dateTime={date}>{formatDateUTC(date)}</time> : null}
             {readingTime ? (
               <>
                 {date ? <span aria-hidden>•</span> : null}

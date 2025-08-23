@@ -24,7 +24,7 @@ export default function Lightbox({
   onClose,
   onPrev,
   onNext,
-}: LightboxProps) {
+}: Readonly<LightboxProps>) {
   const project = projects[index];
 
   useEffect(() => {
@@ -146,16 +146,16 @@ export default function Lightbox({
               {/* Dots indicator */}
               {projects.length > 1 && (
                 <div className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 translate-y-full flex items-center gap-2">
-                  {projects.map((_, i) => (
+                  {projects.map((project, i) => (
                     <span
-                      key={i}
+                      key={project.num}
                       className={`h-1.5 w-1.5 rounded-full transition-all ${
                         i === index
                           ? "bg-white/90 w-3"
                           : "bg-white/40 hover:bg-white/60"
                       }`}
-                    />)
-                  )}
+                    />
+                  ))}
                 </div>
               )}
             </div>

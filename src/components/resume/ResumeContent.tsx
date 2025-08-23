@@ -4,7 +4,11 @@ interface Props {
   children: React.ReactNode;
 }
 
-export default function ResumeContent({ title, description, children }: Props) {
+export default function ResumeContent({
+  title,
+  description,
+  children,
+}: Readonly<Props>) {
   return (
     <div>
       <h3 className="text-2xl lg:text-3xl">{title}</h3>

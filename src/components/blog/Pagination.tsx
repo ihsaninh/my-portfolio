@@ -6,20 +6,21 @@ export default function Pagination({
   totalPages,
   basePath = "/blog",
   queryParam,
-}: {
+}: Readonly<{
   current: number;
   totalPages: number;
   basePath?: string;
   queryParam?: string;
-}) {
-  const pageHref = (n: number) =>
-    queryParam
-      ? n <= 1
-        ? basePath
-        : `${basePath}?${queryParam}=${n}`
-      : n <= 1
-      ? basePath
-      : `${basePath}/page/${n}`;
+}>) {
+  const pageHref = (n: number) => {
+    if (n <= 1) {
+      return basePath;
+    }
+    if (queryParam) {
+      return `${basePath}?${queryParam}=${n}`;
+    }
+    return `${basePath}/page/${n}`;
+  };
 
   const prevHref = pageHref(current - 1);
   const nextHref = pageHref(current + 1);

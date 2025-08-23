@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { formatDateUTC } from "@/src/lib/date";
 
-type Post = {
+interface Post {
   slug: string;
   title: string;
   date: string;
@@ -15,9 +15,11 @@ type Post = {
   readingTime?: string;
   tags?: string[];
   cover?: string;
-};
+}
 
-export default function BlogListAnimated({ posts }: { posts: Post[] }) {
+export default function BlogListAnimated({
+  posts,
+}: Readonly<{ posts: Post[] }>) {
   const container = {
     hidden: { opacity: 0 },
     show: {

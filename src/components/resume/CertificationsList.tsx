@@ -16,7 +16,7 @@ export default function CertificationsList({
   items,
   className,
   initialVisible = 6,
-}: Props) {
+}: Readonly<Props>) {
   const [expanded, setExpanded] = useState(false);
   const canToggle = items.length > initialVisible;
 

@@ -12,7 +12,7 @@ export default function LazyOnView({
   children,
   rootMargin = "200px",
   once = true,
-}: Props) {
+}: Readonly<Props>) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
 

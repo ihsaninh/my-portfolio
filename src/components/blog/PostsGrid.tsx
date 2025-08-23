@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import { formatDateUTC } from "@/src/lib/date";
 
-type PostLike = {
+interface PostLike {
   slug: string;
   title: string;
   date: string;
@@ -16,9 +16,9 @@ type PostLike = {
   cover?: string;
   externalUrl?: string;
   readingTime?: string;
-};
+}
 
-function PostCard({ post }: { post: PostLike }) {
+function PostCard({ post }: Readonly<{ post: PostLike }>) {
   const href = post.externalUrl ? post.externalUrl : `/blog/${post.slug}`;
   const isExternal = Boolean(post.externalUrl);
   return (
@@ -77,7 +77,7 @@ function PostCard({ post }: { post: PostLike }) {
   );
 }
 
-export default function PostsGrid({ posts }: { posts: PostLike[] }) {
+export default function PostsGrid({ posts }: Readonly<{ posts: PostLike[] }>) {
   const container = {
     hidden: { opacity: 0 },
     show: {

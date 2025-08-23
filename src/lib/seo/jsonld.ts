@@ -16,7 +16,7 @@ export function personJsonLd(params: {
     name,
     url,
     ...(jobTitle ? { jobTitle } : {}),
-    ...(sameAs && sameAs.length ? { sameAs } : {}),
+    ...(sameAs?.length ? { sameAs } : {}),
   };
 }
 
@@ -85,4 +85,3 @@ export function blogPostingJsonLd(params: {
     },
   };
 }
-

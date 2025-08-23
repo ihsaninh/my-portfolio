@@ -60,7 +60,7 @@ describe("Skills Component", () => {
       expect(screen.getByText(s.name)).toBeTruthy();
       const li = screen.getByTitle(s.name);
       expect(li).toBeTruthy();
-      const svg = (li as HTMLElement).querySelector("svg");
+      const svg = li.querySelector("svg");
       expect(svg).toBeTruthy();
     }
   });

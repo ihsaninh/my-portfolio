@@ -18,10 +18,10 @@ export default function Social({
   iconClass = "",
   labelClass = "",
   variant = "icon",
-}: Props) {
+}: Readonly<Props>) {
   return (
     <div className={containerClass}>
-      {socials.map((s, i) => {
+      {socials.map((s) => {
         const Icon = s.icon;
         const baseIcon =
           "shrink-0 " +
@@ -34,7 +34,7 @@ export default function Social({
 
         return (
           <Link
-            key={i}
+            key={s.link}
             href={s.link}
             target="_blank"
             rel="noopener noreferrer"

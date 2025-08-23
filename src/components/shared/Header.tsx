@@ -32,7 +32,7 @@ export default function Header() {
     const spy = () => {
       let active: string | null = null;
       for (const link of navLinks) {
-        const el = document.querySelector(link.href) as HTMLElement | null;
+        const el = document.querySelector(link.href);
         if (!el) continue;
         const rect = el.getBoundingClientRect();
         if (
@@ -122,27 +122,31 @@ export default function Header() {
 
           <nav className="hidden lg:block" aria-label="Main navigation">
             <ul className="flex items-center gap-8">
-              {navLinks.map((link, i) => {
+              {navLinks.map((link) => {
                 const isBlogLink = link.name.toLowerCase() === "blog";
-                const hrefFinal = isBlogLink
-                  ? isHome
-                    ? "#blog"
-                    : "/blog"
-                  : isHome
-                  ? link.href
-                  : `/${link.href}`;
+
+                let hrefFinal: string;
+                if (isBlogLink) {
+                  hrefFinal = isHome ? "#blog" : "/blog";
+                } else {
+                  hrefFinal = isHome ? link.href : `/${link.href}`;
+                }
+
                 const active = isBlogLink
                   ? isBlog || (isHome && link.isActive)
                   : link.isActive;
                 return (
-                  <li key={i} className="relative group">
+                  <li key={link.href} className="relative group">
                     <Link
                       href={hrefFinal}
                       onClick={
                         isHome
-                          ? isBlogLink
-                            ? handleNavClick("#blog")
-                            : handleNavClick(link.href)
+                          ? (() => {
+                              if (isBlogLink) {
+                                return handleNavClick("#blog");
+                              }
+                              return handleNavClick(link.href);
+                            })()
                           : undefined
                       }
                       className={[
@@ -230,8 +234,8 @@ export default function Header() {
             <div className="container">
               <div className="mt-2 rounded-2xl border border-slate-300 bg-slate-50 backdrop-blur shadow-xl dark:border-white/10 dark:bg-white/5">
                 <ul className="flex flex-col divide-y divide-slate-200 dark:divide-white/10">
-                  {navLinks.map((link, i) => (
-                    <li key={i}>
+                  {navLinks.map((link) => (
+                    <li key={link.href}>
                       <a
                         href={link.href}
                         onClick={handleNavClick(link.href)}

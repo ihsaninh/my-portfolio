@@ -42,8 +42,7 @@ export function getAllPostsMeta(): (BlogFrontmatter & { slug: string })[] {
   const toTime = (d: string | number | Date | null | undefined): number => {
     if (d == null) return 0;
     const dt = typeof d === "string" || typeof d === "number" ? new Date(d) : d;
-    const t =
-      typeof (dt as Date).getTime === "function" ? (dt as Date).getTime() : NaN;
+    const t = typeof dt.getTime === "function" ? dt.getTime() : NaN;
     return Number.isNaN(t) ? 0 : t;
   };
 

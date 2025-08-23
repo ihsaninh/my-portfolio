@@ -49,7 +49,7 @@ export default function Home() {
             viewport={{ once: true, amount: 0.3 }}
             className="mt-6 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs text-accent"
           >
-            <span className="inline-block h-2 w-2 rounded-full bg-green-400" />
+            <span className="inline-block h-2 w-2 rounded-full bg-green-400" />{" "}
             Available for select projects
           </m.div>
 

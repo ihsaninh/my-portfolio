@@ -17,8 +17,11 @@ export default function ThemeToggle() {
   const isDark = current === "dark";
 
   const toggle = () => setTheme(isDark ? "light" : "dark");
+
+  const targetMode = isDark ? "light" : "dark";
+
   const ariaLabel = mounted
-    ? `Switch to ${isDark ? "light" : "dark"} mode`
+    ? `Switch to ${targetMode} mode`
     : "Toggle color mode";
 
   return (

@@ -8,7 +8,11 @@ interface Props {
   offsetPx?: number;
 }
 
-export default function Timeline({ items, className, offsetPx = 24 }: Props) {
+export default function Timeline({
+  items,
+  className,
+  offsetPx = 24,
+}: Readonly<Props>) {
   return (
     <div
       className={`relative overflow-visible ${className ?? ""}`}
@@ -19,8 +23,11 @@ export default function Timeline({ items, className, offsetPx = 24 }: Props) {
         style={{ left: offsetPx }}
       />
       <ul className="relative flex flex-col gap-8">
-        {items.map((item, idx) => (
-          <li key={idx} className="relative">
+        {items.map((item) => (
+          <li
+            key={`${item.title}-${item.company}-${item.startDate}`}
+            className="relative"
+          >
             <span
               className="absolute -translate-x-1/2 top-1.5 h-4 w-4 rounded-full border-2 border-accent bg-white dark:bg-secondary z-10"
               style={{ left: offsetPx }}
@@ -48,7 +55,7 @@ export default function Timeline({ items, className, offsetPx = 24 }: Props) {
               {item.descriptions && item.descriptions.length > 0 && (
                 <ul className="list-disc pl-5 space-y-2 text-sm text-slate-500 dark:text-white/60">
                   {item.descriptions.map((desc, i) => (
-                    <li key={i}>{desc}</li>
+                    <li key={`${desc.substring(0, 50)}-${i}`}>{desc}</li>
                   ))}
                 </ul>
               )}

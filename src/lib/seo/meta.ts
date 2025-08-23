@@ -10,7 +10,8 @@ export type ArticleOpenGraph = Omit<
 export function ensureAbsoluteUrl(input: string, origin: string): string {
   if (!input) return input;
   if (/^https?:\/\//i.test(input)) return input;
-  return `${origin}${input.startsWith("/") ? input : `/${input}`}`;
+  const path = input.startsWith("/") ? input : `/${input}`;
+  return `${origin}${path}`;
 }
 
 export function buildPostOpenGraph(params: {

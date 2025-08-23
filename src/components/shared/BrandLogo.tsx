@@ -8,13 +8,19 @@ type BrandLogoProps = {
   className?: string;
 };
 
-export default function BrandLogo({ size = "sm", abbr = "INH", className }: BrandLogoProps) {
-  const sizeClass =
-    size === "lg"
-      ? "h-12 w-12 text-[13px]"
-      : size === "md"
-      ? "h-10 w-10 text-[12px]"
-      : "h-8 w-8 text-[11px]";
+export default function BrandLogo({
+  size = "sm",
+  abbr = "INH",
+  className,
+}: Readonly<BrandLogoProps>) {
+  let sizeClass: string;
+  if (size === "lg") {
+    sizeClass = "h-12 w-12 text-[13px]";
+  } else if (size === "md") {
+    sizeClass = "h-10 w-10 text-[12px]";
+  } else {
+    sizeClass = "h-8 w-8 text-[11px]";
+  }
 
   return (
     <span
@@ -45,4 +51,3 @@ export default function BrandLogo({ size = "sm", abbr = "INH", className }: Bran
     </span>
   );
 }
-

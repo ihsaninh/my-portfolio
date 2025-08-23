@@ -32,10 +32,10 @@ export default function Skills() {
         viewport={{ once: true, amount: 0.2 }}
         className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 lg:gap-6"
       >
-        {skills.map((skill, index) => (
+        {skills.map((skill) => (
           <motion.li
             variants={item}
-            key={index}
+            key={skill.name}
             className="group cursor-default"
             title={skill.name}
           >
