@@ -7,7 +7,7 @@ import { JetBrains_Mono, Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
-import Footer from "@/src/components/shared/Footer";
+import FooterGuard from "@/src/components/shared/FooterGuard";
 import Header from "@/src/components/shared/Header";
 import { personJsonLd, websiteJsonLd } from "@/src/lib/seo";
 
@@ -106,7 +106,7 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             <Header />
             <main className="py-8 mt-0 lg:mt-8">{children}</main>
-            <Footer />
+            <FooterGuard />
           </div>
           <Analytics />
           <SpeedInsights />
