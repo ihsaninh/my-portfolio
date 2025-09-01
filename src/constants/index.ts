@@ -18,3 +18,4 @@ export const PLACEHOLDERS = {
 } as const;
 
 export const MAX_TEXTAREA_HEIGHT = 160;
+export const BLOG_PAGE_SIZE = 9;

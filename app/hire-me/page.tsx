@@ -11,17 +11,13 @@ import {
   PresetButtons,
   TypingIndicator,
 } from "@/src/components/hire-me";
+import { HR_PRESETS, PLACEHOLDERS, TECH_PRESETS } from "@/src/constants";
 import {
   useBodyOverflowLock,
   useScrollToBottom,
   useTextareaAutoResize,
 } from "@/src/hooks/useHireMe";
-import {
-  HR_PRESETS,
-  Mode,
-  PLACEHOLDERS,
-  TECH_PRESETS,
-} from "@/src/types/hire-me";
+import { Mode } from "@/src/types/hire-me";
 
 export default function HireMePage() {
   const [mode, setMode] = useState<Mode>("HR");
