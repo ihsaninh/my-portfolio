@@ -16,7 +16,7 @@ export function ChatInput({
   disabled,
   placeholder,
   textareaRef,
-}: ChatInputProps) {
+}: Readonly<ChatInputProps>) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
