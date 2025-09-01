@@ -81,10 +81,7 @@ export default function Contact() {
 
         <div className="mt-8 grid gap-8 lg:grid-cols-2">
           <motion.div variants={fadeLeft} className="flex flex-col gap-6">
-            <div
-              className="rounded-2xl border border-slate-300 bg-slate-50 p-6 shadow-xl backdrop-blur
-                       flex flex-col gap-5 dark:border-white/5 dark:bg-white/5"
-            >
+            <div className="rounded-2xl border border-slate-300 bg-slate-50 p-6 shadow-xl backdrop-blur flex flex-col gap-5 dark:border-white/5 dark:bg-white/5">
               <p className="leading-8 text-slate-800 dark:text-white/80">
                 Have an idea you&apos;d like me to work on? Reach out via the
                 form, or use social links below.
@@ -113,8 +110,7 @@ export default function Contact() {
             variants={fadeRight}
             noValidate
             onSubmit={handleSubmit(onSubmit)}
-            className="rounded-2xl border border-slate-300 bg-slate-50 p-6 shadow-xl backdrop-blur
-                       flex flex-col gap-5 dark:border-white/5 dark:bg-white/5"
+            className="rounded-2xl border border-slate-300 bg-slate-50 p-6 shadow-xl backdrop-blur flex flex-col gap-5 dark:border-white/5 dark:bg-white/5"
           >
             <input
               type="text"
@@ -216,9 +212,7 @@ export default function Contact() {
               <button
                 type="submit"
                 disabled={!isValid || isSubmitting}
-                className="cursor-pointer bg-accent px-6 py-2 text-primary rounded-full shadow-md
-                           transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/50
-                           disabled:opacity-60 disabled:cursor-not-allowed"
+                className="cursor-pointer bg-accent px-6 py-2 text-primary rounded-full shadow-md transform transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/50 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Sending…" : "Submit"}
               </button>

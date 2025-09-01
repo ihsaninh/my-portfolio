@@ -6,7 +6,7 @@ import { FiArrowLeft } from "react-icons/fi";
 import BlogListAnimated from "@/src/components/blog/BlogListAnimated";
 import Pagination from "@/src/components/blog/Pagination";
 import ScrollToTop from "@/src/components/shared/ScrollToTop";
-import { BLOG_PAGE_SIZE } from "@/src/lib/constants";
+import { BLOG_PAGE_SIZE } from "@/src/constants";
 import { getAllPostsMeta } from "@/src/lib/mdx";
 import { breadcrumbJsonLd, getBlogPageMetadata } from "@/src/lib/seo";
 

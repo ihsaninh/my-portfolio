@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-import { MAX_TEXTAREA_HEIGHT } from "@/src/types/hire-me";
+import { MAX_TEXTAREA_HEIGHT } from "../constants";
 
 // Custom hook to lock body overflow when component is mounted
 export function useBodyOverflowLock() {
