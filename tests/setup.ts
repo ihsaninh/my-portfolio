@@ -1,3 +1,5 @@
+import "@testing-library/jest-dom";
+
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 import { mock } from "bun:test";
 import React from "react";
@@ -73,7 +75,6 @@ Object.defineProperty(window, "scrollTo", {
 if (typeof Element !== "undefined") {
   Element.prototype.scrollIntoView = () => {};
 }
-
 
 // Global mock for next/image to prevent boolean prop warnings (fill, priority)
 mock.module("next/image", () => ({

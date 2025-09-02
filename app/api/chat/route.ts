@@ -1,6 +1,12 @@
 import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText, UIMessage } from "ai";
 
+import {
+  chatRateLimiter,
+  createRateLimitResponse,
+  getClientIP,
+} from "@/src/lib/rate-limiter";
+
 export const runtime = "edge";
 export const maxDuration = 30;
 
@@ -94,6 +100,17 @@ Mode TECH (hard-skill):
 }
 
 export async function POST(req: Request) {
+  // Rate limiting check
+  const clientIP = getClientIP(req);
+  const rateLimitResult = chatRateLimiter.check(clientIP);
+
+  if (!rateLimitResult.success) {
+    return createRateLimitResponse(
+      rateLimitResult.remaining,
+      rateLimitResult.resetTime
+    );
+  }
+
   // ambil mode dari query (?mode=HR|TECH), default TECH
   const url = new URL(req.url);
   const mode = (url.searchParams.get("mode") as Mode) ?? "HR";
@@ -107,5 +124,38 @@ export async function POST(req: Request) {
     temperature: mode === "HR" ? 0.7 : 0.5,
   });
 
-  return result.toUIMessageStreamResponse();
+  // Add rate limit headers to the response
+  const response = result.toUIMessageStreamResponse();
+  response.headers.set(
+    "X-RateLimit-Remaining",
+    rateLimitResult.remaining.toString()
+  );
+  response.headers.set(
+    "X-RateLimit-Reset",
+    rateLimitResult.resetTime.toString()
+  );
+
+  return response;
+}
+
+// GET endpoint to check rate limit status without consuming a request
+export async function GET(req: Request) {
+  const clientIP = getClientIP(req);
+  const status = chatRateLimiter.getStatus(clientIP);
+
+  return new Response(
+    JSON.stringify({
+      remaining: status.remaining,
+      resetTime: status.resetTime,
+      resetInSeconds: Math.ceil((status.resetTime - Date.now()) / 1000),
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "X-RateLimit-Remaining": status.remaining.toString(),
+        "X-RateLimit-Reset": status.resetTime.toString(),
+      },
+    }
+  );
 }
