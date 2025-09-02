@@ -29,6 +29,7 @@ export default function HireMePage() {
     resetInSeconds: number;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [rateLimitRefreshTrigger, setRateLimitRefreshTrigger] = useState(0);
 
   const { messages, sendMessage, status } = useChat({
     id: `hire-${mode}`,
@@ -45,6 +46,10 @@ export default function HireMePage() {
       }
       // Clear error after 5 seconds
       setTimeout(() => setErrorMessage(null), 5000);
+    },
+    onFinish: () => {
+      // Refresh rate limit status after message is sent
+      setRateLimitRefreshTrigger((prev) => prev + 1);
     },
   });
 
@@ -106,7 +111,10 @@ export default function HireMePage() {
           </div>
 
           {/* Rate limit info */}
-          <RateLimitInfo onRateLimitChange={setRateLimitStatus} />
+          <RateLimitInfo
+            onRateLimitChange={setRateLimitStatus}
+            refreshTrigger={rateLimitRefreshTrigger}
+          />
 
           {/* Error message */}
           {errorMessage && (

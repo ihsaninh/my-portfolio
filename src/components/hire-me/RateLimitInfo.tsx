@@ -8,16 +8,29 @@ interface RateLimitStatus {
 
 interface RateLimitInfoProps {
   onRateLimitChange?: (status: RateLimitStatus) => void;
+  refreshTrigger?: number;
 }
 
-export function RateLimitInfo({ onRateLimitChange }: RateLimitInfoProps) {
+export function RateLimitInfo({
+  onRateLimitChange,
+  refreshTrigger,
+}: RateLimitInfoProps) {
   const [status, setStatus] = useState<RateLimitStatus | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchRateLimitStatus = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/chat");
+      // Add cache-busting parameter and no-cache headers to prevent browser caching
+      const cacheBuster = Date.now();
+      const response = await fetch(`/api/chat?_=${cacheBuster}`, {
+        method: "GET",
+        headers: {
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      });
       if (response.ok) {
         const data: RateLimitStatus = await response.json();
         setStatus(data);
@@ -32,9 +45,32 @@ export function RateLimitInfo({ onRateLimitChange }: RateLimitInfoProps) {
 
   useEffect(() => {
     fetchRateLimitStatus();
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchRateLimitStatus, 30000);
+    // Refresh every 10 seconds for more responsive updates
+    const interval = setInterval(fetchRateLimitStatus, 10000);
     return () => clearInterval(interval);
+  }, [fetchRateLimitStatus]);
+
+  // Refresh when refreshTrigger changes (after sending a message)
+  useEffect(() => {
+    if (refreshTrigger !== undefined && refreshTrigger > 0) {
+      // Small delay to allow rate limiter to update
+      setTimeout(() => {
+        fetchRateLimitStatus();
+      }, 100);
+    }
+  }, [refreshTrigger, fetchRateLimitStatus]);
+
+  // Also refresh when component becomes visible (user switches tabs)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchRateLimitStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [fetchRateLimitStatus]);
 
   if (isLoading || !status) {
