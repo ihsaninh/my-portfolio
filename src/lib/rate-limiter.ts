@@ -11,16 +11,16 @@ class RateLimiter {
   private cleanupInterval: NodeJS.Timeout;
 
   constructor(
-    windowMs: number = 60000,
-    maxRequests: number = 10,
+    windowMs: number = 60 * 60 * 1000,
+    maxRequests: number = 20,
     maxEntries: number = 1000
   ) {
-    this.windowMs = windowMs; // 1 minute default
-    this.maxRequests = maxRequests; // 10 requests per minute default
+    this.windowMs = windowMs; // 1 hour default
+    this.maxRequests = maxRequests; // 20 requests per hour default
     this.maxEntries = maxEntries; // Maximum entries to prevent memory overflow
 
-    // Clean up expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    // Clean up expired entries every 30 minutes
+    this.cleanupInterval = setInterval(() => this.cleanup(), 30 * 60 * 1000);
   }
 
   check(identifier: string): {
@@ -125,8 +125,8 @@ class RateLimiter {
 }
 
 // Create a singleton instance for the chat API
-// 10 requests per minute for chat API, max 1000 entries to prevent memory issues
-export const chatRateLimiter = new RateLimiter(60000, 10, 1000);
+// 20 requests per hour for chat API, max 1000 entries to prevent memory issues
+export const chatRateLimiter = new RateLimiter(60 * 60 * 1000, 20, 1000);
 
 // Helper function to get client IP from request
 export function getClientIP(request: Request): string {
