@@ -1,0 +1,26 @@
+[
+  {
+    "company": "PT XLSMART Telecom Sejahtera Tbk",
+    "role": "Frontend Engineer",
+    "start": "2022-03",
+    "end": "2024-08",
+    "summary": "Bangun dan optimasi aplikasi web internal telco; fokus performa dan DX.",
+    "highlights": [
+      "TTI < 2s pada halaman kritikal di jaringan seluler",
+      "Standarisasi komponen UI dengan Storybook + lint + testing",
+      "Integrasi observability dasar untuk error monitoring"
+    ]
+  },
+  {
+    "company": "Axiata Digital Labs",
+    "role": "Frontend/Mobile Engineer",
+    "start": "2021-01",
+    "end": "2022-02",
+    "summary": "Kontribusi pada aplikasi enterprise; React/React Native, aksesibilitas dasar.",
+    "highlights": [
+      "Implementasi state management yang konsisten (React Query + Redux)",
+      "Improved crash rate mobile dengan error boundaries dan logging"
+    ]
+  }
+]
+

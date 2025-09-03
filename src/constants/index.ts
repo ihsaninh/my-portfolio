@@ -13,8 +13,8 @@ export const TECH_PRESETS = [
 ] as const;
 
 export const PLACEHOLDERS = {
-  HR: "Ask about motivation, collaboration, team culture…",
-  TECH: "Ask about architecture, best practices, and tooling…",
+  HR: "Ask about motivation, collaboration…",
+  TECH: "Ask about architecture, best practices…",
 } as const;
 
 export const MAX_TEXTAREA_HEIGHT = 160;

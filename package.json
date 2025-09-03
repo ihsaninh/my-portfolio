@@ -14,6 +14,7 @@
     "prepare": "husky"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
     "@ai-sdk/google": "^2.0.8",
     "@ai-sdk/react": "^2.0.22",
     "@hookform/resolvers": "^5.1.1",

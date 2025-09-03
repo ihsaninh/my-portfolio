@@ -43,7 +43,8 @@ export default function HireMeLayout({
           ),
         }}
       />
-      {children}
+      {/* Full-page experience without default layout */}
+      <div className="isolate">{children}</div>
     </>
   );
 }

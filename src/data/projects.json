@@ -1,0 +1,19 @@
+[
+  {
+    "name": "Telco Ops Dashboard",
+    "role": "Frontend Engineer",
+    "stack": ["Next.js", "React", "TypeScript", "Tailwind", "TanStack Query"],
+    "period": "2023",
+    "outcome": "Percepatan load utama 40% dan pengurangan error UI",
+    "links": { "demo": null, "repo": null }
+  },
+  {
+    "name": "Enterprise Mobile App",
+    "role": "Mobile Engineer",
+    "stack": ["React Native", "TypeScript"],
+    "period": "2022",
+    "outcome": "Stabilitas rilis meningkat; penurunan crash rate",
+    "links": { "demo": null, "repo": null }
+  }
+]
+

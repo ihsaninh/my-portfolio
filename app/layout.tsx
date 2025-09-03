@@ -7,8 +7,7 @@ import { JetBrains_Mono, Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
-import FooterGuard from "@/src/components/shared/FooterGuard";
-import Header from "@/src/components/shared/Header";
+import LayoutWrapper from "@/src/components/shared/LayoutWrapper";
 import { personJsonLd, websiteJsonLd } from "@/src/lib/seo";
 
 const outfit = Outfit({
@@ -103,11 +102,7 @@ export default function RootLayout({
         >
           <CopyCodeClient />
           <div aria-hidden className="app-bg" />
-          <div className="flex flex-col min-h-screen">
-            <Header />
-            <main className="py-8 mt-0 lg:mt-8">{children}</main>
-            <FooterGuard />
-          </div>
+          <LayoutWrapper>{children}</LayoutWrapper>
           <Analytics />
           <SpeedInsights />
         </ThemeProvider>
