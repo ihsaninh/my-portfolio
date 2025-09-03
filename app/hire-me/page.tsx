@@ -9,7 +9,6 @@ import {
   ChatMessage,
   ModeSelector,
   PresetButtons,
-  RateLimitInfo,
   TypingIndicator,
 } from "@/src/components/hire-me";
 import { HR_PRESETS, PLACEHOLDERS, TECH_PRESETS } from "@/src/constants";
@@ -23,41 +22,19 @@ import { Mode } from "@/src/types/hire-me";
 export default function HireMePage() {
   const [mode, setMode] = useState<Mode>("HR");
   const [input, setInput] = useState("");
-  const [rateLimitStatus, setRateLimitStatus] = useState<{
-    remaining: number;
-    resetTime: number;
-    resetInSeconds: number;
-  } | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [rateLimitRefreshTrigger, setRateLimitRefreshTrigger] = useState(0);
 
   const { messages, sendMessage, status } = useChat({
     id: `hire-${mode}`,
     transport: new DefaultChatTransport({
       api: `/api/chat?mode=${mode}`,
     }),
-    onError: (error) => {
-      if (error.message.includes("Rate limit")) {
-        setErrorMessage(
-          "Rate limit exceeded. Please wait before sending another message."
-        );
-      } else {
-        setErrorMessage("Something went wrong. Please try again.");
-      }
-      // Clear error after 5 seconds
-      setTimeout(() => setErrorMessage(null), 5000);
-    },
-    onFinish: () => {
-      // Refresh rate limit status after message is sent
-      setRateLimitRefreshTrigger((prev) => prev + 1);
-    },
   });
 
   useBodyOverflowLock();
   const bottomRef = useScrollToBottom(messages, status);
   const textareaRef = useTextareaAutoResize(input);
 
-  const disabled = status !== "ready" || rateLimitStatus?.remaining === 0;
+  const disabled = status !== "ready";
   const presets = mode === "HR" ? HR_PRESETS : TECH_PRESETS;
   const placeholder = PLACEHOLDERS[mode];
 
@@ -109,19 +86,6 @@ export default function HireMePage() {
               disabled={disabled}
             />
           </div>
-
-          {/* Rate limit info */}
-          <RateLimitInfo
-            onRateLimitChange={setRateLimitStatus}
-            refreshTrigger={rateLimitRefreshTrigger}
-          />
-
-          {/* Error message */}
-          {errorMessage && (
-            <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
-              {errorMessage}
-            </div>
-          )}
 
           {/* Chat card */}
           <section className="flex-1 rounded-2xl border border-slate-200/60 bg-white/70 p-4 backdrop-blur-md shadow-sm dark:border-white/10 dark:bg-white/[0.04] flex flex-col min-h-0">
