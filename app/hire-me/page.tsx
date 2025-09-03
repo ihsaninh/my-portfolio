@@ -262,46 +262,6 @@ export default function HireMePage() {
                           </span>
                         </h1>
                       </div>
-
-                      {/* Enhanced description */}
-                      <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-2 md:gap-2">
-                        <motion.div
-                          initial={{ opacity: 0, x: -10 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.6, delay: 0.8 }}
-                          className="flex flex-col md:flex-row items-center gap-3 md:gap-2 text-sm md:text-base text-slate-600 dark:text-slate-400"
-                        >
-                          <span className="inline-flex items-center gap-1.5">
-                            <motion.span
-                              animate={{ rotate: [0, 10, -10, 0] }}
-                              transition={{
-                                duration: 2,
-                                repeat: Infinity,
-                                delay: 1,
-                              }}
-                            >
-                              💼
-                            </motion.span>
-                            Practice interview skills
-                          </span>
-                          <span className="hidden md:inline text-slate-400 dark:text-slate-500">
-                            •
-                          </span>
-                          <span className="inline-flex items-center gap-1.5">
-                            <motion.span
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: Infinity,
-                                delay: 2,
-                              }}
-                            >
-                              🎯
-                            </motion.span>
-                            Get personalized responses
-                          </span>
-                        </motion.div>
-                      </div>
                     </div>
 
                     {/* Mode Selector */}
