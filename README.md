@@ -57,7 +57,6 @@ A modern, performant, and accessible personal portfolio website built with Next.
 - **Database:** Supabase (PostgreSQL with pgvector extension)
 - **AI Integration:** Google Gemini (via AI SDK)
 - **Embeddings:** Google text-embedding-004 (768 dimensions)
-- **Caching:** Upstash Redis
 - **Analytics:** Vercel Analytics & Speed Insights
 
 ### Developer Experience
@@ -110,10 +109,6 @@ SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # Google Gemini AI
 GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
-
-# Upstash Redis (optional)
-UPSTASH_REDIS_REST_URL=your_redis_url
-UPSTASH_REDIS_REST_TOKEN=your_redis_token
 ```
 
 4. **Run development server**
