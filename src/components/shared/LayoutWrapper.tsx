@@ -12,9 +12,10 @@ interface LayoutWrapperProps {
 export default function LayoutWrapper({ children }: LayoutWrapperProps) {
   const pathname = usePathname();
   const isHireMePage = pathname === "/hire-me";
+  const isQuizPage = pathname.startsWith("/quiz");
 
-  if (isHireMePage) {
-    // Full-page layout for hire-me (no header/footer)
+  if (isHireMePage || isQuizPage) {
+    // Full-page layout for hire-me and quiz pages (no header/footer)
     return <>{children}</>;
   }
 

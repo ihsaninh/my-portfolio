@@ -18,6 +18,7 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isBlog = pathname.startsWith("/blog");
+  const [toolsOpen, setToolsOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -173,6 +174,66 @@ export default function Header() {
                   </li>
                 );
               })}
+              {/* AI Tools dropdown */}
+              <li
+                className="relative"
+                onMouseEnter={() => setToolsOpen(true)}
+                onMouseLeave={() => setToolsOpen(false)}
+              >
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-3 py-1.5 text-sm text-primary shadow-md hover:shadow-lg hover:shadow-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60"
+                  aria-haspopup="menu"
+                  aria-expanded={toolsOpen}
+                  onClick={() => setToolsOpen((v) => !v)}
+                >
+                  AI Tools
+                  <span
+                    className={[
+                      "inline-block transition-transform",
+                      toolsOpen ? "rotate-180" : "rotate-0",
+                    ].join(" ")}
+                    aria-hidden
+                  >
+                    ▾
+                  </span>
+                </button>
+                <AnimatePresence>
+                  {toolsOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute right-0 mt-2 w-56 rounded-2xl border border-slate-300 bg-slate-50/95 backdrop-blur shadow-xl dark:border-white/10 dark:bg-white/10 overflow-hidden"
+                      role="menu"
+                    >
+                      <ul className="py-2">
+                        <li>
+                          <Link
+                            href="/hire-me"
+                            className="block px-4 py-2.5 text-sm text-slate-800 hover:bg-white/70 focus:bg-white/70 focus:outline-none dark:text-white/90 dark:hover:bg-white/10"
+                            role="menuitem"
+                            onClick={() => setToolsOpen(false)}
+                          >
+                            Hire Me Simulator
+                          </Link>
+                        </li>
+                        <li>
+                          <Link
+                            href="/quiz"
+                            className="block px-4 py-2.5 text-sm text-slate-800 hover:bg-white/70 focus:bg-white/70 focus:outline-none dark:text-white/90 dark:hover:bg-white/10"
+                            role="menuitem"
+                            onClick={() => setToolsOpen(false)}
+                          >
+                            AI Quiz
+                          </Link>
+                        </li>
+                      </ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </li>
               <li>
                 <a
                   href="/document/CV-Ihsan-Nurul-Habib.pdf"
@@ -250,6 +311,37 @@ export default function Header() {
                       </a>
                     </li>
                   ))}
+                  {/* Mobile: AI Tools collapsible */}
+                  <li className="p-2">
+                    <details className="group">
+                      <summary className="flex cursor-pointer list-none items-center justify-between rounded-xl bg-accent px-4 py-2 text-sm text-primary shadow-md hover:shadow-lg hover:shadow-accent/40">
+                        <span>AI Tools</span>
+                        <span className="transition-transform group-open:rotate-180">▾</span>
+                      </summary>
+                      <div className="mt-2 rounded-xl border border-slate-300 bg-slate-50 dark:border-white/10 dark:bg-white/5">
+                        <ul>
+                          <li>
+                            <Link
+                              href="/hire-me"
+                              className="block px-4 py-2 text-sm text-slate-800 hover:bg-white/70 dark:text-white/90 dark:hover:bg-white/10 rounded-md"
+                              onClick={() => setOpen(false)}
+                            >
+                              Hire Me Simulator
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/quiz"
+                              className="block px-4 py-2 text-sm text-slate-800 hover:bg-white/70 dark:text-white/90 dark:hover:bg-white/10 rounded-md"
+                              onClick={() => setOpen(false)}
+                            >
+                              AI Quiz
+                            </Link>
+                          </li>
+                        </ul>
+                      </div>
+                    </details>
+                  </li>
                   <li className="p-2">
                     <a
                       href="/document/CV-Ihsan-Nurul-Habib.pdf"
