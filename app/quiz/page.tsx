@@ -123,11 +123,11 @@ export default function QuizLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight"
+              className="text-5xl lg:text-6xl font-bold text-slate-900 dark:text-white mb-6 tracking-tight leading-tight"
             >
               {selectedLanguage === "id" ? (
                 <>
-                  Tantang Diri Anda dengan{" "}
+                  Ayo tantang dirimu di{" "}
                   <span className="bg-gradient-to-r from-accent to-accent/80 bg-clip-text text-transparent">
                     Kuis AI!
                   </span>
@@ -150,7 +150,7 @@ export default function QuizLandingPage() {
               className="text-xl text-slate-600 dark:text-slate-300 mb-12 leading-relaxed"
             >
               {selectedLanguage === "id"
-                ? "Uji pengetahuan Anda di berbagai kategori, dapatkan feedback AI instan, dan bersaing di papan peringkat!"
+                ? "Uji pengetahuanmu di berbagai kategori, dapatkan feedback AI instan, dan naikkan peringkatmu!"
                 : "Test your knowledge across various categories, get instant AI-powered feedback, and compete on the leaderboard!"}
             </motion.p>
 
@@ -234,7 +234,7 @@ export default function QuizLandingPage() {
                   >
                     {isLoading
                       ? selectedLanguage === "id"
-                        ? "Menyiapkan Kuis..."
+                        ? "Lagi nyiapin kuis..."
                         : "Preparing Quiz..."
                       : t.startQuiz}
                   </Button>
@@ -252,9 +252,7 @@ export default function QuizLandingPage() {
                 onClick={handleViewLeaderboard}
                 className="text-accent hover:text-accent-hover font-medium transition-colors duration-200 underline decoration-2 underline-offset-4 hover:decoration-accent-hover"
               >
-                {selectedLanguage === "id"
-                  ? "Lihat Papan Peringkat 🏆"
-                  : "View Leaderboard 🏆"}
+                {selectedLanguage === "id" ? t.viewLeaderboard : "View Leaderboard 🏆"}
               </button>
             </motion.div>
 

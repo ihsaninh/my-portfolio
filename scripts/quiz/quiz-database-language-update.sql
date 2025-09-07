@@ -1,15 +1,15 @@
 -- Update database schema to support multilingual questions
 -- Run this in your Supabase SQL Editor
 
--- 1. Add language column to questions table
-ALTER TABLE questions ADD COLUMN IF NOT EXISTS language VARCHAR(5) DEFAULT 'en';
+-- 1. Add language column to quiz_questions table
+ALTER TABLE quiz_questions ADD COLUMN IF NOT EXISTS language VARCHAR(5) DEFAULT 'en';
 
 -- 2. Create index for language-based queries
-CREATE INDEX IF NOT EXISTS questions_language_idx ON questions(language);
+CREATE INDEX IF NOT EXISTS quiz_questions_language_idx ON quiz_questions(language);
 
 -- 3. Insert Indonesian questions
 -- Tech questions in Indonesian
-INSERT INTO questions (id, category_id, prompt, difficulty, type, language, is_active) VALUES
+INSERT INTO quiz_questions (id, category_id, prompt, difficulty, type, language, is_active) VALUES
 ('tech-1-id', 'tech', 'Jelaskan konsep virtual machine dan bagaimana perbedaannya dengan container.', 3, 'open-ended', 'id', true),
 ('tech-2-id', 'tech', 'Apa saja prinsip utama dalam desain RESTful API?', 3, 'open-ended', 'id', true),
 ('tech-3-id', 'tech', 'Jelaskan perbedaan antara database SQL dan NoSQL.', 2, 'open-ended', 'id', true),
@@ -39,12 +39,12 @@ ON CONFLICT (id) DO UPDATE SET
     is_active = EXCLUDED.is_active;
 
 -- 4. Update existing English questions to have language 'en'
-UPDATE questions SET language = 'en' WHERE language IS NULL OR language = '';
+UPDATE quiz_questions SET language = 'en' WHERE language IS NULL OR language = '';
 
 -- 5. Update RLS policy to include language consideration
-DROP POLICY IF EXISTS "Questions are viewable by everyone" ON questions;
+DROP POLICY IF EXISTS "Questions are viewable by everyone" ON quiz_questions;
 CREATE POLICY "Questions are viewable by everyone" 
-    ON questions FOR SELECT 
+    ON quiz_questions FOR SELECT 
     USING (is_active = true);
 
 -- Language update complete!

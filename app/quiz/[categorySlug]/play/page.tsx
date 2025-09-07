@@ -502,12 +502,12 @@ export default function QuizPlayPage() {
               <Card variant="glass" padding="sm" className="text-center">
                 <div className="text-2xl mb-1">⭐</div>
                 <div className="text-lg font-bold text-slate-900 dark:text-white">
-                  {Math.round(
-                    (quizSession.totalScore /
-                      (quizSession.answers.length * 100)) *
-                      100
-                  ) || 0}
-                  %
+                  {quizSession.answers.length > 0
+                    ? Math.round(
+                        quizSession.totalScore / quizSession.answers.length
+                      )
+                    : 0}
+                  <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">/100</span>
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">
                   {t.avgScore}

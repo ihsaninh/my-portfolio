@@ -101,6 +101,7 @@ export interface QuizTranslations {
   categoryRankings: string;
   allCategories: string;
   backToQuiz: string;
+  points: string;
 
   // AI Feedback
   aiFeedbackMessages: {
@@ -187,6 +188,7 @@ export const translations: Record<Language, QuizTranslations> = {
     categoryRankings: "Category Rankings",
     allCategories: "All Categories",
     backToQuiz: "Back to Quiz",
+    points: "points",
 
     // AI Feedback
     aiFeedbackMessages: {
@@ -203,36 +205,36 @@ export const translations: Record<Language, QuizTranslations> = {
     back: "Kembali",
     next: "Lanjut",
     submit: "Kirim",
-    loading: "Memuat...",
-    error: "Error",
-    tryAgain: "Coba Lagi",
+    loading: "Lagi dimuat...",
+    error: "Ups, ada yang salah",
+    tryAgain: "Coba lagi",
 
     // Quiz Start
     selectLanguage: "Pilih Bahasa",
-    languagePrompt: "Pilih bahasa yang Anda inginkan untuk kuis ini",
-    enterName: "Masukkan Nama Anda",
-    namePlaceholder: "Nama Anda...",
-    startQuiz: "Mulai Kuis",
+    languagePrompt: "Mau main pakai bahasa apa?",
+    enterName: "Masukkan Namamu",
+    namePlaceholder: "Nama kamu...",
+    startQuiz: "Mulai Kuis 🚀",
 
     // Categories
-    selectCategory: "Pilih Kategori Kuis",
-    welcomeMessage: "Selamat datang",
-    questionsPerQuiz: "Per sesi kuis",
-    aiFeedback: "Evaluasi instan",
+    selectCategory: "Pilih Kategori",
+    welcomeMessage: "Halo!",
+    questionsPerQuiz: "per sesi kuis",
+    aiFeedback: "Dinilai otomatis sama AI",
 
     // Quiz Play
     question: "Pertanyaan",
     of: "dari",
-    playingAs: "Bermain sebagai:",
-    yourAnswer: "Jawaban Anda",
-    answerPlaceholder: "Ketik jawaban Anda di sini...",
+    playingAs: "Main sebagai:",
+    yourAnswer: "Jawabanmu",
+    answerPlaceholder: "Tulis jawabanmu di sini...",
     characters: "Karakter:",
-    minRecommended: "Min. 10 karakter disarankan",
+    minRecommended: "Minimal 10 karakter ya",
     submitAnswer: "Kirim Jawaban 🚀",
-    aiEvaluating: "AI sedang mengevaluasi...",
+    aiEvaluating: "AI lagi ngecek jawabanmu...",
     answered: "Terjawab",
     avgScore: "Skor Rata-rata",
-    remaining: "Tersisa",
+    remaining: "Sisa",
 
     // Difficulty levels
     easy: "mudah",
@@ -240,49 +242,48 @@ export const translations: Record<Language, QuizTranslations> = {
     hard: "sulit",
 
     // Quiz Results
-    congratulations: "Selamat!",
-    quizCompleted: "Kuis Selesai",
+    congratulations: "Selamat! 🎉",
+    quizCompleted: "Kuis Selesai!",
     finalScore: "Skor Akhir",
     aiFeedbackSummary: "Ringkasan Feedback AI",
-    viewDetailedFeedback: "Lihat Feedback Detail",
-    hideDetailedFeedback: "Sembunyikan Feedback Detail",
+    viewDetailedFeedback: "Lihat Feedback Lengkap",
+    hideDetailedFeedback: "Sembunyikan Feedback",
     questionByQuestionFeedback: "Feedback per Pertanyaan",
-    yourAnswerLabel: "Jawaban Anda:",
-    strengths: "Kelebihan",
-    areasForImprovement: "Area yang Perlu Diperbaiki",
+    yourAnswerLabel: "Jawabanmu:",
+    strengths: "Yang Keren",
+    areasForImprovement: "Yang Bisa Ditingkatkan",
     aiAssessment: "Penilaian AI:",
 
     // Performance categories
-    excellent: "Sangat Baik",
-    good: "Baik",
-    average: "Cukup",
-    poor: "Kurang",
+    excellent: "Keren Banget",
+    good: "Mantap",
+    average: "Lumayan",
+    poor: "Perlu Latihan",
 
     // Actions
-    viewLeaderboard: "Lihat Papan Peringkat 🏆",
-    tryAgainInCategory: "Coba Lagi di",
-    startNewQuiz: "Mulai Kuis Baru",
+    viewLeaderboard: "Lihat Leaderboard 🏆",
+    tryAgainInCategory: "Coba lagi di",
+    startNewQuiz: "Main Lagi",
 
     // Leaderboard
-    quizLeaderboard: "Papan Peringkat Kuis",
-    seeHowYouStackUp:
-      "Lihat bagaimana posisi Anda dibanding peserta kuis lainnya!",
-    yourStats: "Statistik Anda",
+    quizLeaderboard: "Leaderboard",
+    seeHowYouStackUp: "Lihat posisi kamu dibanding pemain lain!",
+    yourStats: "Statistikmu",
     globalRank: "Peringkat Global",
     bestScore: "Skor Terbaik",
     globalRankings: "Peringkat Global",
     categoryRankings: "Peringkat Kategori",
     allCategories: "Semua Kategori",
     backToQuiz: "Kembali ke Kuis",
+    points: "poin",
 
     // AI Feedback
     aiFeedbackMessages: {
       excellent:
-        "Kerja yang sangat baik! Jawaban Anda menunjukkan pemahaman yang mendalam dan penjelasan yang jelas. Pertahankan!",
-      good: "Bagus! Jawaban Anda solid. Pertimbangkan untuk menambahkan lebih banyak contoh dan detail untuk lebih baik lagi.",
-      average:
-        "Usaha yang baik! Fokus pada penjelasan yang lebih komprehensif dan contoh-contoh dalam jawaban Anda.",
-      poor: "Terus berlatih! Cobalah memberikan penjelasan yang lebih detail dan contoh yang relevan di jawaban Anda selanjutnya.",
+        "Wuih! Jawabanmu mantap, jelas, lengkap, dan mengena. Pertahankan!",
+      good: "Good job! Udah oke. Tambahin contoh biar makin nendang, ya.",
+      average: "Lumayan! Coba tambahin detail dan contoh biar lebih kuat.",
+      poor: "Belum pas. Tenang, coba jawab lebih jelas + kasih contoh ya!",
     },
   },
 };

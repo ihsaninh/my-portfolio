@@ -14,7 +14,7 @@ export async function getCategories(): Promise<Category[]> {
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("categories")
+    .from("quiz_categories")
     .select("*")
     .eq("is_active", true)
     .order("created_at");
@@ -33,7 +33,7 @@ export async function getCategoryBySlug(
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("categories")
+    .from("quiz_categories")
     .select("*")
     .eq("slug", slug)
     .eq("is_active", true)
@@ -56,7 +56,7 @@ export async function getQuestionsByCategory(
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("questions")
+    .from("quiz_questions")
     .select("*")
     .eq("category_id", categoryId)
     .eq("language", language)
@@ -72,6 +72,26 @@ export async function getQuestionsByCategory(
   return data || [];
 }
 
+// Fetch a single question by ID
+export async function getQuestionById(
+  questionId: string
+): Promise<Question | null> {
+  const supabase = supabaseServer();
+
+  const { data, error } = await supabase
+    .from("quiz_questions")
+    .select("*")
+    .eq("id", questionId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching question:", error);
+    return null;
+  }
+
+  return data;
+}
+
 // Sessions API
 export async function createSession(sessionData: {
   id: string;
@@ -81,7 +101,7 @@ export async function createSession(sessionData: {
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("sessions")
+    .from("quiz_sessions")
     .insert(sessionData)
     .select()
     .single();
@@ -98,7 +118,7 @@ export async function getSession(sessionId: string): Promise<Session | null> {
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("sessions")
+    .from("quiz_sessions")
     .select("*")
     .eq("id", sessionId)
     .single();
@@ -117,7 +137,7 @@ export async function getSessionByFingerprint(
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("sessions")
+    .from("quiz_sessions")
     .select("*")
     .eq("fingerprint_hash", fingerprint)
     .single();
@@ -144,7 +164,7 @@ export async function createAttempt(attemptData: {
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("attempts")
+    .from("quiz_attempts")
     .insert(attemptData)
     .select()
     .single();
@@ -163,7 +183,7 @@ export async function getAttemptsBySession(
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("attempts")
+    .from("quiz_attempts")
     .select("*")
     .eq("session_id", sessionId)
     .order("created_at");
@@ -183,9 +203,10 @@ export async function getGlobalLeaderboard(
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("leaderboard_global")
+    .from("quiz_leaderboard_global")
     .select("*")
-    .order("best_score", { ascending: false })
+    // Order by average score to align with quiz result percentage
+    .order("avg_score", { ascending: false })
     .order("first_attempt", { ascending: true })
     .limit(limit);
 
@@ -204,10 +225,11 @@ export async function getCategoryLeaderboard(
   const supabase = supabaseServer();
 
   const { data, error } = await supabase
-    .from("leaderboard_category")
+    .from("quiz_leaderboard_category")
     .select("*")
     .eq("category_id", categoryId)
-    .order("best_score", { ascending: false })
+    // Order by average score to align with quiz result percentage
+    .order("avg_score", { ascending: false })
     .order("first_attempt", { ascending: true })
     .limit(limit);
 

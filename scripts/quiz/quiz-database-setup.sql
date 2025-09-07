@@ -1,8 +1,8 @@
 -- Quiz Application Database Schema for Supabase
 -- Run these queries in your Supabase SQL Editor
 
--- 1. Create categories table
-CREATE TABLE IF NOT EXISTS categories (
+-- 1. Create categories table (prefixed)
+CREATE TABLE IF NOT EXISTS quiz_categories (
     id VARCHAR(50) PRIMARY KEY,
     slug VARCHAR(100) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -12,31 +12,32 @@ CREATE TABLE IF NOT EXISTS categories (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Create questions table
-CREATE TABLE IF NOT EXISTS questions (
+-- 2. Create questions table (prefixed)
+CREATE TABLE IF NOT EXISTS quiz_questions (
     id VARCHAR(50) PRIMARY KEY,
-    category_id VARCHAR(50) REFERENCES categories(id) ON DELETE CASCADE,
+    category_id VARCHAR(50) REFERENCES quiz_categories(id) ON DELETE CASCADE,
     prompt TEXT NOT NULL,
     difficulty INTEGER DEFAULT 3 CHECK (difficulty >= 1 AND difficulty <= 5),
     rubric_json JSONB,
     type VARCHAR(20) DEFAULT 'open-ended' CHECK (type IN ('open-ended', 'multiple-choice')),
+    language VARCHAR(5) DEFAULT 'en',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 3. Create sessions table
-CREATE TABLE IF NOT EXISTS sessions (
+-- 3. Create sessions table (prefixed)
+CREATE TABLE IF NOT EXISTS quiz_sessions (
     id VARCHAR(50) PRIMARY KEY,
     display_name VARCHAR(100) NOT NULL,
     fingerprint_hash VARCHAR(255) UNIQUE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 4. Create attempts table
-CREATE TABLE IF NOT EXISTS attempts (
+-- 4. Create attempts table (prefixed)
+CREATE TABLE IF NOT EXISTS quiz_attempts (
     id VARCHAR(50) PRIMARY KEY,
-    session_id VARCHAR(50) REFERENCES sessions(id) ON DELETE CASCADE,
-    question_id VARCHAR(50) REFERENCES questions(id) ON DELETE CASCADE,
+    session_id VARCHAR(50) REFERENCES quiz_sessions(id) ON DELETE CASCADE,
+    question_id VARCHAR(50) REFERENCES quiz_questions(id) ON DELETE CASCADE,
     answer_text TEXT NOT NULL,
     score_ai INTEGER CHECK (score_ai >= 0 AND score_ai <= 100),
     score_rule INTEGER CHECK (score_rule >= 0 AND score_rule <= 100),
@@ -46,14 +47,15 @@ CREATE TABLE IF NOT EXISTS attempts (
 );
 
 -- 5. Create indexes for performance
-CREATE INDEX IF NOT EXISTS idx_questions_category_active ON questions(category_id, is_active);
-CREATE INDEX IF NOT EXISTS idx_sessions_fingerprint ON sessions(fingerprint_hash);
-CREATE INDEX IF NOT EXISTS idx_attempts_session ON attempts(session_id);
-CREATE INDEX IF NOT EXISTS idx_attempts_question ON attempts(question_id);
-CREATE INDEX IF NOT EXISTS idx_attempts_score ON attempts(score_final DESC);
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_category_active ON quiz_questions(category_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_language ON quiz_questions(language);
+CREATE INDEX IF NOT EXISTS idx_quiz_sessions_fingerprint ON quiz_sessions(fingerprint_hash);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_session ON quiz_attempts(session_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_question ON quiz_attempts(question_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempts_score ON quiz_attempts(score_final DESC);
 
--- 6. Create materialized views for leaderboards
-CREATE MATERIALIZED VIEW IF NOT EXISTS leaderboard_global AS
+-- 6. Create materialized views for leaderboards (prefixed)
+CREATE MATERIALIZED VIEW IF NOT EXISTS quiz_leaderboard_global AS
 SELECT 
     s.id as session_id,
     s.display_name,
@@ -62,12 +64,12 @@ SELECT
     COUNT(a.id) as total_attempts,
     MIN(a.created_at) as first_attempt,
     MAX(a.created_at) as last_attempt
-FROM attempts a
-JOIN sessions s ON a.session_id = s.id
+FROM quiz_attempts a
+JOIN quiz_sessions s ON a.session_id = s.id
 GROUP BY s.id, s.display_name
 ORDER BY best_score DESC, first_attempt ASC;
 
-CREATE MATERIALIZED VIEW IF NOT EXISTS leaderboard_category AS
+CREATE MATERIALIZED VIEW IF NOT EXISTS quiz_leaderboard_category AS
 SELECT 
     q.category_id,
     s.id as session_id,
@@ -77,24 +79,23 @@ SELECT
     COUNT(a.id) as total_attempts,
     MIN(a.created_at) as first_attempt,
     MAX(a.created_at) as last_attempt
-FROM attempts a
-JOIN questions q ON a.question_id = q.id
-JOIN sessions s ON a.session_id = s.id
+FROM quiz_attempts a
+JOIN quiz_questions q ON a.question_id = q.id
+JOIN quiz_sessions s ON a.session_id = s.id
 GROUP BY q.category_id, s.id, s.display_name
 ORDER BY q.category_id, best_score DESC, first_attempt ASC;
 
 -- 7. Create indexes on materialized views
-CREATE UNIQUE INDEX IF NOT EXISTS idx_leaderboard_global_session ON leaderboard_global(session_id);
-CREATE INDEX IF NOT EXISTS idx_leaderboard_global_score ON leaderboard_global(best_score DESC);
-CREATE UNIQUE INDEX IF NOT EXISTS idx_leaderboard_category_session ON leaderboard_category(category_id, session_id);
-CREATE INDEX IF NOT EXISTS idx_leaderboard_category_score ON leaderboard_category(category_id, best_score DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_quiz_leaderboard_global_session ON quiz_leaderboard_global(session_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_leaderboard_global_score ON quiz_leaderboard_global(best_score DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_quiz_leaderboard_category_session ON quiz_leaderboard_category(category_id, session_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_leaderboard_category_score ON quiz_leaderboard_category(category_id, best_score DESC);
 
--- 8. Create function to refresh materialized views
 CREATE OR REPLACE FUNCTION refresh_leaderboards()
 RETURNS void AS $$
 BEGIN
-    REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_global;
-    REFRESH MATERIALIZED VIEW CONCURRENTLY leaderboard_category;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY quiz_leaderboard_global;
+    REFRESH MATERIALIZED VIEW CONCURRENTLY quiz_leaderboard_category;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -109,55 +110,54 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Create trigger (drop if exists first)
-DROP TRIGGER IF EXISTS refresh_leaderboards_trigger ON attempts;
+DROP TRIGGER IF EXISTS refresh_leaderboards_trigger ON quiz_attempts;
 CREATE TRIGGER refresh_leaderboards_trigger
-    AFTER INSERT OR UPDATE OR DELETE ON attempts
+    AFTER INSERT OR UPDATE OR DELETE ON quiz_attempts
     FOR EACH STATEMENT
     EXECUTE FUNCTION trigger_refresh_leaderboards();
 
 -- 10. Enable Row Level Security
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quiz_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quiz_questions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quiz_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE quiz_attempts ENABLE ROW LEVEL SECURITY;
 
--- 11. Create RLS policies
 -- Categories: public read access for active categories
-DROP POLICY IF EXISTS "Categories are viewable by everyone" ON categories;
+DROP POLICY IF EXISTS "Categories are viewable by everyone" ON quiz_categories;
 CREATE POLICY "Categories are viewable by everyone" 
-    ON categories FOR SELECT 
+    ON quiz_categories FOR SELECT 
     USING (is_active = true);
 
 -- Questions: public read access for active questions
-DROP POLICY IF EXISTS "Questions are viewable by everyone" ON questions;
+DROP POLICY IF EXISTS "Questions are viewable by everyone" ON quiz_questions;
 CREATE POLICY "Questions are viewable by everyone" 
-    ON questions FOR SELECT 
+    ON quiz_questions FOR SELECT 
     USING (is_active = true);
 
 -- Sessions: anyone can create and read sessions
-DROP POLICY IF EXISTS "Users can create sessions" ON sessions;
+DROP POLICY IF EXISTS "Users can create sessions" ON quiz_sessions;
 CREATE POLICY "Users can create sessions" 
-    ON sessions FOR INSERT 
+    ON quiz_sessions FOR INSERT 
     WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Users can read all sessions" ON sessions;
+DROP POLICY IF EXISTS "Users can read all sessions" ON quiz_sessions;
 CREATE POLICY "Users can read all sessions" 
-    ON sessions FOR SELECT 
+    ON quiz_sessions FOR SELECT 
     USING (true);
 
 -- Attempts: anyone can create and read attempts
-DROP POLICY IF EXISTS "Users can create attempts" ON attempts;
+DROP POLICY IF EXISTS "Users can create attempts" ON quiz_attempts;
 CREATE POLICY "Users can create attempts" 
-    ON attempts FOR INSERT 
+    ON quiz_attempts FOR INSERT 
     WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Users can read all attempts" ON attempts;
+DROP POLICY IF EXISTS "Users can read all attempts" ON quiz_attempts;
 CREATE POLICY "Users can read all attempts" 
-    ON attempts FOR SELECT 
+    ON quiz_attempts FOR SELECT 
     USING (true);
 
 -- 12. Insert initial data
-INSERT INTO categories (id, slug, name, icon, color, is_active) VALUES
+INSERT INTO quiz_categories (id, slug, name, icon, color, is_active) VALUES
 ('tech', 'tech', 'Tech', '🤖', 'from-blue-500 to-cyan-500', true),
 ('career', 'career', 'Career', '🚀', 'from-purple-500 to-pink-500', true),
 ('fun', 'fun', 'Fun', '🎭', 'from-green-500 to-emerald-500', true)
@@ -169,7 +169,7 @@ ON CONFLICT (id) DO UPDATE SET
     is_active = EXCLUDED.is_active;
 
 -- Insert sample questions
-INSERT INTO questions (id, category_id, prompt, difficulty, type, is_active) VALUES
+INSERT INTO quiz_questions (id, category_id, prompt, difficulty, type, is_active) VALUES
 -- Tech questions
 ('tech-1', 'tech', 'Explain the concept of a virtual machine and how it differs from a container.', 3, 'open-ended', true),
 ('tech-2', 'tech', 'What are the key principles of RESTful API design?', 3, 'open-ended', true),

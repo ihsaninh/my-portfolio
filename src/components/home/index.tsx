@@ -3,7 +3,6 @@
 import type { Variants } from "framer-motion";
 import { domAnimation, easeOut, LazyMotion, m } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
 import { FiDownload, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 

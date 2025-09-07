@@ -149,8 +149,8 @@ export default function CategoriesPage() {
               </h2>
               <p className="text-lg text-slate-600 dark:text-slate-300">
                 {language === "id"
-                  ? "Pilih topik yang Anda inginkan dan uji pengetahuan Anda!"
-                  : "Choose your preferred topic and test your knowledge!"}
+                  ? "Pilih topik favoritmu dan uji skill kamu!"
+                  : "Choose your favorite topic and test your skills!"}
               </p>
             </motion.div>
 
@@ -206,7 +206,7 @@ export default function CategoriesPage() {
                           handleCategorySelect(category.slug);
                         }}
                       >
-                        {t.startQuiz} 🎯
+                        {t.startQuiz}
                       </Button>
                     </div>
                   </Card>

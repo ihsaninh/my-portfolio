@@ -1,20 +1,15 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button, Card } from "@/src/components/quiz";
 import { DEFAULT_LANGUAGE, getTranslation, Language } from "@/src/lib/i18n";
-import {
-  LeaderboardEntry,
-  LeaderboardView,
-  QuizCategory,
-} from "@/src/types/quiz";
+import { LeaderboardEntry, QuizCategory } from "@/src/types/quiz";
 
 export default function LeaderboardPage() {
   const router = useRouter();
-  const [activeView, setActiveView] = useState<LeaderboardView>("global");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [userRank, setUserRank] = useState<number | null>(null);
   const [userScore, setUserScore] = useState<number | null>(null);
@@ -22,82 +17,95 @@ export default function LeaderboardPage() {
     []
   );
   const [categories, setCategories] = useState<QuizCategory[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initializing, setInitializing] = useState(true);
+  const [listLoading, setListLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
 
   const t = getTranslation(language);
 
-  useEffect(() => {
-    // Get language from localStorage
-    const savedLanguage = localStorage.getItem("quizLanguage") as Language;
-    if (savedLanguage) {
-      setLanguage(savedLanguage);
-    }
+  // Helper to fetch leaderboard only
+  const fetchLeaderboard = async (categoryId: string) => {
+    try {
+      setListLoading(true);
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+      const leaderboardUrl =
+        categoryId === "all"
+          ? "/api/quiz/leaderboard"
+          : `/api/quiz/leaderboard?categoryId=${categoryId}`;
 
-        // Fetch categories
-        const categoriesResponse = await fetch("/api/quiz/categories");
-        if (!categoriesResponse.ok) {
-          throw new Error("Failed to fetch categories");
+      const leaderboardResponse = await fetch(leaderboardUrl);
+      if (!leaderboardResponse.ok) {
+        throw new Error("Failed to fetch leaderboard");
+      }
+      const data = await leaderboardResponse.json();
+      const finalLeaderboardData = Array.isArray(data) ? data : [];
+      setLeaderboardData(finalLeaderboardData);
+
+      // Update user rank/score
+      const playerName = localStorage.getItem("quizPlayerName");
+      if (playerName && Array.isArray(finalLeaderboardData)) {
+        const userEntry = finalLeaderboardData.find(
+          (entry: LeaderboardEntry) =>
+            entry.playerName?.toLowerCase() === playerName.toLowerCase()
+        );
+
+        if (userEntry) {
+          const rank =
+            finalLeaderboardData.findIndex(
+              (entry: LeaderboardEntry) => entry.id === userEntry.id
+            ) + 1;
+          setUserRank(rank);
+          setUserScore(userEntry.score);
+        } else {
+          setUserRank(null);
+          setUserScore(null);
         }
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load leaderboard"
+      );
+    } finally {
+      setListLoading(false);
+    }
+  };
+
+  // Initial load: language, categories, and initial leaderboard
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const savedLanguage = localStorage.getItem("quizLanguage") as Language;
+        if (savedLanguage) setLanguage(savedLanguage);
+
+        const categoriesResponse = await fetch("/api/quiz/categories");
+        if (!categoriesResponse.ok)
+          throw new Error("Failed to fetch categories");
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
 
-        // Fetch leaderboard data
-        const leaderboardUrl =
-          activeView === "global"
-            ? "/api/quiz/leaderboard"
-            : `/api/quiz/leaderboard?categoryId=${selectedCategory}`;
-
-        const leaderboardResponse = await fetch(leaderboardUrl);
-        if (!leaderboardResponse.ok) {
-          throw new Error("Failed to fetch leaderboard");
-        }
-        const leaderboardData = await leaderboardResponse.json();
-
-        // Ensure we have an array
-        const finalLeaderboardData = Array.isArray(leaderboardData)
-          ? leaderboardData
-          : [];
-
-        setLeaderboardData(finalLeaderboardData);
-
-        // Check user's rank and score
-        const playerName = localStorage.getItem("quizPlayerName");
-        if (playerName && Array.isArray(finalLeaderboardData)) {
-          const userEntry = finalLeaderboardData.find(
-            (entry: LeaderboardEntry) =>
-              entry.playerName?.toLowerCase() === playerName.toLowerCase()
-          );
-
-          if (userEntry) {
-            const rank =
-              finalLeaderboardData.findIndex(
-                (entry: LeaderboardEntry) => entry.id === userEntry.id
-              ) + 1;
-            setUserRank(rank);
-            setUserScore(userEntry.percentage);
-          } else {
-            // User not in top rankings
-            setUserRank(null);
-            setUserScore(null);
-          }
-        }
+        await fetchLeaderboard(selectedCategory);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load leaderboard"
+          err instanceof Error
+            ? err.message
+            : "Failed to initialize leaderboard"
         );
       } finally {
-        setLoading(false);
+        setInitializing(false);
       }
     };
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    fetchData();
-  }, [activeView, selectedCategory]);
+  // Update leaderboard only when category changes
+  useEffect(() => {
+    if (!initializing) {
+      fetchLeaderboard(selectedCategory);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategory]);
 
   const getFilteredLeaderboard = (): LeaderboardEntry[] => {
     // Ensure leaderboardData is an array before calling slice
@@ -145,7 +153,7 @@ export default function LeaderboardPage() {
   const leaderboard = getFilteredLeaderboard();
   const isEmpty = leaderboard.length === 0;
 
-  if (loading) {
+  if (initializing) {
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -256,10 +264,13 @@ export default function LeaderboardPage() {
                     </div>
                     <div>
                       <div className="text-3xl font-bold text-accent mb-2">
-                        {userScore}%
+                        {userScore}
+                        <span className="ml-1 text-sm text-slate-500 dark:text-slate-400">
+                          /100
+                        </span>
                       </div>
                       <div className="text-slate-600 dark:text-slate-400">
-                        {t.bestScore}
+                        {t.avgScore}
                       </div>
                     </div>
                   </div>
@@ -267,7 +278,7 @@ export default function LeaderboardPage() {
               </motion.div>
             )}
 
-            {/* View Toggle */}
+            {/* Filter */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -275,55 +286,42 @@ export default function LeaderboardPage() {
               className="mb-8"
             >
               <Card variant="glass" padding="sm">
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                  {/* View Tabs */}
-                  <div className="flex bg-slate-100 dark:bg-slate-700 rounded-xl p-1">
-                    <button
-                      onClick={() => setActiveView("global")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        activeView === "global"
-                          ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-md"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                      }`}
-                    >
-                      🌍 {t.globalRankings}
-                    </button>
-                    <button
-                      onClick={() => setActiveView("category")}
-                      className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                        activeView === "category"
-                          ? "bg-white dark:bg-slate-600 text-slate-900 dark:text-white shadow-md"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                      }`}
-                    >
-                      📂 {t.categoryRankings}
-                    </button>
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="text-slate-700 dark:text-slate-300 font-medium">
+                    {selectedCategory === "all"
+                      ? t.globalRankings
+                      : t.categoryRankings}
                   </div>
-
-                  {/* Category Filter */}
-                  <AnimatePresence>
-                    {activeView === "category" && (
-                      <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        transition={{ duration: 0.3 }}
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="appearance-none pl-4 pr-12 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
                       >
-                        <select
-                          value={selectedCategory}
-                          onChange={(e) => setSelectedCategory(e.target.value)}
-                          className="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-accent"
+                        <option value="all">{t.allCategories}</option>
+                        {categories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.icon} {category.name}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-slate-500 dark:text-slate-400">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
                         >
-                          <option value="all">{t.allCategories}</option>
-                          {categories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.icon} {category.name}
-                            </option>
-                          ))}
-                        </select>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </Card>
             </motion.div>
@@ -336,23 +334,46 @@ export default function LeaderboardPage() {
               className="mb-8"
             >
               <Card variant="default" padding="lg">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-                  {activeView === "global"
-                    ? t.globalRankings
-                    : t.categoryRankings}
-                  {activeView === "category" && selectedCategory !== "all" && (
-                    <span className="text-accent">
-                      {" "}
-                      -{" "}
-                      {
-                        categories.find((cat) => cat.id === selectedCategory)
-                          ?.name
-                      }
-                    </span>
+                <div className="mb-6 flex items-center justify-between gap-4">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {selectedCategory === "all" ? (
+                      t.globalRankings
+                    ) : (
+                      <>
+                        {t.categoryRankings}{" "}
+                        <span className="text-accent">
+                          -{" "}
+                          {
+                            categories.find(
+                              (cat) => cat.id === selectedCategory
+                            )?.name
+                          }
+                        </span>
+                      </>
+                    )}
+                  </h2>
+                  {listLoading && (
+                    <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                      <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm">
+                        {language === "id"
+                          ? "Memuat daftar..."
+                          : "Loading list..."}
+                      </span>
+                    </div>
                   )}
-                </h2>
+                </div>
 
-                {isEmpty ? (
+                {listLoading ? (
+                  <div className="space-y-3">
+                    {Array.from({ length: 5 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : isEmpty ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -424,13 +445,13 @@ export default function LeaderboardPage() {
                           </div>
                         </div>
 
-                        {/* Score */}
+                        {/* Score (points) */}
                         <div className="text-right">
                           <div className="text-2xl font-bold text-accent">
-                            {entry.percentage}%
-                          </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {entry.score}/{entry.maxScore}
+                            {entry.score}
+                            <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                              /100
+                            </span>
                           </div>
                         </div>
                       </motion.div>
