@@ -216,7 +216,7 @@ ${rubric ? `**Rubrik Tambahan:** ${JSON.stringify(rubric)}` : ""}
 - KONSISTENSI PENTING: Jawaban identik harus mendapat skor identik. Evaluasi berdasarkan konten faktual, bukan variasi subjektif.
 - Untuk jawaban singkat yang benar tapi tidak lengkap (contoh: "Istana Bogor. dulunya markas VOC"), berikan skor konsisten 50-60 jika nama benar tapi penjelasan kurang akurat.
 
-**Gaya Feedback:** Santai, positif, 2–4 kalimat, hindari terlalu formal. Boleh emoji seperlunya 🙂.
+**Gaya Feedback:** Santai, positif, 2–4 kalimat, hindari terlalu formal. Boleh emoji seperlunya pilih salah satu sesuai konteks(🤣😅😁😭🥹).
 
 Ikuti schema output.`
       : `You are a friendly, supportive evaluator for a fun quiz. Scoring must be objective (no inflation), feedback casual.
