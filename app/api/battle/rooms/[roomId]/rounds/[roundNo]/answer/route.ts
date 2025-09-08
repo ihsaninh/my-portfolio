@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { evaluateAnswer } from "@/src/lib/ai-scoring";
@@ -159,17 +159,20 @@ export async function POST(
       round_no: roundNo,
     });
 
-    // Broadcast answer_received (no content)
-    publishBattleEvent({
-      roomId,
-      event: "answer_received",
-      payload: { roundNo: Number(roundNo), participantId: part.id },
-    });
+    // Broadcast answer_received in background (notify other clients)
+    after(() =>
+      publishBattleEvent({
+        roomId,
+        event: "answer_received",
+        payload: { roundNo: Number(roundNo), participantId: part.id },
+      })
+    );
 
     // Check if all participants have answered for auto-advance
     const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
     if (autoAdvanceEnabled) {
-      await checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo));
+      // Run auto-advance in the background so the response isn't delayed
+      after(() => checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo)));
     }
 
     return NextResponse.json({ score: ai.score, feedback: ai.feedback });
