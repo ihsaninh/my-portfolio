@@ -129,7 +129,7 @@ export default function QuizPlayPage() {
       // Reset ref when component unmounts or categorySlug changes
       initializeRef.current = false;
     };
-  }, [categorySlug]); // Only depend on categorySlug, not router
+  }, [categorySlug, router]); // Include router in dependencies
 
   const simulateAIEvaluation = async (
     sessionId: string,
@@ -507,7 +507,9 @@ export default function QuizPlayPage() {
                         quizSession.totalScore / quizSession.answers.length
                       )
                     : 0}
-                  <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">/100</span>
+                  <span className="ml-1 text-xs text-slate-500 dark:text-slate-400">
+                    /100
+                  </span>
                 </div>
                 <div className="text-xs text-slate-600 dark:text-slate-400">
                   {t.avgScore}

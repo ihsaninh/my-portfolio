@@ -1,6 +1,36 @@
 import { google } from "@ai-sdk/google";
 import { generateObject } from "ai";
+import crypto from "crypto";
 import { z } from "zod";
+
+// Simple in-memory cache for consistent scoring of identical inputs
+const scoreCache = new Map<string, AIScoreResult>();
+const MAX_CACHE_SIZE = 1000; // Limit cache size to prevent memory issues
+
+// Clean cache if it gets too large
+function cleanCacheIfNeeded() {
+  if (scoreCache.size > MAX_CACHE_SIZE) {
+    // Remove oldest entries (simple FIFO)
+    const keysToDelete = Array.from(scoreCache.keys()).slice(
+      0,
+      scoreCache.size - MAX_CACHE_SIZE + 100
+    );
+    keysToDelete.forEach((key) => scoreCache.delete(key));
+  }
+}
+
+// Generate cache key for deterministic scoring
+function generateCacheKey(params: {
+  question: string;
+  answer: string;
+  category: string;
+  difficulty: number;
+  language?: string;
+}): string {
+  const { question, answer, category, difficulty, language = "en" } = params;
+  const content = `${question}|${answer}|${category}|${difficulty}|${language}`;
+  return crypto.createHash("sha256").update(content).digest("hex");
+}
 
 // Define the scoring schema for structured output
 const ScoringSchema = z.object({
@@ -79,6 +109,21 @@ export async function evaluateAnswer(params: {
     rubric,
   } = params;
 
+  // Generate cache key for consistent scoring
+  const cacheKey = generateCacheKey({
+    question,
+    answer,
+    category,
+    difficulty,
+    language,
+  });
+
+  // Return cached result if available
+  if (scoreCache.has(cacheKey)) {
+    console.log("Using cached AI score for consistent results");
+    return scoreCache.get(cacheKey)!;
+  }
+
   try {
     // Early guard for clearly low-effort/unknown answers
     const trimmed = answer.trim();
@@ -100,9 +145,20 @@ export async function evaluateAnswer(params: {
       "skip",
       "pass",
     ];
-    const shortAnswer = trimmed.split(/\s+/).filter(Boolean).length < 5;
-    const isUnknown = unknownPatterns.some((p) => lower === p || lower.includes(p));
-    if (isUnknown || shortAnswer) {
+
+    // Check for explicit "unknown" patterns first
+    const isUnknown = unknownPatterns.some(
+      (p) => lower === p || lower.includes(p)
+    );
+
+    // For short answers, be more lenient - only penalize if BOTH short AND clearly inadequate
+    const wordCount = trimmed.split(/\s+/).filter(Boolean).length;
+    const isVeryShort = wordCount < 2; // Changed from 5 to 2 words
+    const isEmptyOrMeaningless =
+      trimmed.length < 3 || /^[\s\-_.!?]*$/.test(trimmed);
+
+    // Only give 0 score if it's explicitly unknown OR completely inadequate
+    if (isUnknown || (isVeryShort && isEmptyOrMeaningless)) {
       return {
         score: 0,
         feedback:
@@ -112,7 +168,10 @@ export async function evaluateAnswer(params: {
         strengths: [],
         improvements:
           language === "id"
-            ? ["Jawab lebih spesifik ke pertanyaan", "Tambahkan 1–2 contoh kalau bisa"]
+            ? [
+                "Jawab lebih spesifik ke pertanyaan",
+                "Tambahkan 1–2 contoh kalau bisa",
+              ]
             : ["Answer more specifically", "Add 1–2 examples if possible"],
         category: "poor",
       };
@@ -154,6 +213,8 @@ ${rubric ? `**Rubrik Tambahan:** ${JSON.stringify(rubric)}` : ""}
 **Aturan Ketat (objektif):**
 - Kalau jawabannya jelas bilang tidak tahu/"gak tau"/"idk"/"no idea" ATAU panjangnya < 5 kata ATAU off-topic, beri skor 0–10 (utamakan 0).
 - Jangan menaikkan skor karena gaya bahasa; fokus pada isi.
+- KONSISTENSI PENTING: Jawaban identik harus mendapat skor identik. Evaluasi berdasarkan konten faktual, bukan variasi subjektif.
+- Untuk jawaban singkat yang benar tapi tidak lengkap (contoh: "Istana Bogor. dulunya markas VOC"), berikan skor konsisten 50-60 jika nama benar tapi penjelasan kurang akurat.
 
 **Gaya Feedback:** Santai, positif, 2–4 kalimat, hindari terlalu formal. Boleh emoji seperlunya 🙂.
 
@@ -187,6 +248,8 @@ ${rubric ? `**Additional Rubric:** ${JSON.stringify(rubric)}` : ""}
 Hard rules (objective):
 - If the answer explicitly says "I don't know"/"idk"/"no idea" OR has < 5 words OR is clearly off-topic → score 0–10 (prefer 0).
 - Do not inflate for style; focus on substance.
+- CONSISTENCY CRITICAL: Identical answers must receive identical scores. Base evaluation on factual content, not subjective variation.
+- For short answers that are correct but incomplete (e.g., "Istana Bogor. dulunya markas VOC"), give consistent 50-60 score if name is right but explanation inaccurate.
 
 Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly formal language. Follow the schema.`;
 
@@ -194,7 +257,7 @@ Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly form
       model: google("gemini-2.5-flash-lite"),
       schema: ScoringSchema,
       prompt,
-      temperature: 0.3, // Lower temperature for more consistent scoring
+      temperature: 0.1, // Very low temperature for maximum consistency
     });
 
     // Apply difficulty multiplier (no extra leniency)
@@ -207,10 +270,16 @@ Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly form
       Math.max(0, Math.round(result.object.score * difficultyMultiplier))
     );
 
-    return {
+    const finalResult = {
       ...result.object,
       score: adjustedScore,
     };
+
+    // Cache the result for consistency
+    cleanCacheIfNeeded();
+    scoreCache.set(cacheKey, finalResult);
+
+    return finalResult;
   } catch (error) {
     console.error("AI evaluation failed:", error);
 
@@ -284,7 +353,18 @@ function generateFallbackScore(
     "skip",
     "pass",
   ];
-  if (unknowns.some((p) => ansLower === p || ansLower.includes(p)) || wordCount < 5) {
+
+  // Check for explicit unknowns first
+  const isExplicitUnknown = unknowns.some(
+    (p) => ansLower === p || ansLower.includes(p)
+  );
+
+  // For short answers, be more lenient - only penalize if BOTH very short AND meaningless
+  const isVeryShort = wordCount < 2;
+  const isEmptyOrMeaningless =
+    answer.trim().length < 3 || /^[\s\-_.!?]*$/.test(answer.trim());
+
+  if (isExplicitUnknown || (isVeryShort && isEmptyOrMeaningless)) {
     return {
       score: 0,
       feedback: isIndonesian
@@ -298,11 +378,14 @@ function generateFallbackScore(
     };
   }
 
-  // Word count scoring (0-25 points)
+  // Word count scoring (0-25 points) - more lenient for short but meaningful answers
   if (wordCount >= 100) score += 25;
   else if (wordCount >= 50) score += 20;
   else if (wordCount >= 30) score += 15;
   else if (wordCount >= 15) score += 10;
+  else if (wordCount >= 3)
+    score += 5; // Give some credit for very short but meaningful answers
+  else if (wordCount >= 1) score += 2; // Minimal credit for single-word answers
 
   // Keyword relevance (0-20 points)
   score += Math.min(20, keywordMatches * 5);
@@ -312,8 +395,8 @@ function generateFallbackScore(
   if (hasStructure) score += 8;
   if (hasProfessionalTone) score += 9;
 
-  // Clamp low relevance + short answers
-  if (keywordMatches === 0 && wordCount < 15) {
+  // Clamp low relevance + very short answers (not just short)
+  if (keywordMatches === 0 && wordCount < 3) {
     score = Math.min(score, 30);
   }
 
@@ -354,9 +437,7 @@ function generateFallbackScore(
     feedback = isIndonesian
       ? "Lumayan! Dasarnya udah ada, coba tambah detail dan contoh ya."
       : "Not bad! Basics are there — add some detail and examples.";
-    strengths = isIndonesian
-      ? ["Dasar sudah ada"]
-      : ["Basics present"];
+    strengths = isIndonesian ? ["Dasar sudah ada"] : ["Basics present"];
     improvements = isIndonesian
       ? ["Tambah detail", "Kasih contoh", "Bikin alur lebih rapi"]
       : ["More detail", "Add examples", "Improve structure/flow"];
@@ -367,8 +448,18 @@ function generateFallbackScore(
       : "Not quite there. Try to be more direct, add detail + examples. You got this! 💪";
     strengths = isIndonesian ? ["Sudah mencoba"] : ["Attempt made"];
     improvements = isIndonesian
-      ? ["Lebih detail", "Kasih contoh", "Bikin lebih jelas", "Fokus ke pertanyaan"]
-      : ["More detail", "Add examples", "Improve clarity", "Focus on the question"];
+      ? [
+          "Lebih detail",
+          "Kasih contoh",
+          "Bikin lebih jelas",
+          "Fokus ke pertanyaan",
+        ]
+      : [
+          "More detail",
+          "Add examples",
+          "Improve clarity",
+          "Focus on the question",
+        ];
   }
 
   return {
@@ -383,4 +474,18 @@ function generateFallbackScore(
 // Helper function to validate environment
 export function isAIAvailable(): boolean {
   return !!process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+}
+
+// Helper function to clear scoring cache (useful for testing or memory management)
+export function clearScoringCache(): void {
+  scoreCache.clear();
+  console.log("AI scoring cache cleared");
+}
+
+// Helper function to get cache stats
+export function getScoringCacheStats(): { size: number; maxSize: number } {
+  return {
+    size: scoreCache.size,
+    maxSize: MAX_CACHE_SIZE,
+  };
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createSession, getSessionByFingerprint } from "@/src/lib/quiz-api";
+import { SESSION_COOKIE } from "@/src/lib/session";
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,10 +47,16 @@ export async function POST(request: NextRequest) {
       fingerprint_hash: fingerprintHash,
     });
 
-    return NextResponse.json({
-      sessionId: session.id,
-      ...session,
+    const res = NextResponse.json({ sessionId: session.id, ...session });
+    // Set HttpOnly cookie for session binding
+    res.cookies.set(SESSION_COOKIE, session.id, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     });
+    return res;
   } catch (error) {
     console.error("Sessions API error:", error);
     return NextResponse.json(

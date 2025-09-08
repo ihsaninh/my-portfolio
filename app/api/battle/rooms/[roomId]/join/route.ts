@@ -1,0 +1,148 @@
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+import { publishBattleEvent } from "@/src/lib/realtime";
+import { getSessionIdFromCookies } from "@/src/lib/session";
+import { supabaseAdmin } from "@/src/lib/supabase";
+
+const JoinRoomSchema = z.object({
+  displayName: z.string().min(1).max(100).optional(),
+});
+
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ roomId: string }> }
+) {
+  try {
+    const { roomId } = await context.params;
+    const json = await req.json();
+    const body = JoinRoomSchema.parse(json);
+    const sessionId = getSessionIdFromCookies(req);
+    if (!sessionId) {
+      return NextResponse.json(
+        { error: "Missing session token" },
+        { status: 401 }
+      );
+    }
+
+    const supabase = supabaseAdmin();
+
+    // Validate room is joinable
+    const { data: room, error: roomErr } = await supabase
+      .from("battle_rooms")
+      .select("id, status, capacity")
+      .eq("id", roomId)
+      .single();
+
+    if (roomErr || !room) {
+      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+    }
+
+    if (room.status !== "waiting") {
+      return NextResponse.json(
+        { error: "Room is not open for joining" },
+        { status: 400 }
+      );
+    }
+
+    // Enforce capacity if set
+    if (room.capacity) {
+      const { count } = await supabase
+        .from("battle_room_participants")
+        .select("id", { count: "exact", head: true })
+        .eq("room_id", roomId);
+      if ((count ?? 0) >= room.capacity) {
+        return NextResponse.json({ error: "Room is full" }, { status: 400 });
+      }
+    }
+
+    // Ensure session exists
+    const { data: session, error: sessionErr } = await supabase
+      .from("quiz_sessions")
+      .select("id")
+      .eq("id", sessionId)
+      .single();
+    if (sessionErr || !session) {
+      return NextResponse.json({ error: "Invalid session" }, { status: 400 });
+    }
+
+    // Resolve display name from session (single source of truth)
+    const { data: sRec } = await supabase
+      .from("quiz_sessions")
+      .select("display_name")
+      .eq("id", sessionId)
+      .single();
+    const resolvedName =
+      (sRec?.display_name as string) || body.displayName || "Player";
+
+    // Check if this session is the room host
+    const { data: roomInfo } = await supabase
+      .from("battle_rooms")
+      .select("host_session_id")
+      .eq("id", roomId)
+      .single();
+
+    const isHost = roomInfo?.host_session_id === sessionId;
+
+    // Insert participant (idempotent by unique constraint)
+    const { data: participant, error: joinErr } = await supabase
+      .from("battle_room_participants")
+      .insert({
+        room_id: roomId,
+        session_id: sessionId,
+        display_name: resolvedName,
+        is_host: isHost, // Set host status based on session check
+      })
+      .select("id")
+      .single();
+
+    if (joinErr) {
+      // If duplicate, treat as success and fetch existing participant
+      if (joinErr.code === "23505") {
+        console.log(
+          `Participant already exists for session ${sessionId} in room ${roomId}`
+        );
+        const { data: existing } = await supabase
+          .from("battle_room_participants")
+          .select("id")
+          .eq("room_id", roomId)
+          .eq("session_id", sessionId)
+          .single();
+
+        // Update host status if this is the host rejoining
+        if (isHost) {
+          await supabase
+            .from("battle_room_participants")
+            .update({ is_host: true, display_name: resolvedName })
+            .eq("room_id", roomId)
+            .eq("session_id", sessionId);
+        }
+
+        return NextResponse.json({ participantId: existing?.id });
+      }
+      console.error("Join room error", joinErr);
+      return NextResponse.json(
+        { error: "Failed to join room" },
+        { status: 500 }
+      );
+    }
+
+    // Broadcast player joined (idempotent if duplicate join handled)
+    publishBattleEvent({
+      roomId,
+      event: "player_joined",
+      payload: { participantId: participant?.id, displayName: resolvedName },
+    });
+
+    return NextResponse.json({ participantId: participant?.id });
+  } catch (e: unknown) {
+    console.error("Join room exception", e);
+    if (e && typeof e === "object" && "issues" in e) {
+      return NextResponse.json(
+        { error: (e as { issues: unknown }).issues },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  }
+}
