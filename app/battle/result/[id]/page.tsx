@@ -117,17 +117,17 @@ export default function BattleResultPage() {
   const shareResults = () => {
     const text = `I just completed a quiz battle! 🏆 Final score: ${
       results?.currentUser?.total_score || 0
-    } points. Join the fun!`;
+    } points. Check out the results!`;
+    const resultUrl = `${window.location.origin}/battle/result/${roomId}`;
+
     if (navigator.share) {
       navigator.share({
         title: "Quiz Battle Results",
         text,
-        url: window.location.origin + "/battle",
+        url: resultUrl,
       });
     } else {
-      navigator.clipboard.writeText(
-        text + " " + window.location.origin + "/battle"
-      );
+      navigator.clipboard.writeText(text + " " + resultUrl);
       alert("Results copied to clipboard!");
     }
   };

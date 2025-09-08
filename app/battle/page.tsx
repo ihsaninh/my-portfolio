@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
   FaBolt,
@@ -19,6 +19,7 @@ type GameMode = "create" | "join" | null;
 
 function BattleLandingContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [gameMode, setGameMode] = useState<GameMode>(null);
   const [createPayload, setCreatePayload] = useState({
     topic: "",
@@ -150,8 +151,8 @@ function BattleLandingContent() {
       // Small delay to ensure the join is processed on the server
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Redirect to room
-      window.location.href = `/battle/rooms/${roomId}`;
+      // Redirect to room using Next.js router
+      router.push(`/battle/rooms/${roomId}`);
     } catch (err: unknown) {
       console.error("Join error:", err);
       setLog(

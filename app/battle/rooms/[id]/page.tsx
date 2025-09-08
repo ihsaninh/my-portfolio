@@ -2,10 +2,11 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   FaBolt,
+  FaCheck,
   FaClock,
   FaCopy,
   FaCrown,
@@ -60,8 +61,21 @@ type StateResp = {
 
 type GamePhase = "waiting" | "playing" | "answering" | "results" | "finished";
 
+type AnswerStatus = {
+  participants: Array<{
+    session_id: string;
+    display_name: string;
+    has_answered: boolean;
+    is_host: boolean;
+  }>;
+  currentRound: number | null;
+  totalAnswered: number;
+  totalParticipants: number;
+};
+
 export default function BattleRoom() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const roomId = useMemo(() => params?.id, [params]);
 
   // Game state
@@ -77,6 +91,7 @@ export default function BattleRoom() {
   const [state, setState] = useState<StateResp | null>(null);
   const [notifications, setNotifications] = useState<string[]>([]);
   const [answeredCount, setAnsweredCount] = useState(0);
+  const [answerStatus, setAnswerStatus] = useState<AnswerStatus | null>(null);
 
   const addNotification = (message: string) => {
     setNotifications((prev) => [message, ...prev.slice(0, 2)]); // Only keep 3 notifications max
@@ -247,9 +262,16 @@ export default function BattleRoom() {
 
   async function refresh() {
     try {
-      const s = await fetch(`/api/battle/rooms/${roomId}/state`, {
-        credentials: "include", // Ensure cookies are sent
-      }).then((r) => r.json());
+      const [stateResponse, answerStatusResponse] = await Promise.all([
+        fetch(`/api/battle/rooms/${roomId}/state`, {
+          credentials: "include", // Ensure cookies are sent
+        }),
+        fetch(`/api/battle/rooms/${roomId}/answer-status`, {
+          credentials: "include",
+        }),
+      ]);
+
+      const s = await stateResponse.json();
 
       // Preserve currentUser data if it's lost but we have it cached
       if (!s?.currentUser && state?.currentUser) {
@@ -257,6 +279,13 @@ export default function BattleRoom() {
       }
 
       setState(s);
+
+      // Update answer status if available
+      if (answerStatusResponse.ok) {
+        const answerData = await answerStatusResponse.json();
+        setAnswerStatus(answerData);
+        setAnsweredCount(answerData.totalAnswered);
+      }
 
       // Update game phase based on state
       const newPhase = getGamePhase(s);
@@ -305,11 +334,7 @@ export default function BattleRoom() {
         refresh();
       });
       ch.on("broadcast", { event: "answer_received" }, () => {
-        // Update answered count silently - no notification spam
-        setAnsweredCount((prev) => {
-          const newCount = prev + 1;
-          return newCount;
-        });
+        // Update answered count and status with real-time updates
         refresh();
       });
       ch.on("broadcast", { event: "round_closed" }, (p) => {
@@ -354,7 +379,7 @@ export default function BattleRoom() {
 
         // Redirect to final results page after a short delay
         setTimeout(() => {
-          window.location.href = `/battle/result/${roomId}`;
+          router.push(`/battle/result/${roomId}`);
         }, 3000);
 
         refresh();
@@ -487,7 +512,7 @@ export default function BattleRoom() {
             setGamePhase("finished");
             // addNotification("🏆 Battle finished!");
             setTimeout(() => {
-              window.location.href = `/battle/result/${roomId}`;
+              router.push(`/battle/result/${roomId}`);
             }, 3000);
           }
         }, 3000);
@@ -722,35 +747,66 @@ export default function BattleRoom() {
                   {state.room.capacity || 0})
                 </h2>
                 <div className="space-y-3">
-                  {state.participants?.map((participant, index) => (
-                    <motion.div
-                      key={participant.session_id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                      className={`flex items-center justify-between p-3 rounded-xl ${
-                        participant.is_host
-                          ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30"
-                          : "bg-white/5 border border-white/10"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {participant.is_host ? (
-                          <FaCrown className="w-4 h-4 text-yellow-400" />
-                        ) : (
-                          <FaGamepad className="w-4 h-4 text-gray-400" />
-                        )}
-                        <span className="text-white font-medium">
-                          {participant.display_name || "Anonymous Player"}
-                        </span>
-                        {participant.is_host && (
-                          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full">
-                            HOST
+                  {state.participants?.map((participant, index) => {
+                    // Find answer status for this participant
+                    const participantAnswerStatus =
+                      answerStatus?.participants.find(
+                        (p) => p.session_id === participant.session_id
+                      );
+
+                    return (
+                      <motion.div
+                        key={participant.session_id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 * index }}
+                        className={`flex items-center justify-between p-3 rounded-xl ${
+                          participant.is_host
+                            ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30"
+                            : "bg-white/5 border border-white/10"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {participant.is_host ? (
+                            <FaCrown className="w-4 h-4 text-yellow-400" />
+                          ) : (
+                            <FaGamepad className="w-4 h-4 text-gray-400" />
+                          )}
+                          <span className="text-white font-medium">
+                            {participant.display_name || "Anonymous Player"}
                           </span>
-                        )}
-                      </div>
-                    </motion.div>
-                  ))}
+                          {participant.is_host && (
+                            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full">
+                              HOST
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Answer Status Indicator */}
+                        <div className="flex items-center gap-2">
+                          {/* Show answer status only during answering or results phases */}
+                          {(gamePhase === "answering" ||
+                            gamePhase === "results") &&
+                            answerStatus &&
+                            participantAnswerStatus && (
+                              <div className="flex items-center gap-1">
+                                {participantAnswerStatus.has_answered ? (
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-300 rounded-full border border-green-500/30">
+                                    <FaCheck className="w-3 h-3" />
+                                    <span className="text-xs">Answered</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1 px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full border border-gray-500/30">
+                                    <div className="w-3 h-3 rounded-full border border-gray-400" />
+                                    <span className="text-xs">Waiting</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </motion.div>
             </div>
