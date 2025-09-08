@@ -258,6 +258,22 @@ const reader = response.body.getReader();
 - **First Contentful Paint:** < 0.8s
 - **Time to Interactive:** < 2s
 - **Cumulative Layout Shift:** < 0.1
+
+## 🌍 Multilingual Support
+
+The quiz application now supports multiple languages:
+
+- **English** - Default language
+- **Indonesian** - Full translation of UI and questions
+
+Users can select their preferred language before starting the quiz. All content including questions and AI feedback will be provided in the selected language.
+
+To enable multilingual support:
+
+1. Run the database update script (`database-language-update.sql`)
+2. Ensure Indonesian questions are added to the database
+3. The application will automatically detect and use the user's language preference
+
 - **Bundle Size:** Optimized with dynamic imports and tree shaking
 
 ## 🔒 Security

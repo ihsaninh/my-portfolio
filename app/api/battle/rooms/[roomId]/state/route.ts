@@ -1,0 +1,169 @@
+import { NextRequest, NextResponse } from "next/server";
+
+import { getSessionIdFromCookies } from "@/src/lib/session";
+import { supabaseAdmin } from "@/src/lib/supabase";
+
+type Participant = {
+  id: string;
+  session_id: string;
+  display_name: string;
+  is_host: boolean;
+  connection_status: string;
+  total_score: number;
+};
+
+type QuestionSummary = {
+  prompt: string;
+  difficulty: number;
+  language: string;
+  category?: string;
+} | null;
+
+export async function GET(
+  req: NextRequest,
+  context: { params: Promise<{ roomId: string }> }
+) {
+  try {
+    const { roomId } = await context.params;
+    const sessionId = getSessionIdFromCookies(req);
+    const supabase = supabaseAdmin();
+
+    console.log("State API - Session lookup:", {
+      roomId,
+      sessionId,
+      cookies: req.cookies.toString(),
+    });
+
+    // Get room info with capacity
+    const { data: room, error: roomErr } = await supabase
+      .from("battle_rooms")
+      .select(
+        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity"
+      )
+      .eq("id", roomId)
+      .single();
+    if (roomErr || !room)
+      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+
+    // Get participants with session_id for proper mapping
+    // Order by participant ID to maintain consistent ordering
+    const { data: participants, error: participantsErr } = await supabase
+      .from("battle_room_participants")
+      .select(
+        "id, session_id, display_name, is_host, connection_status, total_score"
+      )
+      .eq("room_id", roomId)
+      .order("id", { ascending: true }); // Use participant ID for consistent ordering
+
+    console.log("Participants query result:", {
+      roomId,
+      participantsCount: participants?.length || 0,
+      participantsErr,
+      participants: participants?.map((p) => ({
+        id: p.id,
+        session_id: p.session_id,
+        display_name: p.display_name,
+        is_host: p.is_host,
+      })),
+    });
+
+    // Find current user if session exists
+    let currentUser = null;
+    if (sessionId && participants) {
+      const currentParticipant = participants.find(
+        (p: Participant) => p.session_id === sessionId
+      );
+      if (currentParticipant) {
+        currentUser = {
+          session_id: currentParticipant.session_id,
+          display_name: currentParticipant.display_name,
+          is_host: currentParticipant.is_host,
+          total_score: currentParticipant.total_score,
+        };
+        console.log("Current user found in state API:", {
+          sessionId,
+          currentUser,
+          participantCount: participants.length,
+        });
+      } else {
+        console.log("Current user NOT found in participants:", {
+          sessionId,
+          participantSessions: participants.map((p) => p.session_id),
+        });
+      }
+    } else {
+      console.log("No session ID or participants for current user lookup:", {
+        hasSessionId: !!sessionId,
+        participantCount: participants?.length || 0,
+      });
+    }
+
+    // Active round snapshot (if any)
+    const { data: round } = await supabase
+      .from("battle_room_rounds")
+      .select(
+        "round_no, revealed_at, deadline_at, status, question_id, question_json"
+      )
+      .eq("room_id", roomId)
+      .eq("status", "active")
+      .order("round_no", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    let questionSummary: QuestionSummary = null;
+    if (round && round.revealed_at) {
+      if (round.question_id) {
+        const { data: q } = await supabase
+          .from("quiz_questions")
+          .select("prompt, difficulty, language, category_id")
+          .eq("id", round.question_id)
+          .single();
+        if (q)
+          questionSummary = {
+            prompt: q.prompt,
+            difficulty: q.difficulty,
+            language: q.language,
+            category: q.category_id,
+          };
+      } else if (round.question_json) {
+        const q = round.question_json as {
+          prompt: string;
+          difficulty: number;
+          language: string;
+          category?: string;
+        };
+        questionSummary = {
+          prompt: q.prompt,
+          difficulty: q.difficulty,
+          language: q.language,
+          category: q.category,
+        };
+      }
+    }
+
+    return NextResponse.json({
+      room,
+      participants: (participants || []).map((p: Participant) => ({
+        session_id: p.session_id, // Include session_id for host detection
+        display_name: p.display_name,
+        is_host: p.is_host,
+        connection_status: p.connection_status,
+        total_score: p.total_score,
+        participantId: p.id, // Keep participantId for UI
+      })),
+      currentUser, // Include current user info for host detection
+      activeRound: round
+        ? {
+            roundNo: round.round_no,
+            revealedAt: round.revealed_at,
+            deadlineAt: round.deadline_at,
+            status: round.status,
+            question: questionSummary, // hidden if not revealed
+          }
+        : null,
+    });
+  } catch (e) {
+    console.error("State exception", e);
+    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  }
+}

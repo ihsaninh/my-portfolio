@@ -1,17 +1,10 @@
 "use client";
 
 import type { Variants } from "framer-motion";
-import { domAnimation, easeOut, LazyMotion, m, motion } from "framer-motion";
+import { domAnimation, easeOut, LazyMotion, m } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import React from "react";
-import {
-  FiDownload,
-  FiGithub,
-  FiLinkedin,
-  FiMail,
-  FiMessageSquare,
-} from "react-icons/fi";
+import { FiDownload, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 
 import { useHeaderService } from "@/src/hooks/useHeader";
 
@@ -22,8 +15,6 @@ const fadeUp: Variants = {
 
 export default function Home() {
   const { setActiveLink } = useHeaderService();
-
-  const MotionLink = motion(Link);
 
   const handleConnectClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault();
@@ -102,29 +93,6 @@ export default function Home() {
             >
               Connect with me
             </a>
-
-            <MotionLink
-              href="/hire-me"
-              className="relative inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-accent/50 bg-accent/10 px-6 text-sm lg:text-base text-accent transition-all duration-300 hover:bg-accent/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 whitespace-nowrap"
-              aria-label="Hire Me Simulator with Ihsan"
-              initial={{ y: 0 }}
-              animate={{ y: [0, -4, 0, 0, 0] }}
-              transition={{
-                duration: 1.1,
-                ease: easeOut,
-                repeat: Infinity,
-                repeatDelay: 6,
-              }}
-              whileHover={{ scale: 1.06 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <span className="pointer-events-none absolute -top-1 -right-1 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-accent" />
-              </span>
-              <FiMessageSquare className="text-lg" />
-              <span>Hire Me Simulator</span>
-            </MotionLink>
 
             <a
               href="/document/CV-Ihsan-Nurul-Habib.pdf"
