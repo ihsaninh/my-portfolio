@@ -18,7 +18,7 @@ import {
   FaUsers,
 } from "react-icons/fa";
 
-import { createRoomChannel } from "@/src/lib/realtime";
+import { createEnhancedRoomChannel } from "@/src/lib/realtime";
 
 type StateResp = {
   room?: {
@@ -87,6 +87,15 @@ export default function BattleRoom() {
   const [copied, setCopied] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
   const [stuckDetectionTimer, setStuckDetectionTimer] =
+    useState<NodeJS.Timeout | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [connectionState, setConnectionState] = useState<
+    "connected" | "disconnected" | "reconnecting"
+  >("disconnected");
+  const [lastEventTime, setLastEventTime] = useState<number>(Date.now());
+  const [forceProgressTimer, setForceProgressTimer] =
     useState<NodeJS.Timeout | null>(null);
 
   // Data state
@@ -262,8 +271,10 @@ export default function BattleRoom() {
     isProgressing,
   ]);
 
+  // Enhanced refresh function with better error handling
   async function refresh() {
     try {
+      console.log(`🔄 Refreshing state for room ${roomId}`);
       const [stateResponse, answerStatusResponse] = await Promise.all([
         fetch(`/api/battle/rooms/${roomId}/state`, {
           credentials: "include", // Ensure cookies are sent
@@ -272,6 +283,10 @@ export default function BattleRoom() {
           credentials: "include",
         }),
       ]);
+
+      if (!stateResponse.ok) {
+        throw new Error(`State API returned ${stateResponse.status}`);
+      }
 
       const s = await stateResponse.json();
 
@@ -292,8 +307,12 @@ export default function BattleRoom() {
       // Update game phase based on state
       const newPhase = getGamePhase(s);
       setGamePhase(newPhase);
+
+      setLastEventTime(Date.now());
+      console.log(`✅ State refreshed successfully, phase: ${newPhase}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
+      console.error(`❌ Refresh error: ${message}`);
       addNotification(`Refresh error: ${message}`);
     }
   }
@@ -302,23 +321,93 @@ export default function BattleRoom() {
     if (!roomId) return;
     refresh();
 
-    // Realtime subscribe
-    const ch = createRoomChannel(String(roomId));
+    // Setup polling backup for critical state updates
+    const setupPollingBackup = () => {
+      // Clear existing polling
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+
+      // Only poll during active phases
+      if (
+        gamePhase === "answering" ||
+        gamePhase === "results" ||
+        gamePhase === "playing"
+      ) {
+        console.log(`🔄 Setting up polling backup for phase: ${gamePhase}`);
+        const interval = setInterval(() => {
+          const timeSinceLastEvent = Date.now() - lastEventTime;
+          // Poll if no events received in last 10 seconds
+          if (timeSinceLastEvent > 10000) {
+            console.log("📶 No recent events, polling for updates...");
+            refresh();
+          }
+        }, 5000); // Poll every 5 seconds
+
+        setPollingInterval(interval);
+      }
+    };
+
+    // Setup force progression timer for stuck states
+    const setupForceProgressionTimer = () => {
+      if (forceProgressTimer) {
+        clearTimeout(forceProgressTimer);
+      }
+
+      // If we're waiting for round transition for more than 15 seconds, force it
+      if (gamePhase === "results" && isHost()) {
+        const timer = setTimeout(() => {
+          console.warn(
+            "⚠️ Force progression timeout - attempting manual state fix"
+          );
+          refresh();
+          // Try to trigger next round or finish match
+          const currentRound = state?.activeRound?.roundNo || 0;
+          const totalRounds = state?.room?.num_questions || 0;
+
+          if (currentRound >= totalRounds) {
+            console.log("🏁 Forcing match finish...");
+            // Force redirect to results if this was the last round
+            setTimeout(() => {
+              router.push(`/battle/result/${roomId}`);
+            }, 2000);
+          }
+        }, 15000); // 15 seconds timeout
+
+        setForceProgressTimer(timer);
+      }
+    };
+
+    setupPollingBackup();
+    setupForceProgressionTimer();
+
+    // Enhanced realtime setup with reconnection
+    const ch = createEnhancedRoomChannel(String(roomId), () => {
+      console.log("🔗 Reconnected to room channel, refreshing state...");
+      setConnectionState("connected");
+      refresh();
+    });
+
     if (ch) {
+      setConnectionState("connected");
+
       ch.on("broadcast", { event: "player_joined" }, () => {
+        setLastEventTime(Date.now());
         // Only refresh, don't clear existing state unnecessarily
         setTimeout(() => {
           refresh();
         }, 100); // Small delay to ensure server state is updated
       });
+
       ch.on("broadcast", { event: "room_started" }, () => {
-        // addNotification("🚀 Battle started!");
+        setLastEventTime(Date.now());
         setGamePhase("playing");
         refresh();
       });
+
       ch.on("broadcast", { event: "round_revealed" }, (p) => {
+        setLastEventTime(Date.now());
         const payload = p?.payload as { roundNo?: number; reason?: string };
-        // const roundNo = payload?.roundNo || "?";
         const reason = payload?.reason;
 
         if (reason === "auto_advance") {
@@ -338,14 +427,45 @@ export default function BattleRoom() {
           setStuckDetectionTimer(null);
         }
 
+        // Clear force progression timer
+        if (forceProgressTimer) {
+          clearTimeout(forceProgressTimer);
+          setForceProgressTimer(null);
+        }
+
         setGamePhase("answering");
         refresh();
       });
+
       ch.on("broadcast", { event: "answer_received" }, () => {
+        setLastEventTime(Date.now());
         // Update answered count and status with real-time updates
         refresh();
       });
+
+      ch.on("broadcast", { event: "all_participants_answered" }, (p) => {
+        setLastEventTime(Date.now());
+        const payload = p?.payload as {
+          roundNo?: number;
+          totalAnswered?: number;
+        };
+        console.log("🏁 All participants answered event received:", payload);
+
+        // If I'm the host, trigger auto-close after a short delay
+        if (isHost()) {
+          console.log(
+            "🔄 Host triggering auto-close due to all participants answered"
+          );
+          setTimeout(() => {
+            autoCloseRound();
+          }, 2000); // 2 second delay to let users see their answers
+        }
+
+        refresh();
+      });
+
       ch.on("broadcast", { event: "round_closed" }, (p) => {
+        setLastEventTime(Date.now());
         const payload = p?.payload as {
           roundNo?: number;
           reason?: string;
@@ -394,8 +514,9 @@ export default function BattleRoom() {
           refresh();
         }, 1000);
       });
+
       ch.on("broadcast", { event: "match_finished" }, () => {
-        // addNotification("🏆 Battle finished!");
+        setLastEventTime(Date.now());
         setIsProgressing(false); // Reset progression state
         setGamePhase("finished");
 
@@ -406,9 +527,25 @@ export default function BattleRoom() {
 
         refresh();
       });
-      ch.subscribe();
+
+      ch.subscribe((status) => {
+        console.log(`🔗 Channel subscription status: ${status}`);
+        if (status === "SUBSCRIBED") {
+          setConnectionState("connected");
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          setConnectionState("disconnected");
+        }
+      });
+
       return () => {
+        console.log("🗌 Cleaning up room channel and timers");
         ch.unsubscribe();
+
+        // Enhanced cleanup
+        if (pollingInterval) clearInterval(pollingInterval);
+        if (stuckDetectionTimer) clearTimeout(stuckDetectionTimer);
+        if (forceProgressTimer) clearTimeout(forceProgressTimer);
+
         // Clean up localStorage when leaving the room
         if (localStorage.getItem(`battle_host_tab_${roomId}`) === tabId) {
           localStorage.removeItem(`battle_host_tab_${roomId}`);
@@ -417,7 +554,7 @@ export default function BattleRoom() {
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId]);
+  }, [roomId, gamePhase, lastEventTime]);
 
   async function startBattle() {
     if (!isHost()) {
@@ -501,6 +638,9 @@ export default function BattleRoom() {
       return;
     }
 
+    console.log("🔄 Auto-closing round by host...");
+    setIsProgressing(true);
+
     try {
       const currentRound = state.activeRound.roundNo;
       const totalRounds = state?.room?.num_questions || 0;
@@ -520,24 +660,31 @@ export default function BattleRoom() {
           closeRes.status,
           await closeRes.text()
         );
+        setIsProgressing(false);
         return;
       }
 
-      await closeRes.json();
+      const closeData = await closeRes.json();
+      console.log("✅ Round closed successfully:", closeData);
 
       // Check if this was the last round
       if (currentRound >= totalRounds) {
+        console.log(
+          "🏁 This was the last round, waiting for match_finished event..."
+        );
         // The close API should have set the room status to "finished" and broadcast match_finished
-        // If not received within 3 seconds, force transition
+        // If not received within 5 seconds, force transition
         setTimeout(() => {
           if (gamePhase !== "finished") {
+            console.warn(
+              "⚠️ Match finished event not received, forcing transition..."
+            );
             setGamePhase("finished");
-            // addNotification("🏆 Battle finished!");
             setTimeout(() => {
               router.push(`/battle/result/${roomId}`);
-            }, 3000);
+            }, 2000);
           }
-        }, 3000);
+        }, 5000);
         return;
       }
 
@@ -545,6 +692,7 @@ export default function BattleRoom() {
       setTimeout(async () => {
         try {
           const nextRound = currentRound + 1;
+          console.log(`🚀 Revealing next round: ${nextRound}`);
 
           const revealRes = await fetch(
             `/api/battle/rooms/${roomId}/rounds/${nextRound}/reveal`,
@@ -555,18 +703,28 @@ export default function BattleRoom() {
           );
 
           if (!revealRes.ok) {
+            console.error(
+              "Failed to reveal next round:",
+              revealRes.status,
+              await revealRes.text()
+            );
             // Force refresh to get updated state
             refresh();
+          } else {
+            console.log("✅ Next round revealed successfully");
           }
         } catch (err) {
           console.error("Failed to reveal next round:", err);
           // Force refresh to get updated state
           refresh();
+        } finally {
+          setIsProgressing(false);
         }
       }, 1000);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error(`Auto-close error: ${message}`);
+      setIsProgressing(false);
     }
   }
 
@@ -574,6 +732,13 @@ export default function BattleRoom() {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const difficultyLabel = (difficulty: number, language: string) => {
+    if (language === "id") {
+      return difficulty === 1 ? "Mudah" : difficulty === 3 ? "Sulit" : "Sedang";
+    }
+    return difficulty === 1 ? "Easy" : difficulty === 3 ? "Hard" : "Medium";
   };
 
   const getDifficultyColor = (difficulty: number) => {
@@ -695,6 +860,28 @@ export default function BattleRoom() {
               </div>
 
               <div className="flex items-center gap-3">
+                {/* Connection Status Indicator */}
+                <div
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${
+                    connectionState === "connected"
+                      ? "bg-green-500/20 text-green-300 border-green-500/30"
+                      : connectionState === "reconnecting"
+                      ? "bg-yellow-500/20 text-yellow-300 border-yellow-500/30"
+                      : "bg-red-500/20 text-red-300 border-red-500/30"
+                  }`}
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full ${
+                      connectionState === "connected"
+                        ? "bg-green-400 animate-pulse"
+                        : connectionState === "reconnecting"
+                        ? "bg-yellow-400 animate-spin"
+                        : "bg-red-400"
+                    }`}
+                  />
+                  {connectionState}
+                </div>
+
                 <button
                   onClick={copyRoomLink}
                   className="px-4 py-2 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 rounded-xl transition-all flex items-center gap-2"
@@ -1081,11 +1268,4 @@ export default function BattleRoom() {
       </div>
     </div>
   );
-}
-
-function difficultyLabel(d: number, lang?: string) {
-  const id = lang === "id";
-  if (d === 1) return id ? "Mudah" : "Easy";
-  if (d === 3) return id ? "Sulit" : "Hard";
-  return id ? "Sedang" : "Medium";
 }

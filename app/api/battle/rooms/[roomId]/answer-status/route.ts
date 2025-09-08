@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
@@ -76,11 +77,43 @@ export async function GET(
       (p) => p.has_answered
     ).length;
 
+    // Check if all participants have answered and trigger auto-close
+    const allAnswered =
+      totalAnswered === participantStatus.length &&
+      participantStatus.length > 0;
+
+    if (allAnswered) {
+      console.log(
+        `🏁 All ${participantStatus.length} participants have answered round ${activeRound.round_no}`
+      );
+
+      // Trigger auto-close event to notify clients
+      setTimeout(async () => {
+        try {
+          await publishBattleEvent({
+            roomId,
+            event: "all_participants_answered",
+            payload: {
+              roundNo: activeRound.round_no,
+              totalAnswered,
+              totalParticipants: participantStatus.length,
+            },
+          });
+        } catch (err) {
+          console.error(
+            "Failed to publish all_participants_answered event:",
+            err
+          );
+        }
+      }, 100); // Small delay to ensure response is sent first
+    }
+
     return NextResponse.json({
       participants: participantStatus,
       currentRound: activeRound.round_no,
       totalAnswered,
       totalParticipants: participantStatus.length,
+      allAnswered, // Add this flag for client-side handling
     });
   } catch (error) {
     console.error("Get answer status exception:", error);
