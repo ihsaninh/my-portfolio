@@ -1,10 +1,4 @@
 {
-  "crons": [
-    {
-      "path": "/api/battle/cron/auto-close",
-      "schedule": "* * * * *"
-    }
-  ],
   "functions": {
     "app/api/battle/cron/auto-close/route.ts": {
       "maxDuration": 30

@@ -235,7 +235,7 @@ export default function BattleRoom() {
     return "playing";
   };
 
-  // Timer effect
+  // Timer effect with enhanced timeout for Hobby plan
   useEffect(() => {
     if (!state?.activeRound?.deadlineAt) {
       setTimeLeft(null);
@@ -249,12 +249,26 @@ export default function BattleRoom() {
       setTimeLeft(remaining);
 
       // Auto-progress when timer reaches zero (only for host)
+      // Enhanced for Hobby plan - more aggressive timeout
       if (
         remaining === 0 &&
         isHost() &&
         state.activeRound?.status === "active" &&
         !isProgressing
       ) {
+        setIsProgressing(true);
+        autoCloseRound();
+      }
+
+      // Additional check: if 30 seconds past deadline and host, force close
+      if (
+        remaining === 0 &&
+        isHost() &&
+        state.activeRound?.status === "active" &&
+        now - deadline > 30000 && // 30 seconds past deadline
+        !isProgressing
+      ) {
+        console.warn("🚨 Force closing round due to extended timeout");
         setIsProgressing(true);
         autoCloseRound();
       }
@@ -1185,6 +1199,46 @@ export default function BattleRoom() {
                             <p className="text-green-300">
                               Waiting for other players to finish...
                             </p>
+
+                            {/* Manual Progress Button for Host (Hobby Plan Fallback) */}
+                            {isHost() && (
+                              <div className="mt-4">
+                                <button
+                                  onClick={() => {
+                                    console.log(
+                                      "🔄 Manual progression triggered by host"
+                                    );
+                                    const currentRound =
+                                      state?.activeRound?.roundNo || 0;
+                                    const totalRounds =
+                                      state?.room?.num_questions || 0;
+
+                                    if (currentRound >= totalRounds) {
+                                      // Force finish
+                                      router.push(`/battle/result/${roomId}`);
+                                    } else {
+                                      // Try to progress to next round
+                                      autoCloseRound();
+                                    }
+                                  }}
+                                  disabled={isProgressing}
+                                  className="px-4 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/30 text-orange-300 rounded-xl transition-all flex items-center gap-2 text-sm"
+                                >
+                                  {isProgressing ? (
+                                    <div className="w-4 h-4 border-2 border-orange-300/30 border-t-orange-300 rounded-full animate-spin" />
+                                  ) : (
+                                    <FaBolt className="w-4 h-4" />
+                                  )}
+                                  {isProgressing
+                                    ? "Processing..."
+                                    : "Force Next Round"}
+                                </button>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Use this if the round doesn&apos;t progress
+                                  automatically
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
