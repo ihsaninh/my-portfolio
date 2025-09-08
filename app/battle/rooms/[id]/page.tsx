@@ -86,6 +86,8 @@ export default function BattleRoom() {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isProgressing, setIsProgressing] = useState(false);
+  const [stuckDetectionTimer, setStuckDetectionTimer] =
+    useState<NodeJS.Timeout | null>(null);
 
   // Data state
   const [state, setState] = useState<StateResp | null>(null);
@@ -330,6 +332,12 @@ export default function BattleRoom() {
         setAnsweredCount(0); // Reset answered count for new round
         setIsProgressing(false); // Reset progression state
 
+        // Clear stuck detection timer since we got the round_revealed event
+        if (stuckDetectionTimer) {
+          clearTimeout(stuckDetectionTimer);
+          setStuckDetectionTimer(null);
+        }
+
         setGamePhase("answering");
         refresh();
       });
@@ -366,6 +374,20 @@ export default function BattleRoom() {
 
         // Skip scoreboard entirely - go directly to results/waiting
         setGamePhase("results");
+
+        // Clear any existing stuck detection timer
+        if (stuckDetectionTimer) {
+          clearTimeout(stuckDetectionTimer);
+          setStuckDetectionTimer(null);
+        }
+
+        // Start stuck detection timer - if no round_revealed event comes in 10 seconds, mark as stuck
+        const timer = setTimeout(() => {
+          console.warn(
+            `No round_revealed event received after round ${roundNo} closed`
+          );
+        }, 10000); // 10 seconds timeout
+        setStuckDetectionTimer(timer);
 
         // Force refresh to get updated state
         setTimeout(() => {

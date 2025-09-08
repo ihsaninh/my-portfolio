@@ -9,7 +9,6 @@ import { supabaseAdmin } from "@/src/lib/supabase";
 const AnswerSchema = z.object({ answer_text: z.string().min(1).max(5000) });
 
 const GRACE_MS = 3000; // small grace to tolerate minor clock drift
-const AUTO_ADVANCE_DELAY_MS = 2000; // delay before revealing next round
 
 export async function POST(
   req: NextRequest,
@@ -196,6 +195,18 @@ async function checkAndAutoAdvanceRound(
   const supabase = supabaseAdmin();
 
   try {
+    // Use a transaction-like approach to prevent race conditions
+    // First, check if the round is still active (not already closed by another request)
+    const { data: currentRound } = await supabase
+      .from("battle_room_rounds")
+      .select("status")
+      .eq("id", roundId)
+      .single();
+
+    if (!currentRound || currentRound.status !== "active") {
+      console.log(`Round ${roundNo} is not active, skipping auto-advance`);
+      return;
+    }
     // Get total participants in the room
     const { count: totalParticipants } = await supabase
       .from("battle_room_participants")
@@ -220,11 +231,19 @@ async function checkAndAutoAdvanceRound(
     ) {
       console.log(`All participants answered! Auto-closing round ${roundNo}`);
 
-      // Close the current round
-      await supabase
+      // Close the current round atomically
+      const { data: closedRound, error: closeError } = await supabase
         .from("battle_room_rounds")
         .update({ status: "closed" })
-        .eq("id", roundId);
+        .eq("id", roundId)
+        .eq("status", "active") // Only close if still active
+        .select("status")
+        .single();
+
+      if (closeError || !closedRound) {
+        console.log(`Round ${roundNo} was already closed by another request`);
+        return;
+      }
 
       // Get answers for scoreboard
       const { data: answers } = await supabase
@@ -297,10 +316,8 @@ async function checkAndAutoAdvanceRound(
           payload: { roomId },
         });
       } else {
-        // Auto-reveal next round after a brief delay
-        setTimeout(async () => {
-          await autoRevealNextRound(roomId, roundNo + 1);
-        }, AUTO_ADVANCE_DELAY_MS);
+        // Auto-reveal next round immediately (no setTimeout in serverless)
+        await autoRevealNextRound(roomId, roundNo + 1);
       }
     }
   } catch (error) {
@@ -333,8 +350,8 @@ async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
       now.getTime() + (room.round_time_sec || 60) * 1000
     );
 
-    // Reveal next round
-    const { error: revealErr } = await supabase
+    // Reveal next round atomically
+    const { data: revealedRound, error: revealErr } = await supabase
       .from("battle_room_rounds")
       .update({
         status: "active",
@@ -342,10 +359,18 @@ async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
         deadline_at: deadline.toISOString(),
       })
       .eq("room_id", roomId)
-      .eq("round_no", nextRoundNo);
+      .eq("round_no", nextRoundNo)
+      .eq("status", "pending") // Only reveal if still pending
+      .select("round_no, status")
+      .single();
 
-    if (revealErr) {
-      console.error("Failed to auto-reveal next round:", revealErr);
+    if (revealErr || !revealedRound) {
+      console.error("Failed to auto-reveal next round:", {
+        roomId,
+        nextRoundNo,
+        error: revealErr,
+        revealedRound,
+      });
       return;
     }
 
