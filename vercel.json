@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/battle/cron/auto-close",
-      "schedule": "*/30 * * * * *"
+      "schedule": "* * * * *"
     }
   ],
   "functions": {
