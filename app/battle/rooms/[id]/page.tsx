@@ -97,6 +97,8 @@ export default function BattleRoom() {
   const [lastEventTime, setLastEventTime] = useState<number>(Date.now());
   const [forceProgressTimer, setForceProgressTimer] =
     useState<NodeJS.Timeout | null>(null);
+  const [refreshDebounceTimer, setRefreshDebounceTimer] =
+    useState<NodeJS.Timeout | null>(null);
 
   // Data state
   const [state, setState] = useState<StateResp | null>(null);
@@ -214,25 +216,24 @@ export default function BattleRoom() {
       return "waiting";
     }
 
-    // Check if we're on the last round and it's closed (should be finished)
-    const totalRounds = stateToUse.room.num_questions || 0;
-    const currentRound = stateToUse.activeRound?.roundNo || 0;
+    // If there's an active round with a question, determine phase based on submission status
     if (
-      currentRound >= totalRounds &&
-      stateToUse.activeRound?.status !== "active"
+      stateToUse.activeRound?.status === "active" &&
+      stateToUse.activeRound?.question
     ) {
-      return "finished";
+      if (hasSubmitted) {
+        return "results";
+      } else {
+        return "answering";
+      }
     }
 
-    if (stateToUse.activeRound?.status === "active" && !hasSubmitted) {
-      return "answering";
+    // If room is active but no active round or no question yet, we're in playing phase
+    if (stateToUse.room.status === "active") {
+      return "playing";
     }
 
-    if (stateToUse.activeRound?.status === "active" && hasSubmitted) {
-      return "results";
-    }
-
-    return "playing";
+    return "waiting";
   };
 
   // Timer effect with enhanced timeout for Hobby plan
@@ -285,7 +286,20 @@ export default function BattleRoom() {
     isProgressing,
   ]);
 
-  // Enhanced refresh function with better error handling
+  // Debounced refresh to prevent blinking
+  const debouncedRefresh = (delay: number = 300) => {
+    if (refreshDebounceTimer) {
+      clearTimeout(refreshDebounceTimer);
+    }
+
+    const timer = setTimeout(() => {
+      refresh();
+    }, delay);
+
+    setRefreshDebounceTimer(timer);
+  };
+
+  // Enhanced refresh function with better error handling and state stability
   async function refresh() {
     try {
       console.log(`🔄 Refreshing state for room ${roomId}`);
@@ -309,7 +323,21 @@ export default function BattleRoom() {
         s.currentUser = state.currentUser;
       }
 
-      setState(s);
+      // Prevent unnecessary state updates that cause blinking
+      const newPhase = getGamePhase(s);
+      const currentPhase = state ? getGamePhase(state) : "waiting";
+
+      // Only update state if there's a meaningful change
+      const hasActiveRoundChanged =
+        s.activeRound?.roundNo !== state?.activeRound?.roundNo ||
+        s.activeRound?.status !== state?.activeRound?.status;
+
+      const hasRoomStatusChanged = s.room?.status !== state?.room?.status;
+
+      if (hasActiveRoundChanged || hasRoomStatusChanged || !state) {
+        setState(s);
+        console.log(`✅ State updated - Phase: ${currentPhase} -> ${newPhase}`);
+      }
 
       // Update answer status if available
       if (answerStatusResponse.ok) {
@@ -318,12 +346,13 @@ export default function BattleRoom() {
         setAnsweredCount(answerData.totalAnswered);
       }
 
-      // Update game phase based on state
-      const newPhase = getGamePhase(s);
-      setGamePhase(newPhase);
+      // Update game phase only if it actually changed
+      if (newPhase !== currentPhase) {
+        setGamePhase(newPhase);
+        console.log(`🎮 Game phase changed: ${currentPhase} -> ${newPhase}`);
+      }
 
       setLastEventTime(Date.now());
-      console.log(`✅ State refreshed successfully, phase: ${newPhase}`);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error(`❌ Refresh error: ${message}`);
@@ -342,7 +371,7 @@ export default function BattleRoom() {
         clearInterval(pollingInterval);
       }
 
-      // Only poll during active phases
+      // Only poll during active phases and less frequently to prevent blinking
       if (
         gamePhase === "answering" ||
         gamePhase === "results" ||
@@ -351,12 +380,12 @@ export default function BattleRoom() {
         console.log(`🔄 Setting up polling backup for phase: ${gamePhase}`);
         const interval = setInterval(() => {
           const timeSinceLastEvent = Date.now() - lastEventTime;
-          // Poll if no events received in last 10 seconds
-          if (timeSinceLastEvent > 10000) {
+          // Poll if no events received in last 15 seconds (increased from 10)
+          if (timeSinceLastEvent > 15000) {
             console.log("📶 No recent events, polling for updates...");
             refresh();
           }
-        }, 5000); // Poll every 5 seconds
+        }, 8000); // Poll every 8 seconds (increased from 5) to reduce blinking
 
         setPollingInterval(interval);
       }
@@ -422,14 +451,10 @@ export default function BattleRoom() {
       ch.on("broadcast", { event: "round_revealed" }, (p) => {
         setLastEventTime(Date.now());
         const payload = p?.payload as { roundNo?: number; reason?: string };
-        const reason = payload?.reason;
 
-        if (reason === "auto_advance") {
-          // addNotification(`🚀 Round ${roundNo} ready!`);
-        } else {
-          // addNotification(`⚡ Round ${roundNo}!`);
-        }
+        console.log(`🚀 Round revealed event received:`, payload);
 
+        // Reset form state immediately for new round
         setHasSubmitted(false);
         setAnswer("");
         setAnsweredCount(0); // Reset answered count for new round
@@ -447,14 +472,17 @@ export default function BattleRoom() {
           setForceProgressTimer(null);
         }
 
+        // Set phase first, then refresh to get question data
         setGamePhase("answering");
-        refresh();
+
+        // Use debounced refresh to prevent blinking
+        debouncedRefresh(500);
       });
 
       ch.on("broadcast", { event: "answer_received" }, () => {
         setLastEventTime(Date.now());
-        // Update answered count and status with real-time updates
-        refresh();
+        // Update answered count and status with debounced refresh to prevent blinking
+        debouncedRefresh(1000);
       });
 
       ch.on("broadcast", { event: "all_participants_answered" }, (p) => {
@@ -493,6 +521,11 @@ export default function BattleRoom() {
         const reason = payload?.reason;
         const totalRounds = state?.room?.num_questions || 0;
 
+        console.log(`📊 Round ${roundNo} closed event:`, {
+          reason,
+          totalRounds,
+        });
+
         if (reason === "all_answered") {
           // addNotification(`🚀 Round ${roundNo} - Next question coming up!`);
         } else {
@@ -501,12 +534,13 @@ export default function BattleRoom() {
 
         // Check if this was the last round
         if (Number(roundNo) >= totalRounds) {
-          setGamePhase("results");
+          console.log(`🏁 This was the last round (${roundNo}/${totalRounds})`);
+          setGamePhase("finished"); // Go directly to finished, not results
           // Don't refresh immediately for last round - wait for match_finished
           return;
         }
 
-        // Skip scoreboard entirely - go directly to results/waiting
+        // For non-final rounds, go to results phase temporarily
         setGamePhase("results");
 
         // Clear any existing stuck detection timer
@@ -520,13 +554,13 @@ export default function BattleRoom() {
           console.warn(
             `No round_revealed event received after round ${roundNo} closed`
           );
+          // Force refresh if stuck
+          refresh();
         }, 10000); // 10 seconds timeout
         setStuckDetectionTimer(timer);
 
-        // Force refresh to get updated state
-        setTimeout(() => {
-          refresh();
-        }, 1000);
+        // Minimal refresh delay to prevent blinking
+        debouncedRefresh(800);
       });
 
       ch.on("broadcast", { event: "match_finished" }, () => {
@@ -559,6 +593,7 @@ export default function BattleRoom() {
         if (pollingInterval) clearInterval(pollingInterval);
         if (stuckDetectionTimer) clearTimeout(stuckDetectionTimer);
         if (forceProgressTimer) clearTimeout(forceProgressTimer);
+        if (refreshDebounceTimer) clearTimeout(refreshDebounceTimer);
 
         // Clean up localStorage when leaving the room
         if (localStorage.getItem(`battle_host_tab_${roomId}`) === tabId) {
@@ -568,7 +603,7 @@ export default function BattleRoom() {
       };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [roomId, gamePhase, lastEventTime]);
+  }, [roomId]); // Reduced dependencies to prevent excessive re-renders
 
   async function startBattle() {
     if (!isHost()) {
