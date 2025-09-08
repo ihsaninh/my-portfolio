@@ -216,22 +216,19 @@ export default function BattleRoom() {
       return "waiting";
     }
 
-    // If there's an active round, determine phase based on question availability and submission status
-    if (stateToUse.activeRound?.status === "active") {
-      // Only show answering/results if we have a question
-      if (stateToUse.activeRound?.question) {
-        if (hasSubmitted) {
-          return "results";
-        } else {
-          return "answering";
-        }
+    // If there's an active round with a question, determine phase based on submission status
+    if (
+      stateToUse.activeRound?.status === "active" &&
+      stateToUse.activeRound?.question
+    ) {
+      if (hasSubmitted) {
+        return "results";
       } else {
-        // Active round but no question yet - still loading question
-        return "playing";
+        return "answering";
       }
     }
 
-    // If room is active but no active round, we're in playing phase (waiting for round)
+    // If room is active but no active round or no question yet, we're in playing phase
     if (stateToUse.room.status === "active") {
       return "playing";
     }
@@ -422,20 +419,6 @@ export default function BattleRoom() {
 
         setForceProgressTimer(timer);
       }
-
-      // IMPORTANT: Add timeout for stuck "playing" phase
-      if (
-        gamePhase === "playing" &&
-        state?.room?.status === "active" &&
-        !state?.activeRound
-      ) {
-        const timer = setTimeout(() => {
-          console.warn("🚨 Stuck in playing phase - forcing refresh...");
-          refresh();
-        }, 8000); // 8 seconds timeout for playing phase
-
-        setForceProgressTimer(timer);
-      }
     };
 
     setupPollingBackup();
@@ -492,8 +475,8 @@ export default function BattleRoom() {
         // Set phase first, then refresh to get question data
         setGamePhase("answering");
 
-        // Immediate refresh to get question data
-        refresh();
+        // Use debounced refresh to prevent blinking
+        debouncedRefresh(500);
       });
 
       ch.on("broadcast", { event: "answer_received" }, () => {
@@ -552,8 +535,8 @@ export default function BattleRoom() {
         // Check if this was the last round
         if (Number(roundNo) >= totalRounds) {
           console.log(`🏁 This was the last round (${roundNo}/${totalRounds})`);
-          // Don't set to finished immediately - wait for match_finished event
-          // setGamePhase("finished"); // REMOVED - this causes the brief "Battle Complete!"
+          setGamePhase("finished"); // Go directly to finished, not results
+          // Don't refresh immediately for last round - wait for match_finished
           return;
         }
 
@@ -1339,10 +1322,18 @@ export default function BattleRoom() {
                             <FaClock className="w-16 h-16 text-orange-400 mx-auto" />
                           </motion.div>
                           <h3 className="text-xl font-semibold text-white">
-                            Preparing Next Round...
+                            {state?.room?.num_questions &&
+                            state?.room?.status === "active" &&
+                            !state.activeRound
+                              ? "Calculating Final Results..."
+                              : "Preparing Next Round..."}
                           </h3>
                           <p className="text-gray-300">
-                            The next question is being prepared automatically.
+                            {state?.room?.num_questions &&
+                            state?.room?.status === "active" &&
+                            !state.activeRound
+                              ? "The battle is finishing up. Final scores are being calculated."
+                              : "The next question is being prepared automatically."}
                           </p>
                         </>
                       ) : (
@@ -1354,26 +1345,6 @@ export default function BattleRoom() {
                           <p className="text-gray-300">
                             The next round is about to begin...
                           </p>
-
-                          {/* Add manual refresh button if stuck for too long */}
-                          <div className="mt-6">
-                            <button
-                              onClick={() => {
-                                console.log(
-                                  "🔄 Manual refresh triggered by user"
-                                );
-                                refresh();
-                              }}
-                              className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 text-purple-300 rounded-xl transition-all flex items-center gap-2 text-sm mx-auto"
-                            >
-                              <FaBolt className="w-4 h-4" />
-                              Refresh Status
-                            </button>
-                            <p className="text-xs text-gray-400 mt-2">
-                              Click if the next round doesn’t appear
-                              automatically
-                            </p>
-                          </div>
                         </>
                       )}
                     </div>
