@@ -13,10 +13,8 @@ interface GameAreaProps {
   answeredCount: number;
   onStartBattle: () => void;
   onSubmitAnswer: () => void;
-  roomId: string;
   isHost: boolean;
   iHaveAnswered: boolean;
-  onRedirectToResults: () => void;
 }
 
 export function GameArea({
@@ -24,10 +22,8 @@ export function GameArea({
   answeredCount,
   onStartBattle,
   onSubmitAnswer,
-  roomId,
   isHost,
   iHaveAnswered,
-  onRedirectToResults,
 }: GameAreaProps) {
   const { state, gamePhase } = useBattleStore();
 
@@ -91,9 +87,7 @@ export function GameArea({
               iHaveAnswered={iHaveAnswered}
             />
           )}
-        {gamePhase === "finished" && (
-          <FinishedPhase roomId={roomId} onRedirect={onRedirectToResults} />
-        )}
+        {gamePhase === "finished" && <FinishedPhase />}
         {gamePhase === "playing" && !state?.activeRound && <PlayingPhase />}
       </div>
     </motion.div>

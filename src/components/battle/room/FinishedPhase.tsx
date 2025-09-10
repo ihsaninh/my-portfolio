@@ -1,23 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useEffect } from "react";
 import { FaTrophy } from "react-icons/fa";
 
-interface FinishedPhaseProps {
-  roomId: string;
-  onRedirect: () => void;
-}
-
-export function FinishedPhase({ onRedirect }: FinishedPhaseProps) {
-  // Ensure we actually navigate away from this screen.
-  useEffect(() => {
-    const t = setTimeout(() => {
-      onRedirect?.();
-    }, 1000);
-    return () => clearTimeout(t);
-  }, [onRedirect]);
-
+export function FinishedPhase() {
   return (
     <div className="text-center space-y-6">
       <motion.div

@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -13,7 +12,6 @@ import {
 import { useBattleLogic } from "@/src/hooks/useBattleLogic";
 
 export default function BattleRoom() {
-  const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const {
     // State values
@@ -43,10 +41,6 @@ export default function BattleRoom() {
       top: `${Math.round(Math.random() * 10000) / 100}%`,
     }));
   }, [mounted]);
-
-  const redirectToResults = () => {
-    router.push(`/battle/result/${roomId}`);
-  };
 
   if (!state?.room) {
     return (
@@ -141,10 +135,8 @@ export default function BattleRoom() {
                 answeredCount={answeredCount}
                 onStartBattle={startBattle}
                 onSubmitAnswer={submitAnswer}
-                roomId={roomId}
                 isHost={isHost}
                 iHaveAnswered={iHaveAnswered}
-                onRedirectToResults={redirectToResults}
               />
             </div>
           </div>

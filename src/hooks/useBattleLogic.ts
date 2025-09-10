@@ -510,9 +510,7 @@ export function useBattleLogic() {
         }
 
         // Redirect to final results page after a short delay
-        setTimeout(() => {
-          router.push(`/battle/result/${roomId}`);
-        }, 1500);
+        // Central redirect logic - will be handled by the useEffect below
 
         // Ensure we fetch the final state
         refresh();
@@ -784,27 +782,12 @@ export function useBattleLogic() {
       hasRedirectedRef.current = true;
       const t = setTimeout(() => {
         router.push(`/battle/result/${roomId}`);
-      }, 1200);
+      }, 2500); // Increased delay to 2.5s to ensure users can see the complete message
       return () => clearTimeout(t);
     }
   }, [gamePhase, router, roomId]);
 
-  // Redirect safeguard: if room status becomes finished, ensure redirect happens
-  useEffect(() => {
-    if (state?.room?.status === "finished") {
-      if (gamePhase !== "finished") {
-        setGamePhase("finished");
-      }
-      if (!hasRedirectedRef.current) {
-        const t = setTimeout(() => {
-          hasRedirectedRef.current = true;
-          router.push(`/battle/result/${roomId}`);
-        }, 1200);
-        return () => clearTimeout(t);
-      }
-    }
-  }, [state?.room?.status, gamePhase, router, roomId, setGamePhase]);
-
+  
   // Ensure phase resets to waiting when entering a fresh room
   useEffect(() => {
     if (state?.room?.status === "waiting" && gamePhase !== "waiting") {
