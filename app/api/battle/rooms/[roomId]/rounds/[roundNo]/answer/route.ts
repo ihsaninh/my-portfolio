@@ -7,6 +7,7 @@ import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
 const AnswerSchema = z.object({ answer_text: z.string().min(1).max(5000) });
+const McqAnswerSchema = z.object({ choice_id: z.string().min(1) });
 
 const GRACE_MS = 3000; // small grace to tolerate minor clock drift
 
@@ -16,7 +17,7 @@ export async function POST(
 ) {
   try {
     const { roomId, roundNo } = await context.params;
-    const body = AnswerSchema.parse(await req.json());
+    const raw = await req.json();
     const sessionId = getSessionIdFromCookies(req);
     if (!sessionId) {
       return NextResponse.json(
@@ -54,7 +55,104 @@ export async function POST(
     if (partErr || !part)
       return NextResponse.json({ error: "Not a participant" }, { status: 403 });
 
-    // Fetch question for evaluation
+    // Determine question type for this room
+    const { data: room } = await supabase
+      .from("battle_rooms")
+      .select("question_type, round_time_sec")
+      .eq("id", roomId)
+      .single();
+    const isMcq = (room?.question_type || "open-ended") === "multiple-choice";
+
+    if (isMcq) {
+      // MCQ submission path
+      const body = McqAnswerSchema.parse(raw);
+
+      const qJson = round.question_json as
+        | (Record<string, unknown> & {
+            choices?: Array<{ id: string; text: string }>;
+            correctChoiceId?: string;
+          })
+        | null;
+      if (!qJson || !qJson.choices || !qJson.correctChoiceId) {
+        return NextResponse.json(
+          { error: "MCQ data not available for this round" },
+          { status: 400 }
+        );
+      }
+
+      const correct = body.choice_id === qJson.correctChoiceId;
+
+      // Compute time elapsed from reveal
+      const { data: reveal } = await supabase
+        .from("battle_room_rounds")
+        .select("revealed_at")
+        .eq("id", round.id)
+        .single();
+      const revealedAt = reveal?.revealed_at
+        ? new Date(reveal.revealed_at).getTime()
+        : Date.now();
+      const now = Date.now();
+      const timeMs = Math.max(0, now - revealedAt);
+
+      const tMaxMs = Math.max(1, (room?.round_time_sec || 60) * 1000);
+      // Keep scores within 0..100 per DB constraint
+      // If correct: base 60 + time bonus up to 40. If wrong: 0
+      const base = correct ? 60 : 0;
+      const timeBonus = correct
+        ? Math.floor(((tMaxMs - Math.min(timeMs, tMaxMs)) / tMaxMs) * 40)
+        : 0;
+      const finalScore = Math.max(0, Math.min(100, base + timeBonus));
+
+      const id = `bra-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const { error: ansErr } = await supabase
+        .from("battle_room_answers")
+        .insert({
+          id,
+          room_id: roomId,
+          round_id: round.id,
+          session_id: sessionId,
+          answer_text: "",
+          choice_id: body.choice_id,
+          is_correct: correct,
+          time_ms: timeMs,
+          score_ai: null,
+          score_rule: finalScore,
+          score_final: finalScore,
+          feedback: null,
+        });
+      if (ansErr) {
+        if ((ansErr as Error & { code?: string }).code === "23505") {
+          return NextResponse.json(
+            { error: "Already answered" },
+            { status: 409 }
+          );
+        }
+        console.error("Answer insert error:", ansErr);
+        return NextResponse.json(
+          { error: "Failed to store answer" },
+          { status: 500 }
+        );
+      }
+
+      // Broadcast and maybe auto-advance
+      after(() =>
+        publishBattleEvent({
+          roomId,
+          event: "answer_received",
+          payload: { roundNo: Number(roundNo), participantId: part.id },
+        })
+      );
+
+      const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
+      if (autoAdvanceEnabled) {
+        after(() => checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo)));
+      }
+
+      return NextResponse.json({ score: finalScore, correct });
+    }
+
+    // Fetch question for evaluation (open-ended)
+    const body = AnswerSchema.parse(raw);
     let question: {
       prompt: string;
       difficulty: number;

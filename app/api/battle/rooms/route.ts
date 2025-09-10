@@ -12,6 +12,10 @@ const CreateRoomSchema = z.object({
   roundTimeSec: z.number().int().min(5).max(600),
   capacity: z.number().int().min(2).max(100).optional(),
   hostDisplayName: z.string().min(1).max(100).optional(),
+  questionType: z
+    .enum(["open-ended", "multiple-choice"]) 
+    .default("open-ended")
+    .optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -62,6 +66,7 @@ export async function POST(req: NextRequest) {
       num_questions: body.numQuestions,
       round_time_sec: body.roundTimeSec,
       capacity: body.capacity ?? null,
+      question_type: body.questionType ?? "open-ended",
       status: "waiting",
     });
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateQuestions } from "@/src/lib/ai-question-gen";
+import { generateMcqQuestions, generateQuestions } from "@/src/lib/ai-question-gen";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -39,7 +39,7 @@ export async function POST(
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
       .select(
-        "id, host_session_id, status, num_questions, category_id, language, round_time_sec, topic"
+        "id, host_session_id, status, num_questions, category_id, language, round_time_sec, topic, question_type"
       )
       .eq("id", roomId)
       .single();
@@ -113,24 +113,46 @@ export async function POST(
             .single();
           categoryName = cat?.name ?? null;
         }
-        const aiQs = await generateQuestions({
-          topic: room.topic || null,
-          categoryName,
-          categoryId: room.category_id || null,
-          language: room.language,
-          num: room.num_questions,
-          seed: `${roomId}-${Date.now()}`,
-        });
-        if (aiQs.length > 0) {
-          inserts = aiQs.map((q, idx) => ({
-            id: `round-${roomId}-${idx + 1}`,
-            room_id: roomId,
-            round_no: idx + 1,
-            question_id: null,
-            question_json: q,
-            status: "pending" as const,
-          }));
-          usedAI = true;
+        if (room.question_type === "multiple-choice") {
+          const aiQs = await generateMcqQuestions({
+            topic: room.topic || null,
+            categoryName,
+            categoryId: room.category_id || null,
+            language: room.language,
+            num: room.num_questions,
+            seed: `${roomId}-${Date.now()}`,
+          });
+          if (aiQs.length > 0) {
+            inserts = aiQs.map((q, idx) => ({
+              id: `round-${roomId}-${idx + 1}`,
+              room_id: roomId,
+              round_no: idx + 1,
+              question_id: null,
+              question_json: q,
+              status: "pending" as const,
+            }));
+            usedAI = true;
+          }
+        } else {
+          const aiQs = await generateQuestions({
+            topic: room.topic || null,
+            categoryName,
+            categoryId: room.category_id || null,
+            language: room.language,
+            num: room.num_questions,
+            seed: `${roomId}-${Date.now()}`,
+          });
+          if (aiQs.length > 0) {
+            inserts = aiQs.map((q, idx) => ({
+              id: `round-${roomId}-${idx + 1}`,
+              room_id: roomId,
+              round_no: idx + 1,
+              question_id: null,
+              question_json: q,
+              status: "pending" as const,
+            }));
+            usedAI = true;
+          }
         }
       } catch (e) {
         console.error("AI question generation failed, fallback to bank", e);
@@ -139,6 +161,14 @@ export async function POST(
     }
 
     if (inserts.length === 0) {
+      // If MCQ is requested but AI failed and no inserts, abort early (no bank fallback for MCQ in MVP)
+      if (room.question_type === "multiple-choice") {
+        return NextResponse.json(
+          { error: "Failed to prepare MCQ questions" },
+          { status: 500 }
+        );
+      }
+
       const { data: questions, error: qErr } = await supabase
         .from("quiz_questions")
         .select("id, prompt, difficulty, rubric_json, language, category_id")

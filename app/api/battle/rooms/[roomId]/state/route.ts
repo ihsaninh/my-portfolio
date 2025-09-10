@@ -17,6 +17,8 @@ type QuestionSummary = {
   difficulty: number;
   language: string;
   category?: string;
+  // Optional for MCQ
+  choices?: Array<{ id: string; text: string }>;
 } | null;
 
 export async function GET(
@@ -38,7 +40,7 @@ export async function GET(
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
       .select(
-        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity"
+        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity, question_type"
       )
       .eq("id", roomId)
       .single();
@@ -131,12 +133,15 @@ export async function GET(
           difficulty: number;
           language: string;
           category?: string;
+          choices?: Array<{ id: string; text: string }>;
+          correctChoiceId?: string;
         };
         questionSummary = {
           prompt: q.prompt,
           difficulty: q.difficulty,
           language: q.language,
           category: q.category,
+          choices: q.choices?.map((c) => ({ id: c.id, text: c.text })),
         };
       }
     }
@@ -158,7 +163,7 @@ export async function GET(
             revealedAt: round.revealed_at,
             deadlineAt: round.deadline_at,
             status: round.status,
-            question: questionSummary, // hidden if not revealed
+            question: questionSummary, // includes choices for MCQ (without correct id)
           }
         : null,
     });
