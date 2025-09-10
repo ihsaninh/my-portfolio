@@ -134,7 +134,7 @@ export async function POST(
         );
       }
 
-      // Broadcast (best-effort). Even if broadcast fails, we still progress via DB state.
+      // Broadcast and maybe auto-advance
       after(() =>
         publishBattleEvent({
           roomId,
@@ -143,10 +143,9 @@ export async function POST(
         })
       );
 
-      // Auto-advance synchronously to avoid serverless after() being dropped in production
       const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
       if (autoAdvanceEnabled) {
-        await checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo));
+        after(() => checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo)));
       }
 
       return NextResponse.json({ score: finalScore, correct });
@@ -258,7 +257,7 @@ export async function POST(
       round_no: roundNo,
     });
 
-    // Broadcast (best-effort). Even if broadcast fails, we still progress via DB state.
+    // Broadcast answer_received in background (notify other clients)
     after(() =>
       publishBattleEvent({
         roomId,
@@ -267,10 +266,11 @@ export async function POST(
       })
     );
 
-    // Auto-advance synchronously to avoid serverless after() being dropped in production
+    // Check if all participants have answered for auto-advance
     const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
     if (autoAdvanceEnabled) {
-      await checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo));
+      // Run auto-advance in the background so the response isn't delayed
+      after(() => checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo)));
     }
 
     return NextResponse.json({ score: ai.score, feedback: ai.feedback });

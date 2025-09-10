@@ -351,19 +351,6 @@ export function useBattleLogic() {
         } catch {
           // ignore mapping issues, UI will still work with local state
         }
-
-        // Host-side safety: if server reports all participants have answered, proactively close the round
-        try {
-          const allAnswered = Boolean(answerData.allAnswered);
-          const active = (s?.activeRound?.status || state?.activeRound?.status) === "active";
-          if (allAnswered && active && isHost() && !useBattleStore.getState().isProgressing) {
-            setIsProgressing(true);
-            // small delay to let clients see submitted state
-            setTimeout(() => {
-              autoCloseRound();
-            }, 1200);
-          }
-        } catch {}
       }
 
       // Update game phase only if it actually changed
@@ -482,24 +469,8 @@ export function useBattleLogic() {
 
         // Check if this was the last round
         if (Number(roundNo) >= totalRounds) {
-          // For the final round, wait briefly for match_finished, then fallback to refresh/advance
-          // Start a short fallback timer (4s) to avoid getting stuck if match_finished is lost
-          if (useBattleStore.getState().forceProgressTimerId) {
-            clearTimeout(useBattleStore.getState().forceProgressTimerId!);
-            setTimerIds({ forceProgressTimerId: null });
-          }
-          const t = setTimeout(async () => {
-            try {
-              await refresh();
-              const finished = useBattleStore.getState().state?.room?.status === "finished";
-              if (!finished && isHost()) {
-                // Attempt manual advance to trigger match_finished
-                await fetch(`/api/battle/rooms/${roomId}/advance`, { method: "POST" });
-                setTimeout(() => refresh(), 800);
-              }
-            } catch {}
-          }, 4000);
-          setTimerIds({ forceProgressTimerId: t });
+          // For the final round, we stay in "playing" phase while waiting for match_finished event
+          // Don't refresh immediately for last round - wait for match_finished
           return;
         }
 
@@ -512,15 +483,15 @@ export function useBattleLogic() {
           setTimerIds({ stuckDetectionTimerId: null });
         }
 
-        // Start stuck detection timer - if no round_revealed event comes in a few seconds, force refresh
+        // Start stuck detection timer - if no round_revealed event comes in 10 seconds, mark as stuck
         const timer = setTimeout(() => {
           // Force refresh if stuck
           refresh();
-        }, 5000); // tighten timeout to 5 seconds
+        }, 10000); // 10 seconds timeout
         setTimerIds({ stuckDetectionTimerId: timer });
 
         // Minimal refresh delay to prevent blinking
-        debouncedRefresh(500);
+        debouncedRefresh(800);
       });
 
       ch.on("broadcast", { event: "match_finished" }, () => {
