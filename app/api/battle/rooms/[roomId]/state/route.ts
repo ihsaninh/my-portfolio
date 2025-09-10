@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
-import { publishBattleEvent } from "@/src/lib/realtime";
 
 type Participant = {
   id: string;
@@ -116,7 +116,11 @@ export async function GET(
     // On-read auto-close: if active round deadline has passed, close it and progress
     try {
       const now = Date.now();
-      if (round && round.deadline_at && new Date(round.deadline_at).getTime() < now) {
+      if (
+        round &&
+        round.deadline_at &&
+        new Date(round.deadline_at).getTime() < now
+      ) {
         // Re-fetch round id for atomic close
         const { data: current } = await supabase
           .from("battle_room_rounds")
@@ -167,7 +171,10 @@ export async function GET(
               .select("session_id, display_name")
               .eq("room_id", roomId);
             const nameMap = new Map(
-              (participantsForMap || []).map((p) => [p.session_id, p.display_name])
+              (participantsForMap || []).map((p) => [
+                p.session_id,
+                p.display_name,
+              ])
             );
             const roundScoreboard = (answers || []).map((a) => ({
               sessionId: a.session_id,
@@ -179,7 +186,10 @@ export async function GET(
             publishBattleEvent({
               roomId,
               event: "round_closed",
-              payload: { roundNo: closed.round_no, scoreboard: roundScoreboard },
+              payload: {
+                roundNo: closed.round_no,
+                scoreboard: roundScoreboard,
+              },
             });
 
             // Check remaining rounds
@@ -195,7 +205,11 @@ export async function GET(
                 .from("battle_rooms")
                 .update({ status: "finished" })
                 .eq("id", roomId);
-              publishBattleEvent({ roomId, event: "match_finished", payload: { roomId } });
+              publishBattleEvent({
+                roomId,
+                event: "match_finished",
+                payload: { roomId },
+              });
             } else {
               // Reveal next pending round immediately
               const { data: roomInfo } = await supabase
