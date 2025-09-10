@@ -7,12 +7,7 @@ import { supabaseAdmin } from "@/src/lib/supabase";
 interface BattleRoomRound {
   round_no: number;
   question_id: string | null;
-  question_json: {
-    prompt: string;
-    difficulty: number;
-    language: string;
-    category?: string;
-  } | null;
+  question_json: AIQuestion | null;
 }
 
 interface BankQuestion {
@@ -21,6 +16,15 @@ interface BankQuestion {
   difficulty: number;
   language: string;
   category_id: string;
+}
+
+interface AIQuestion {
+  prompt: string;
+  difficulty: number;
+  language: string;
+  category?: string;
+  choices?: Array<{ id: string; text: string }>;
+  correctChoiceId?: string;
 }
 
 export async function GET(
@@ -47,6 +51,9 @@ export async function GET(
         `
         id,
         answer_text,
+        choice_id,
+        is_correct,
+        time_ms,
         score_final,
         feedback,
         round_id,
@@ -100,6 +107,13 @@ export async function GET(
         // Handle both array and single object cases
         const round = Array.isArray(roundData) ? roundData[0] : roundData;
         let questionData = null;
+        let mcq = null as null | {
+          chosenId?: string;
+          chosenText?: string;
+          correctId?: string;
+          correctText?: string;
+          isCorrect?: boolean;
+        };
 
         if (round) {
           if (round.question_id) {
@@ -118,12 +132,30 @@ export async function GET(
           } else if (round.question_json) {
             // AI-generated question
             const q = round.question_json;
-            questionData = {
-              prompt: q.prompt,
-              difficulty: q.difficulty,
-              language: q.language,
-              category: q.category,
-            };
+            if (q) {
+              questionData = {
+                prompt: q.prompt,
+                difficulty: q.difficulty,
+                language: q.language,
+                category: q.category,
+              };
+              if (q.choices && Array.isArray(q.choices)) {
+                const choices = q.choices;
+                const chosen = choices.find((c) => c.id === answer.choice_id);
+                const correct = choices.find((c) => c.id === q.correctChoiceId);
+                mcq = {
+                  chosenId: answer.choice_id || undefined,
+                  chosenText: chosen?.text,
+                  correctId: q.correctChoiceId,
+                  correctText: correct?.text,
+                  isCorrect:
+                    answer.is_correct ??
+                    (answer.choice_id && q.correctChoiceId
+                      ? answer.choice_id === q.correctChoiceId
+                      : undefined),
+                };
+              }
+            }
           }
         }
 
@@ -131,9 +163,16 @@ export async function GET(
           id: answer.id,
           roundNo: round?.round_no || 0,
           question: questionData,
-          answer: answer.answer_text,
+          answer: mcq?.chosenText || answer.answer_text,
           score: answer.score_final || 0,
-          feedback: answer.feedback || "No feedback available",
+          feedback: mcq ? "" : answer.feedback || "No feedback available",
+          ...(mcq
+            ? {
+                correctAnswer: mcq.correctText || "",
+                isCorrect: !!mcq.isCorrect,
+                timeMs: answer.time_ms || null,
+              }
+            : {}),
         };
       })
       .sort((a, b) => a.roundNo - b.roundNo); // Sort by round number
