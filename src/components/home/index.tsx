@@ -8,6 +8,8 @@ import { FiDownload, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 
 import { useHeaderService } from "@/src/hooks/useHeader";
 
+import AiFeaturesAlert from "./AiFeaturesAlert";
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: easeOut } },
@@ -78,6 +80,9 @@ export default function Home() {
               Meteor Inovasi Digital).
             </m.p>
           </div>
+
+          {/* AI Features Alert */}
+          <AiFeaturesAlert />
 
           <m.div
             variants={fadeUp}

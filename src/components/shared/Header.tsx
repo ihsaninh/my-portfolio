@@ -18,7 +18,6 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const isBlog = pathname.startsWith("/blog");
-  const [toolsOpen, setToolsOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -79,17 +78,16 @@ export default function Header() {
   }, []);
 
   useEffect(() => {
-    if (!open && !toolsOpen) return;
+    if (!open) return;
     const onClick = (e: MouseEvent) => {
       if (!navRef.current) return;
       if (!navRef.current.contains(e.target as Node)) {
         setOpen(false);
-        setToolsOpen(false);
       }
     };
     document.addEventListener("click", onClick);
     return () => document.removeEventListener("click", onClick);
-  }, [open, toolsOpen]);
+  }, [open]);
 
   const handleNavClick = (href: string) => (e: React.SyntheticEvent) => {
     if (!isHome) return;
@@ -177,150 +175,7 @@ export default function Header() {
                   </li>
                 );
               })}
-              {/* AI Tools dropdown */}
-              <li
-                className="relative"
-                onMouseEnter={() => setToolsOpen(true)}
-                onMouseLeave={() => setToolsOpen(false)}
-              >
-                <button
-                  type="button"
-                  className="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-accent to-blue-500 px-4 py-2 text-sm font-medium text-primary shadow-lg hover:shadow-xl hover:shadow-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 transition-all duration-300 transform hover:-translate-y-0.5"
-                  aria-haspopup="menu"
-                  aria-expanded={toolsOpen}
-                  onClick={() => setToolsOpen((v) => !v)}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-4 w-4"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  AI Features
-                  <span
-                    className={[
-                      "inline-block transition-transform duration-300",
-                      toolsOpen ? "rotate-180" : "rotate-0",
-                    ].join(" ")}
-                    aria-hidden
-                  >
-                    ▾
-                  </span>
-                </button>
-                <AnimatePresence>
-                  {toolsOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                      transition={{ duration: 0.2, ease: "easeOut" }}
-                      className="absolute right-0 mt-2 w-64 rounded-2xl border border-slate-300 bg-white/90 backdrop-blur-lg shadow-2xl dark:border-white/10 dark:bg-gray-800/90 overflow-hidden"
-                      role="menu"
-                    >
-                      <div className="p-1">
-                        <ul className="space-y-1">
-                          <li>
-                            <Link
-                              href="/hire-me"
-                              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-800 hover:bg-accent/20 focus:bg-accent/20 focus:outline-none dark:text-white/90 dark:hover:bg-white/10 transition-colors duration-200"
-                              role="menuitem"
-                              onClick={() => setToolsOpen(false)}
-                            >
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-5 w-5"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-medium">
-                                  Hire Me Simulator
-                                </div>
-                                <div className="text-xs text-slate-600 dark:text-white/60">
-                                  Experience my hiring process
-                                </div>
-                              </div>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              href="/quiz"
-                              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-800 hover:bg-accent/20 focus:bg-accent/20 focus:outline-none dark:text-white/90 dark:hover:bg-white/10 transition-colors duration-200"
-                              role="menuitem"
-                              onClick={() => setToolsOpen(false)}
-                            >
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-300">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-5 w-5"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-medium">AI Quiz</div>
-                                <div className="text-xs text-slate-600 dark:text-white/60">
-                                  Test your knowledge with AI
-                                </div>
-                              </div>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              href="/battle"
-                              className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-800 hover:bg-accent/20 focus:bg-accent/20 focus:outline-none dark:text-white/90 dark:hover:bg-white/10 transition-colors duration-200"
-                              role="menuitem"
-                              onClick={() => setToolsOpen(false)}
-                            >
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-5 w-5"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="font-medium">Battle Arena</div>
-                                <div className="text-xs text-slate-600 dark:text-white/60">
-                                  Compete in real-time quiz battles
-                                </div>
-                              </div>
-                            </Link>
-                          </li>
-                        </ul>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </li>
+
               <li>
                 <ThemeToggle />
               </li>
@@ -328,28 +183,6 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center gap-2 lg:hidden">
-            {/* Mobile AI Tools Button - Always visible on mobile */}
-            <button
-              type="button"
-              className="cursor-pointer inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-accent to-blue-500 px-2.5 py-1.5 text-xs font-medium text-primary shadow-md hover:shadow-lg hover:shadow-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 transition-all duration-300 transform hover:-translate-y-0.5"
-              aria-label="AI Features"
-              onClick={() => setToolsOpen((v) => !v)}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-3.5 w-3.5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span>AI Features</span>
-            </button>
-
             <button
               type="button"
               className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-slate-100 p-2 text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
@@ -429,112 +262,6 @@ export default function Header() {
               </div>
             </div>
           </motion.nav>
-        )}
-      </AnimatePresence>
-      {/* Mobile AI Tools Dropdown - Shown when mobile AI button is clicked */}
-      <AnimatePresence>
-        {toolsOpen && !open && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="lg:hidden absolute top-16 left-0 right-0 z-50 mx-4 rounded-2xl border border-slate-300 bg-white/90 backdrop-blur-lg shadow-2xl dark:border-white/10 dark:bg-gray-800/90 overflow-hidden"
-            role="menu"
-          >
-            <div className="p-1">
-              <ul className="space-y-1">
-                <li>
-                  <Link
-                    href="/hire-me"
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-800 hover:bg-accent/20 focus:bg-accent/20 focus:outline-none dark:text-white/90 dark:hover:bg-white/10 transition-colors duration-200"
-                    role="menuitem"
-                    onClick={() => setToolsOpen(false)}
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-medium">Hire Me Simulator</div>
-                      <div className="text-xs text-slate-600 dark:text-white/60">
-                        Experience my hiring process
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/quiz"
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-800 hover:bg-accent/20 focus:bg-accent/20 focus:outline-none dark:text-white/90 dark:hover:bg-white/10 transition-colors duration-200"
-                    role="menuitem"
-                    onClick={() => setToolsOpen(false)}
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-300">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-medium">AI Quiz</div>
-                      <div className="text-xs text-slate-600 dark:text-white/60">
-                        Test your knowledge with AI
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    href="/battle"
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm text-slate-800 hover:bg-accent/20 focus:bg-accent/20 focus:outline-none dark:text-white/90 dark:hover:bg-white/10 transition-colors duration-200"
-                    role="menuitem"
-                    onClick={() => setToolsOpen(false)}
-                  >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-300">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-medium">Battle Arena</div>
-                      <div className="text-xs text-slate-600 dark:text-white/60">
-                        Compete in real-time quiz battles
-                      </div>
-                    </div>
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </motion.div>
         )}
       </AnimatePresence>
     </header>
