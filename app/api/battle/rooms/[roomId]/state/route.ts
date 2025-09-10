@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
@@ -101,7 +102,7 @@ export async function GET(
     }
 
     // Active round snapshot (if any)
-    const { data: round } = await supabase
+    let { data: round } = await supabase
       .from("battle_room_rounds")
       .select(
         "round_no, revealed_at, deadline_at, status, question_id, question_json"
@@ -111,6 +112,166 @@ export async function GET(
       .order("round_no", { ascending: false })
       .limit(1)
       .maybeSingle();
+
+    // On-read auto-close: if active round deadline has passed, close it and progress
+    try {
+      const now = Date.now();
+      if (
+        round &&
+        round.deadline_at &&
+        new Date(round.deadline_at).getTime() < now
+      ) {
+        // Re-fetch round id for atomic close
+        const { data: current } = await supabase
+          .from("battle_room_rounds")
+          .select("id, round_no, status")
+          .eq("room_id", roomId)
+          .eq("status", "active")
+          .order("round_no", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (current?.status === "active") {
+          // Atomically close if still active
+          const { data: closed, error: closeErr } = await supabase
+            .from("battle_room_rounds")
+            .update({ status: "closed" })
+            .eq("id", current.id)
+            .eq("status", "active")
+            .select("id, round_no")
+            .single();
+
+          if (!closeErr && closed) {
+            // Update participant totals
+            const { data: answers } = await supabase
+              .from("battle_room_answers")
+              .select("session_id, score_final")
+              .eq("round_id", closed.id);
+
+            if (answers && answers.length > 0) {
+              for (const a of answers) {
+                const { data: curr } = await supabase
+                  .from("battle_room_participants")
+                  .select("total_score")
+                  .eq("room_id", roomId)
+                  .eq("session_id", a.session_id)
+                  .single();
+                const next = (curr?.total_score || 0) + (a.score_final || 0);
+                await supabase
+                  .from("battle_room_participants")
+                  .update({ total_score: next })
+                  .eq("room_id", roomId)
+                  .eq("session_id", a.session_id);
+              }
+            }
+
+            // Prepare scoreboard payload
+            const { data: participantsForMap } = await supabase
+              .from("battle_room_participants")
+              .select("session_id, display_name")
+              .eq("room_id", roomId);
+            const nameMap = new Map(
+              (participantsForMap || []).map((p) => [
+                p.session_id,
+                p.display_name,
+              ])
+            );
+            const roundScoreboard = (answers || []).map((a) => ({
+              sessionId: a.session_id,
+              displayName: nameMap.get(a.session_id) || "Player",
+              score: a.score_final,
+            }));
+
+            // Broadcast round closed (best effort)
+            publishBattleEvent({
+              roomId,
+              event: "round_closed",
+              payload: {
+                roundNo: closed.round_no,
+                scoreboard: roundScoreboard,
+              },
+            });
+
+            // Check remaining rounds
+            const { count: remaining } = await supabase
+              .from("battle_room_rounds")
+              .select("id", { count: "exact", head: true })
+              .eq("room_id", roomId)
+              .eq("status", "pending");
+
+            if (!remaining || remaining === 0) {
+              // Finish room
+              await supabase
+                .from("battle_rooms")
+                .update({ status: "finished" })
+                .eq("id", roomId);
+              publishBattleEvent({
+                roomId,
+                event: "match_finished",
+                payload: { roomId },
+              });
+            } else {
+              // Reveal next pending round immediately
+              const { data: roomInfo } = await supabase
+                .from("battle_rooms")
+                .select("round_time_sec, status")
+                .eq("id", roomId)
+                .single();
+              if (roomInfo?.status === "active") {
+                const { data: nextRound } = await supabase
+                  .from("battle_room_rounds")
+                  .select("id, round_no")
+                  .eq("room_id", roomId)
+                  .eq("status", "pending")
+                  .gt("round_no", closed.round_no)
+                  .order("round_no")
+                  .limit(1)
+                  .maybeSingle();
+                if (nextRound) {
+                  const nowDate = new Date();
+                  const deadline = new Date(
+                    nowDate.getTime() + (roomInfo.round_time_sec || 60) * 1000
+                  );
+                  await supabase
+                    .from("battle_room_rounds")
+                    .update({
+                      status: "active",
+                      revealed_at: nowDate.toISOString(),
+                      deadline_at: deadline.toISOString(),
+                    })
+                    .eq("id", nextRound.id);
+                  publishBattleEvent({
+                    roomId,
+                    event: "round_revealed",
+                    payload: {
+                      roundNo: nextRound.round_no,
+                      revealedAt: nowDate.toISOString(),
+                      deadlineAt: deadline.toISOString(),
+                      reason: "on_read_guard",
+                    },
+                  });
+                }
+              }
+            }
+
+            // Re-fetch the current active round snapshot after progression
+            const { data: refreshed } = await supabase
+              .from("battle_room_rounds")
+              .select(
+                "round_no, revealed_at, deadline_at, status, question_id, question_json"
+              )
+              .eq("room_id", roomId)
+              .eq("status", "active")
+              .order("round_no", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            round = refreshed || null;
+          }
+        }
+      }
+    } catch (guardErr) {
+      console.error("on-read auto-close guard error:", guardErr);
+    }
 
     let questionSummary: QuestionSummary = null;
     if (round && round.revealed_at) {
