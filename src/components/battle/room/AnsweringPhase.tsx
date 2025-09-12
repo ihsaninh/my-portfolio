@@ -3,15 +3,12 @@
 import { FaBolt, FaCheck, FaStar } from "react-icons/fa";
 
 import { useBattleStore } from "@/src/lib/battle-store";
-
-interface AnsweringPhaseProps {
-  onSubmitAnswer: () => void;
-  iHaveAnswered: boolean;
-}
+import type { AnsweringPhaseProps } from "@/src/types/battle";
 
 export function AnsweringPhase({
   onSubmitAnswer,
   iHaveAnswered,
+  loading,
 }: AnsweringPhaseProps) {
   const {
     state,
@@ -19,7 +16,6 @@ export function AnsweringPhase({
     setAnswer,
     selectedChoiceId,
     setSelectedChoiceId,
-    loading,
     timeLeft,
   } = useBattleStore();
 
@@ -170,8 +166,6 @@ export function AnsweringPhase({
           <p className="text-green-300">
             Waiting for other players to finish...
           </p>
-
-          {/* Removed manual "Force Next Round" button to prevent accidental force progression */}
         </div>
       )}
     </div>

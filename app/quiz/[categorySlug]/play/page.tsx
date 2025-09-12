@@ -174,8 +174,7 @@ export default function QuizPlayPage() {
         feedback: result.feedback,
         detailedFeedback: result.detailedFeedback,
       };
-    } catch (error) {
-      console.error("AI evaluation failed:", error);
+    } catch {
       // Fallback to simple simulation
       const wordCount = answer.trim().split(/\s+/).length;
       const hasKeywords =
@@ -254,8 +253,7 @@ export default function QuizPlayPage() {
         setCurrentAnswer("");
         setIsSubmitting(false);
       }
-    } catch (error) {
-      console.error("Failed to submit answer:", error);
+    } catch {
       setIsSubmitting(false);
       // You might want to show an error message to the user here
     }

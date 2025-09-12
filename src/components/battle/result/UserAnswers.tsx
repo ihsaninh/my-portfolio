@@ -6,30 +6,7 @@ import {
   FaStar,
 } from "react-icons/fa";
 
-type UserAnswer = {
-  id: string;
-  roundNo: number;
-  question: {
-    prompt: string;
-    difficulty: number;
-    language: string;
-    category?: string;
-  } | null;
-  answer: string;
-  score: number;
-  feedback: string;
-  // Optional MCQ fields
-  correctAnswer?: string;
-  isCorrect?: boolean;
-  timeMs?: number | null;
-};
-
-interface UserAnswersProps {
-  userAnswers: UserAnswer[];
-  totalAnswers: number;
-  showAnswers: boolean;
-  onToggleShowAnswers: () => void;
-}
+import type { UserAnswersProps } from "@/src/types/battle";
 
 export function UserAnswers({
   userAnswers,

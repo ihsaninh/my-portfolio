@@ -1,10 +1,16 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useCreateRoom, useJoinRoom } from "@/src/hooks/useBattleQueries";
+
 type GameMode = "create" | "join" | null;
 
 export function useBattleLanding() {
   const router = useRouter();
+
+  // TanStack Query mutations
+  const createRoomMutation = useCreateRoom();
+  const joinRoomMutation = useJoinRoom();
   const [gameMode, setGameMode] = useState<GameMode>(null);
   const [createPayload, setCreatePayload] = useState({
     topic: "",
@@ -17,57 +23,30 @@ export function useBattleLanding() {
   });
   const [joinPlayerName, setJoinPlayerName] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");
-  const [loading, setLoading] = useState(false);
   const [log, setLog] = useState<string>("");
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  async function ensureSession(name: string) {
-    try {
-      const res = await fetch("/api/quiz/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ display_name: name || "Player" }),
-      });
-      return res.ok;
-    } catch (error) {
-      console.error("Session creation error:", error);
-      return false;
-    }
-  }
+  // Compute loading state from mutations
+  const loading = createRoomMutation.isPending || joinRoomMutation.isPending;
 
-  async function createRoom(e: React.FormEvent) {
+  const createRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createPayload.hostDisplayName.trim()) {
       setLog("Please enter your name to continue");
       return;
     }
 
-    setLoading(true);
     setLog("");
     try {
-      // Always ensure session exists first
-      const sessionCreated = await ensureSession(createPayload.hostDisplayName);
-      if (!sessionCreated) {
-        throw new Error("Failed to create session");
-      }
-
-      // Small delay to ensure cookie is set
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      // Now create the room
-      const res = await fetch("/api/battle/rooms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(createPayload),
+      const result = await createRoomMutation.mutateAsync({
+        ...createPayload,
+        skipSessionCreation: false,
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create room");
-
       // Store room ID and switch to success view
-      setCreatedRoomId(data.roomId);
-      setJoinRoomId(data.roomId);
+      setCreatedRoomId(result.roomId);
+      setJoinRoomId(result.roomId);
 
       // Hide the form and show success message
       setGameMode(null);
@@ -77,15 +56,13 @@ export function useBattleLanding() {
           err instanceof Error ? err.message : "Unknown error"
         }`
       );
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
-  async function handleJoinRoom(
+  const handleJoinRoom = async (
     nameOverride?: string,
     skipSessionCreation = false
-  ) {
+  ) => {
     const roomId = joinRoomId;
     // Ensure playerName is always a string and handle edge cases
     let playerName: string;
@@ -106,32 +83,13 @@ export function useBattleLanding() {
       return;
     }
 
-    setLoading(true);
     setLog("");
     try {
-      // Create session first (skip if already created during room creation)
-      if (!skipSessionCreation) {
-        const sessionCreated = await ensureSession(playerName);
-
-        if (!sessionCreated) {
-          throw new Error("Failed to create session");
-        }
-
-        // Small delay to ensure cookie is set
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-
-      // Then join the room with the display name
-      const res = await fetch(`/api/battle/rooms/${roomId}/join`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ displayName: playerName.trim() }),
-        credentials: "include", // Ensure cookies are sent
+      await joinRoomMutation.mutateAsync({
+        roomId,
+        payload: { displayName: playerName.trim() },
+        skipSessionCreation,
       });
-
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.error || "Failed to join room");
 
       // Small delay to ensure the join is processed on the server
       await new Promise((resolve) => setTimeout(resolve, 200));
@@ -143,10 +101,8 @@ export function useBattleLanding() {
       setLog(
         `Join error: ${err instanceof Error ? err.message : "Unknown error"}`
       );
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
   const copyRoomId = async () => {
     if (createdRoomId) {

@@ -120,7 +120,6 @@ export async function evaluateAnswer(params: {
 
   // Return cached result if available
   if (scoreCache.has(cacheKey)) {
-    console.log("Using cached AI score for consistent results");
     return scoreCache.get(cacheKey)!;
   }
 
@@ -280,9 +279,7 @@ Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly form
     scoreCache.set(cacheKey, finalResult);
 
     return finalResult;
-  } catch (error) {
-    console.error("AI evaluation failed:", error);
-
+  } catch {
     // Fallback to rule-based scoring
     return generateFallbackScore(answer, category, difficulty, language);
   }
@@ -479,7 +476,6 @@ export function isAIAvailable(): boolean {
 // Helper function to clear scoring cache (useful for testing or memory management)
 export function clearScoringCache(): void {
   scoreCache.clear();
-  console.log("AI scoring cache cleared");
 }
 
 // Helper function to get cache stats

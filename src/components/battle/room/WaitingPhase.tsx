@@ -3,16 +3,13 @@
 import { motion } from "framer-motion";
 import { FaPlay, FaRocket } from "react-icons/fa";
 
-import { useBattleStore } from "@/src/lib/battle-store";
+import type { WaitingPhaseProps } from "@/src/types/battle";
 
-interface WaitingPhaseProps {
-  onStartBattle: () => void;
-  isHost: boolean;
-}
-
-export function WaitingPhase({ onStartBattle, isHost }: WaitingPhaseProps) {
-  const { loading } = useBattleStore();
-
+export function WaitingPhase({
+  onStartBattle,
+  isHost,
+  loading,
+}: WaitingPhaseProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
       <motion.div

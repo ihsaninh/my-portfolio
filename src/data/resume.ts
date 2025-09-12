@@ -2,8 +2,11 @@ import {
   SiAngular,
   SiFlutter,
   SiNextdotjs,
+  SiOpenai,
   SiReact,
+  SiReactquery,
   SiRedux,
+  SiSupabase,
   SiTailwindcss,
   SiTypescript,
 } from "react-icons/si";
@@ -22,9 +25,12 @@ export const skills: Skill[] = [
   { name: "React Native", icon: SiReact },
   { name: "TypeScript", icon: SiTypescript },
   { name: "Angular", icon: SiAngular },
-  { name: "Redux", icon: SiRedux },
+  { name: "Tanstack Query", icon: SiReactquery },
+  { name: "Redux Toolkit", icon: SiRedux },
   { name: "TailwindCSS", icon: SiTailwindcss },
   { name: "Flutter", icon: SiFlutter },
+  { name: "Supabase", icon: SiSupabase },
+  { name: "AI Tools", icon: SiOpenai },
 ];
 
 export const educationData: ResumeData[] = [

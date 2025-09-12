@@ -99,9 +99,6 @@ export async function POST(
     if (joinErr) {
       // If duplicate, treat as success and fetch existing participant
       if (joinErr.code === "23505") {
-        console.log(
-          `Participant already exists for session ${sessionId} in room ${roomId}`
-        );
         const { data: existing } = await supabase
           .from("battle_room_participants")
           .select("id")

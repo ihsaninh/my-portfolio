@@ -21,6 +21,7 @@ export default function BattleRoom() {
     notifications,
     answeredCount,
     iHaveAnswered,
+    loading,
 
     // Functions
     copyRoomLink,
@@ -137,6 +138,7 @@ export default function BattleRoom() {
                 onSubmitAnswer={submitAnswer}
                 isHost={isHost}
                 iHaveAnswered={iHaveAnswered}
+                loading={loading}
               />
             </div>
           </div>

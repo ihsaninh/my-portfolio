@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateMcqQuestions, generateQuestions } from "@/src/lib/ai-question-gen";
+import {
+  generateMcqQuestions,
+  generateQuestions,
+} from "@/src/lib/ai-question-gen";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -25,16 +28,7 @@ export async function POST(
     const supabase = supabaseAdmin();
 
     // Get additional headers for enhanced host validation
-    const hostTabId = req.headers.get("X-Battle-Host-Tab");
     const hostSessionFromClient = req.headers.get("X-Battle-Host-Session");
-
-    console.log("Start battle request:", {
-      roomId,
-      requestSessionId: hostSessionId,
-      hostTabId,
-      hostSessionFromClient,
-    });
-
     // Load room
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
@@ -47,18 +41,11 @@ export async function POST(
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
     }
     if (room.host_session_id !== hostSessionId) {
-      console.error(
-        `Host session mismatch. Room host: ${room.host_session_id}, Request session: ${hostSessionId}`
-      );
-
       // Check if the client claims to be the original host
       if (
         hostSessionFromClient &&
         hostSessionFromClient === room.host_session_id
       ) {
-        console.log(
-          `Client provided original host session: ${hostSessionFromClient}, allowing start`
-        );
         // Allow the start - client has the original host session
       } else {
         // Additional check: see if the current session belongs to a host participant
@@ -70,9 +57,6 @@ export async function POST(
           .single();
 
         if (currentParticipant?.is_host) {
-          console.log(
-            `Session mismatch but current session is a host participant: ${hostSessionId}`
-          );
           // Allow the start - this handles the case where session cookies got mixed up
           // but the current user is still a host participant
         } else {
@@ -155,7 +139,6 @@ export async function POST(
           }
         }
       } catch (e) {
-        console.error("AI question generation failed, fallback to bank", e);
         aiError = (e as Error).message;
       }
     }
@@ -177,7 +160,6 @@ export async function POST(
         .order("created_at")
         .limit(room.num_questions);
       if (qErr) {
-        console.error(qErr);
         return NextResponse.json(
           { error: "Failed to prepare questions" },
           { status: 500 }
@@ -202,7 +184,6 @@ export async function POST(
       .from("battle_room_rounds")
       .insert(inserts);
     if (rErr) {
-      console.error(rErr);
       return NextResponse.json(
         { error: "Failed to create rounds" },
         { status: 500 }
@@ -215,7 +196,6 @@ export async function POST(
       .update({ status: "active", start_time: new Date().toISOString() })
       .eq("id", roomId);
     if (updErr) {
-      console.error(updErr);
       return NextResponse.json(
         { error: "Failed to start room" },
         { status: 500 }
@@ -247,10 +227,8 @@ export async function POST(
       .eq("round_no", 1);
 
     if (revealErr) {
-      console.error("Failed to reveal first round:", revealErr);
       // Don't fail the entire start operation, just log the error
     } else {
-      console.log("First round revealed successfully");
       // Broadcast first round revealed
       publishBattleEvent({
         roomId,
@@ -271,7 +249,6 @@ export async function POST(
       ...(aiError ? { aiError } : {}),
     });
   } catch (e: unknown) {
-    console.error("Start room exception", e);
     if (e && typeof e === "object" && "issues" in e)
       return NextResponse.json(
         { error: (e as { issues: unknown }).issues },

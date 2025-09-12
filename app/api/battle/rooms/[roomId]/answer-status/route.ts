@@ -83,10 +83,6 @@ export async function GET(
       participantStatus.length > 0;
 
     if (allAnswered) {
-      console.log(
-        `🏁 All ${participantStatus.length} participants have answered round ${activeRound.round_no}`
-      );
-
       // Trigger auto-close event to notify clients
       setTimeout(async () => {
         try {

@@ -28,7 +28,6 @@ export async function POST(
         .update({ status: "closed" })
         .eq("id", round.id);
       if (updErr) {
-        console.error(updErr);
         return NextResponse.json(
           { error: "Failed to close round" },
           { status: 500 }
@@ -43,7 +42,6 @@ export async function POST(
       .select("session_id, score_final")
       .eq("round_id", round.id);
     if (aErr) {
-      console.error(aErr);
       return NextResponse.json(
         { error: "Failed to get answers" },
         { status: 500 }
@@ -52,17 +50,6 @@ export async function POST(
 
     // Increment participant totals only once when transitioning to closed
     if (justClosed && answers && answers.length > 0) {
-      console.log(
-        `Updating scores for ${answers.length} answers in round ${roundNo}:`
-      );
-      console.log(
-        "Answers found:",
-        answers.map((a) => ({
-          session_id: a.session_id,
-          score_final: a.score_final,
-        }))
-      );
-
       for (const a of answers) {
         const { data: curr } = await supabase
           .from("battle_room_participants")
@@ -71,27 +58,12 @@ export async function POST(
           .eq("session_id", a.session_id)
           .single();
         const next = (curr?.total_score || 0) + (a.score_final || 0);
-        console.log(
-          `Session ${a.session_id}: ${curr?.total_score || 0} + ${
-            a.score_final || 0
-          } = ${next}`
-        );
-        const { error: updateErr } = await supabase
+        await supabase
           .from("battle_room_participants")
           .update({ total_score: next })
           .eq("room_id", roomId)
           .eq("session_id", a.session_id);
-
-        if (updateErr) {
-          console.error("Failed to update participant score:", updateErr);
-        } else {
-          console.log(
-            `Successfully updated session ${a.session_id} total_score to ${next}`
-          );
-        }
       }
-
-      console.log("Score updates completed");
     }
 
     const { data: participants } = await supabase
@@ -149,8 +121,7 @@ export async function POST(
       roundScoreboard: scoreboard,
       finished,
     });
-  } catch (e) {
-    console.error("Close round exception", e);
+  } catch {
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
 }

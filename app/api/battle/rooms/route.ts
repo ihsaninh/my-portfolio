@@ -13,7 +13,7 @@ const CreateRoomSchema = z.object({
   capacity: z.number().int().min(2).max(100).optional(),
   hostDisplayName: z.string().min(1).max(100).optional(),
   questionType: z
-    .enum(["open-ended", "multiple-choice"]) 
+    .enum(["open-ended", "multiple-choice"])
     .default("open-ended")
     .optional(),
 });

@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
-
-type Participant = {
-  id: string;
-  session_id: string;
-  display_name: string;
-  is_host: boolean;
-  connection_status: string;
-  total_score: number;
-};
+import type { ApiParticipant } from "@/src/types/battle";
 
 type QuestionSummary = {
   prompt: string;
@@ -30,12 +22,6 @@ export async function GET(
     const sessionId = getSessionIdFromCookies(req);
     const supabase = supabaseAdmin();
 
-    console.log("State API - Session lookup:", {
-      roomId,
-      sessionId,
-      cookies: req.cookies.toString(),
-    });
-
     // Get room info with capacity
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
@@ -49,31 +35,18 @@ export async function GET(
 
     // Get participants with session_id for proper mapping
     // Order by participant ID to maintain consistent ordering
-    const { data: participants, error: participantsErr } = await supabase
+    const { data: participants } = await supabase
       .from("battle_room_participants")
       .select(
         "id, session_id, display_name, is_host, connection_status, total_score"
       )
       .eq("room_id", roomId)
       .order("id", { ascending: true }); // Use participant ID for consistent ordering
-
-    console.log("Participants query result:", {
-      roomId,
-      participantsCount: participants?.length || 0,
-      participantsErr,
-      participants: participants?.map((p) => ({
-        id: p.id,
-        session_id: p.session_id,
-        display_name: p.display_name,
-        is_host: p.is_host,
-      })),
-    });
-
     // Find current user if session exists
     let currentUser = null;
     if (sessionId && participants) {
       const currentParticipant = participants.find(
-        (p: Participant) => p.session_id === sessionId
+        (p: ApiParticipant) => p.session_id === sessionId
       );
       if (currentParticipant) {
         currentUser = {
@@ -82,22 +55,7 @@ export async function GET(
           is_host: currentParticipant.is_host,
           total_score: currentParticipant.total_score,
         };
-        console.log("Current user found in state API:", {
-          sessionId,
-          currentUser,
-          participantCount: participants.length,
-        });
-      } else {
-        console.log("Current user NOT found in participants:", {
-          sessionId,
-          participantSessions: participants.map((p) => p.session_id),
-        });
       }
-    } else {
-      console.log("No session ID or participants for current user lookup:", {
-        hasSessionId: !!sessionId,
-        participantCount: participants?.length || 0,
-      });
     }
 
     // Active round snapshot (if any)
@@ -148,7 +106,7 @@ export async function GET(
 
     return NextResponse.json({
       room,
-      participants: (participants || []).map((p: Participant) => ({
+      participants: (participants || []).map((p: ApiParticipant) => ({
         session_id: p.session_id, // Include session_id for host detection
         display_name: p.display_name,
         is_host: p.is_host,
@@ -167,8 +125,7 @@ export async function GET(
           }
         : null,
     });
-  } catch (e) {
-    console.error("State exception", e);
+  } catch {
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
   }
 }

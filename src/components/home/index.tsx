@@ -75,9 +75,9 @@ export default function Home() {
               className="mt-4 text-slate-800 dark:text-white/75 leading-8 max-w-3xl mx-auto text-sm lg:text-lg"
             >
               I build fast, accessible apps with Next.js, React, Angular, and
-              React Native. 5+ years crafting delightful UIs for telco &
-              enterprise (PT XLSMART Telecom Sejahtera Tbk, Axiata Digital Labs,
-              Meteor Inovasi Digital).
+              React Native. 5+ years crafting delightful UIs for enterprise
+              clients. Now specializing in AI-powered applications with
+              Supabase.
             </m.p>
           </div>
 
@@ -180,8 +180,9 @@ export default function Home() {
               "Angular",
               "React Native",
               "Tailwind CSS",
-              "Redux",
-              "Flutter",
+              "Google AI",
+              "Supabase",
+              "AI Tools",
             ].map((t) => (
               <li
                 key={t}

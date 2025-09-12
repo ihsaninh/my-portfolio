@@ -7,6 +7,7 @@ import { JetBrains_Mono, Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
 import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
+import QueryProvider from "@/src/components/providers/QueryProvider";
 import LayoutWrapper from "@/src/components/shared/LayoutWrapper";
 import { personJsonLd, websiteJsonLd } from "@/src/lib/seo";
 
@@ -94,18 +95,20 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          <CopyCodeClient />
-          <div aria-hidden className="app-bg" />
-          <LayoutWrapper>{children}</LayoutWrapper>
-          <Analytics />
-          <SpeedInsights />
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <CopyCodeClient />
+            <div aria-hidden className="app-bg" />
+            <LayoutWrapper>{children}</LayoutWrapper>
+            <Analytics />
+            <SpeedInsights />
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );

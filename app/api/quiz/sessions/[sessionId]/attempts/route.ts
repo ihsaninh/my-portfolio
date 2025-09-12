@@ -74,11 +74,6 @@ export async function POST(
     if (finalScore === undefined) {
       if (isAIAvailable() && question_data) {
         try {
-          console.log(
-            "Using AI evaluation for answer:",
-            finalAnswerText.substring(0, 50) + "..."
-          );
-
           const aiResult = await evaluateAnswer({
             question:
               question_data.prompt ||
@@ -99,22 +94,13 @@ export async function POST(
             improvements: aiResult.improvements,
             category: aiResult.category,
           };
-
-          console.log("AI evaluation completed:", {
-            score: finalScore,
-            category: aiResult.category,
-          });
-        } catch (error) {
-          console.error("AI evaluation failed, using fallback:", error);
+        } catch {
           // Fall back to simple scoring
           const fallbackResult = generateSimpleScore(finalAnswerText);
           finalScore = fallbackResult.score;
           finalFeedback = fallbackResult.feedback;
         }
       } else {
-        console.log(
-          "AI not available or question data missing, using simple scoring"
-        );
         // Simple scoring algorithm (fallback)
         const fallbackResult = generateSimpleScore(finalAnswerText);
         finalScore = fallbackResult.score;
@@ -144,8 +130,7 @@ export async function POST(
       detailedFeedback,
       attempt,
     });
-  } catch (error) {
-    console.error("Attempts API error:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to create attempt" },
       { status: 500 }
@@ -161,8 +146,7 @@ export async function GET(
     const { sessionId } = await context.params;
     const attempts = await getAttemptsBySession(sessionId);
     return NextResponse.json(attempts);
-  } catch (error) {
-    console.error("Attempts API error:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch attempts" },
       { status: 500 }

@@ -145,7 +145,9 @@ export async function POST(
 
       const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
       if (autoAdvanceEnabled) {
-        after(() => checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo)));
+        after(() =>
+          checkAndAutoAdvanceRound(roomId, round.id, Number(roundNo))
+        );
       }
 
       return NextResponse.json({ score: finalScore, correct });
@@ -207,15 +209,6 @@ export async function POST(
 
     // Insert answer
     const id = `bra-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    console.log("Inserting battle answer:", {
-      id,
-      room_id: roomId,
-      round_id: round.id,
-      session_id: sessionId,
-      score_ai: ai.score,
-      score_final: ai.score,
-      answer_length: body.answer_text.length,
-    });
 
     const { error: ansErr } = await supabase
       .from("battle_room_answers")
@@ -232,30 +225,16 @@ export async function POST(
       });
     if (ansErr) {
       if ((ansErr as Error & { code?: string }).code === "23505") {
-        console.log("Duplicate answer attempt:", {
-          room_id: roomId,
-          round_no: roundNo,
-          session_id: sessionId,
-          error_code: (ansErr as Error & { code?: string }).code,
-        });
         return NextResponse.json(
           { error: "Already answered" },
           { status: 409 }
         );
       }
-      console.error("Answer insert error:", ansErr);
       return NextResponse.json(
         { error: "Failed to store answer" },
         { status: 500 }
       );
     }
-
-    console.log("Answer submitted successfully:", {
-      answer_id: id,
-      session_id: sessionId,
-      score: ai.score,
-      round_no: roundNo,
-    });
 
     // Broadcast answer_received in background (notify other clients)
     after(() =>
@@ -275,7 +254,6 @@ export async function POST(
 
     return NextResponse.json({ score: ai.score, feedback: ai.feedback });
   } catch (e: unknown) {
-    console.error("Answer exception", e);
     if (e && typeof e === "object" && "issues" in e)
       return NextResponse.json(
         { error: (e as { issues: unknown }).issues },
@@ -305,7 +283,6 @@ async function checkAndAutoAdvanceRound(
       .single();
 
     if (!currentRound || currentRound.status !== "active") {
-      console.log(`Round ${roundNo} is not active, skipping auto-advance`);
       return;
     }
     // Get total participants in the room
@@ -320,18 +297,12 @@ async function checkAndAutoAdvanceRound(
       .select("*", { count: "exact", head: true })
       .eq("round_id", roundId);
 
-    console.log(
-      `Auto-advance check: ${totalAnswers}/${totalParticipants} answered for round ${roundNo}`
-    );
-
     // If everyone has answered, auto-close the round
     if (
       totalParticipants &&
       totalAnswers &&
       totalAnswers >= totalParticipants
     ) {
-      console.log(`All participants answered! Auto-closing round ${roundNo}`);
-
       // Close the current round atomically
       const { data: closedRound, error: closeError } = await supabase
         .from("battle_room_rounds")
@@ -342,7 +313,6 @@ async function checkAndAutoAdvanceRound(
         .single();
 
       if (closeError || !closedRound) {
-        console.log(`Round ${roundNo} was already closed by another request`);
         return;
       }
 
@@ -421,10 +391,7 @@ async function checkAndAutoAdvanceRound(
         await autoRevealNextRound(roomId, roundNo + 1);
       }
     }
-  } catch (error) {
-    console.error("Auto-advance check failed:", error);
-    // Don't throw - this shouldn't break the answer submission
-  }
+  } catch {}
 }
 
 /**
@@ -442,7 +409,6 @@ async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
       .single();
 
     if (!room || room.status !== "active") {
-      console.log("Room not active, skipping auto-reveal");
       return;
     }
 
@@ -466,16 +432,8 @@ async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
       .single();
 
     if (revealErr || !revealedRound) {
-      console.error("Failed to auto-reveal next round:", {
-        roomId,
-        nextRoundNo,
-        error: revealErr,
-        revealedRound,
-      });
       return;
     }
-
-    console.log(`Auto-revealed round ${nextRoundNo}`);
 
     // Broadcast round revealed
     publishBattleEvent({
@@ -488,7 +446,5 @@ async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
         reason: "auto_advance", // Indicate this was auto-revealed
       },
     });
-  } catch (error) {
-    console.error("Auto-reveal failed:", error);
-  }
+  } catch {}
 }

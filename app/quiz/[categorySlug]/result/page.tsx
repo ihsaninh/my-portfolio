@@ -281,7 +281,9 @@ export default function QuizResultPage() {
                     </h2>
                     <div className="text-7xl font-bold text-accent mb-4">
                       {finalScore}
-                      <span className="ml-2 align-top text-sm text-slate-500 dark:text-slate-400">/100</span>
+                      <span className="ml-2 align-top text-sm text-slate-500 dark:text-slate-400">
+                        /100
+                      </span>
                     </div>
 
                     {userRank && (

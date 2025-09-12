@@ -22,7 +22,8 @@ export default function Skills() {
     <section className="container mt-12 lg:mt-24" id="skills">
       <h2 className="section-title">Skills</h2>
       <p className="pt-6 text-slate-700 dark:text-white/80 max-w-3xl">
-        Tools and technologies I use to ship fast, accessible apps.
+        Tools and technologies I use to ship fast, accessible apps. Specializing
+        in AI-powered applications with Supabase and modern AI tools.
       </p>
 
       <motion.ul
@@ -30,7 +31,7 @@ export default function Skills() {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.2 }}
-        className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 lg:gap-6"
+        className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 lg:gap-6"
       >
         {skills.map((skill) => (
           <motion.li

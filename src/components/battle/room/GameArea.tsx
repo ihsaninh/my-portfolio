@@ -2,20 +2,12 @@ import { motion } from "framer-motion";
 import { FaClock, FaUsers } from "react-icons/fa";
 
 import { useBattleStore } from "@/src/lib/battle-store";
+import type { GameAreaProps } from "@/src/types/battle";
 
 import { AnsweringPhase } from "./AnsweringPhase";
 import { FinishedPhase } from "./FinishedPhase";
 import { PlayingPhase } from "./PlayingPhase";
 import { WaitingPhase } from "./WaitingPhase";
-
-interface GameAreaProps {
-  timeLeft: number | null;
-  answeredCount: number;
-  onStartBattle: () => void;
-  onSubmitAnswer: () => void;
-  isHost: boolean;
-  iHaveAnswered: boolean;
-}
 
 export function GameArea({
   timeLeft,
@@ -24,6 +16,7 @@ export function GameArea({
   onSubmitAnswer,
   isHost,
   iHaveAnswered,
+  loading,
 }: GameAreaProps) {
   const { state, gamePhase } = useBattleStore();
 
@@ -77,7 +70,11 @@ export function GameArea({
       {/* Game Content */}
       <div className="flex-1 p-6">
         {gamePhase === "waiting" && (
-          <WaitingPhase onStartBattle={onStartBattle} isHost={isHost} />
+          <WaitingPhase
+            onStartBattle={onStartBattle}
+            isHost={isHost}
+            loading={loading}
+          />
         )}
         {gamePhase === "answering" &&
           state?.activeRound?.status === "active" &&
@@ -85,6 +82,7 @@ export function GameArea({
             <AnsweringPhase
               onSubmitAnswer={onSubmitAnswer}
               iHaveAnswered={iHaveAnswered}
+              loading={loading}
             />
           )}
         {gamePhase === "finished" && <FinishedPhase />}
