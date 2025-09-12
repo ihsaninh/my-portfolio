@@ -14,13 +14,19 @@ import {
   useSubmitAnswer,
 } from "@/src/hooks/useBattleQueries";
 import { useBattleStore } from "@/src/lib/battle-store";
-import { createEnhancedRoomChannel } from "@/src/lib/realtime";
+import { connectionMonitor } from "@/src/lib/connection-monitor";
+import {
+  createEnhancedRoomChannel,
+  getConnectionStats,
+} from "@/src/lib/realtime";
 import type { AnswerStatus, GamePhase, StateResp } from "@/src/types/battle";
 
 // Extend Window interface to include custom properties
 declare global {
   interface Window {
     lastRoomChangeTime?: number;
+    battleStateChecksum?: string;
+    lastEventSequence?: number;
   }
 }
 
@@ -45,6 +51,63 @@ function determineGamePhaseFromServerState(state: StateResp): GamePhase {
   }
 }
 
+// State validation and checksum functions
+function generateStateChecksum(state: StateResp): string {
+  const keyData = {
+    roomId: state.room?.id,
+    roomStatus: state.room?.status,
+    roundNo: state.activeRound?.roundNo,
+    roundStatus: state.activeRound?.status,
+    participantCount: state.participants?.length,
+    currentUserId: state.currentUser?.session_id,
+  };
+  return btoa(JSON.stringify(keyData)).slice(0, 16);
+}
+
+function validateStateSync(state: StateResp, gamePhase: GamePhase): boolean {
+  if (!state.room) return true; // Initial state
+
+  const expectedPhase = determineGamePhaseFromServerState(state);
+  const currentChecksum = generateStateChecksum(state);
+  const storedChecksum = window.battleStateChecksum;
+
+  // Check for phase mismatch
+  if (expectedPhase !== gamePhase) {
+    console.warn("[SYNC] Phase mismatch detected:", {
+      expected: expectedPhase,
+      current: gamePhase,
+      state: state.room?.status,
+    });
+    return false;
+  }
+
+  // Check for state drift using checksum
+  if (storedChecksum && storedChecksum !== currentChecksum) {
+    console.warn("[SYNC] State drift detected:", {
+      stored: storedChecksum,
+      current: currentChecksum,
+    });
+    return false;
+  }
+
+  return true;
+}
+
+function recoverFromStateDesync(roomId: string, refresh: () => Promise<void>) {
+  console.log("[SYNC] Initiating state recovery for room:", roomId);
+
+  // Clear local state
+  window.battleStateChecksum = undefined;
+  window.lastEventSequence = undefined;
+
+  // Force refresh from server
+  setTimeout(() => {
+    refresh().catch((err) => {
+      console.error("[SYNC] Recovery refresh failed:", err);
+    });
+  }, 1000);
+}
+
 export function useBattleLogic() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -57,9 +120,15 @@ export function useBattleLogic() {
   const [shouldResetCopy, setShouldResetCopy] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
+  // Error state for connection issues
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+
   // Detect room change and force reset all state
   useEffect(() => {
     if (roomId && roomId !== lastRoomIdRef.current) {
+      // Clear any existing connection errors when changing rooms
+      setConnectionError(null);
+
       // Clear TanStack Query cache for previous room to prevent conflicts
       if (lastRoomIdRef.current) {
         queryClient.removeQueries({
@@ -101,15 +170,58 @@ export function useBattleLogic() {
   const shouldRunPolling =
     roomId && (gamePhaseState === "answering" || gamePhaseState === "playing");
 
+  // Adaptive polling with exponential backoff and connection awareness
+  const getAdaptivePollingInterval = () => {
+    if (!shouldRunPolling) return undefined;
+
+    // Base interval: 15 seconds for normal operation
+    let interval = 15000;
+
+    // Reduce to 8 seconds during active answering phase
+    if (gamePhaseState === "answering") {
+      interval = 8000;
+    }
+
+    // Increase to 30 seconds if connection is unstable
+    if (connectionError) {
+      interval = 30000;
+    }
+
+    // Further reduce frequency if user has been inactive
+    const lastActivity = useBattleStore.getState().lastEventTime;
+    const timeSinceActivity = Date.now() - lastActivity;
+    if (timeSinceActivity > 60000) {
+      // 1 minute of inactivity
+      interval = Math.min(interval * 2, 60000); // Double interval, max 1 minute
+    }
+
+    // Add jitter to prevent thundering herd
+    const jitter = Math.random() * 2000 - 1000; // ±1 second
+    interval += jitter;
+
+    return Math.max(interval, 5000); // Minimum 5 seconds
+  };
+
+  const pollingInterval = getAdaptivePollingInterval();
+
   const { data: state, isLoading: stateLoading } = useRoomState(roomId, {
     enabled: !!roomId,
-    refetchInterval: shouldRunPolling ? 8000 : undefined,
+    refetchInterval: shouldRunPolling ? pollingInterval : undefined,
   });
 
   const { data: answerStatus } = useAnswerStatus(roomId, {
     enabled: !!roomId,
-    refetchInterval: shouldRunPolling ? 8000 : undefined,
+    refetchInterval: shouldRunPolling ? pollingInterval : undefined,
   });
+
+  // Log polling activity for monitoring
+  useEffect(() => {
+    if (shouldRunPolling && pollingInterval) {
+      console.log(
+        `[POLL] Active polling: ${pollingInterval}ms interval, phase: ${gamePhaseState}`
+      );
+    }
+  }, [shouldRunPolling, pollingInterval, gamePhaseState]);
 
   const { refreshBattleData } = useBattleRefresh(roomId);
 
@@ -192,10 +304,30 @@ export function useBattleLogic() {
       prevStateRef.current = state;
       setState(state);
 
+      // Store client time when state was received for accurate timer calculation
+      if (state.serverTime) {
+        state.clientTimeReceived = Date.now();
+      }
+
+      // Update state checksum for sync validation
+      const newChecksum = generateStateChecksum(state);
+      window.battleStateChecksum = newChecksum;
+
       // CRITICAL: Sync gamePhase with server state to prevent desync issues
       const serverGamePhase = determineGamePhaseFromServerState(state);
       if (serverGamePhase !== gamePhase) {
+        console.warn("[SYNC] Phase sync triggered:", {
+          from: gamePhase,
+          to: serverGamePhase,
+          reason: "server_state_update",
+        });
         setGamePhase(serverGamePhase);
+      }
+
+      // Validate state synchronization
+      if (!validateStateSync(state, gamePhase)) {
+        console.error("[SYNC] State desync detected, initiating recovery");
+        recoverFromStateDesync(roomId || "", refresh);
       }
 
       // CRITICAL: Validate round progression to prevent regression
@@ -358,8 +490,15 @@ export function useBattleLogic() {
     }
 
     const deadline = new Date(state.activeRound.deadlineAt).getTime();
-    const now = Date.now();
-    const remaining = Math.max(0, Math.floor((deadline - now) / 1000));
+    // Use server time for accurate calculation
+    const currentServerTime =
+      state.serverTime && state.clientTimeReceived
+        ? state.serverTime + (Date.now() - state.clientTimeReceived)
+        : Date.now();
+    const remaining = Math.max(
+      0,
+      Math.floor((deadline - currentServerTime) / 1000)
+    );
 
     if (prevTimeLeftRef.current !== remaining) {
       prevTimeLeftRef.current = remaining;
@@ -407,14 +546,94 @@ export function useBattleLogic() {
     };
   }, []);
 
-  // Enhanced refresh function using TanStack Query
+  // Additional cleanup effect for timers when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear all timers to prevent memory leaks
+      clearTimers();
+
+      // Clear any remaining timeout refs that might exist
+      if (stuckDetectionTimerId) {
+        clearTimeout(stuckDetectionTimerId);
+      }
+      if (forceProgressTimerId) {
+        clearTimeout(forceProgressTimerId);
+      }
+
+      // Note: useTimeout and useInterval from usehooks-ts handle their own cleanup
+      // but we ensure Zustand timers are cleared on unmount
+    };
+  }, [stuckDetectionTimerId, forceProgressTimerId, clearTimers]);
+
+  // Request deduplication for refresh operations
+  const refreshInProgress = useRef(false);
+  const lastRefreshTime = useRef(0);
+
+  // Enhanced refresh function using TanStack Query with deduplication
   const refresh = async () => {
+    const now = Date.now();
+
+    // Prevent multiple simultaneous refresh requests
+    if (refreshInProgress.current) {
+      console.log("[POLL] Refresh already in progress, skipping");
+      return;
+    }
+
+    // Throttle refresh requests to prevent spam
+    if (now - lastRefreshTime.current < 1000) {
+      console.log("[POLL] Refresh throttled, too frequent");
+      return;
+    }
+
+    refreshInProgress.current = true;
+    lastRefreshTime.current = now;
+
     try {
+      console.log("[POLL] Executing refresh");
       await refreshBattleData();
-      setLastEventTime(Date.now());
+      setLastEventTime(now);
+
+      // Validate state after refresh
+      if (state) {
+        const isValid = validateStateSync(state, gamePhase);
+        if (!isValid) {
+          console.warn(
+            "[SYNC] State validation failed after refresh, attempting recovery"
+          );
+          // Don't call recoverFromStateDesync here to avoid infinite loop
+        }
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[SYNC] Refresh error:", message);
       addNotification(`Refresh error: ${message}`);
+
+      // Trigger recovery on refresh failure
+      if (roomId) {
+        setTimeout(() => recoverFromStateDesync(roomId, refresh), 2000);
+      }
+    } finally {
+      refreshInProgress.current = false;
+    }
+  };
+
+  // Manual state recovery function for user-triggered sync
+  const forceStateSync = async () => {
+    console.log("[SYNC] Manual state sync requested");
+    addNotification("Syncing with server...");
+
+    // Clear local state cache
+    window.battleStateChecksum = undefined;
+    window.lastEventSequence = undefined;
+
+    // Force complete refresh
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["battle"] });
+      await refresh();
+      addNotification("State synchronized successfully");
+    } catch (err) {
+      console.error("[SYNC] Manual sync failed:", err);
+      addNotification("Sync failed, please refresh the page");
     }
   };
 
@@ -428,6 +647,13 @@ export function useBattleLogic() {
   useEffect(() => {
     if (!roomId) return;
 
+    // Log connection stats
+    const connectionStats = getConnectionStats();
+    console.log(`📊 Connection stats for room:${roomId}`, connectionStats);
+
+    // Start connection monitoring
+    connectionMonitor.startMonitoring();
+
     // Initial fetch once when room mounts - critical for page refresh scenarios
     refresh();
 
@@ -436,9 +662,35 @@ export function useBattleLogic() {
       if (prevConnectionStateRef.current !== "connected") {
         prevConnectionStateRef.current = "connected";
         setConnectionState("connected");
+        setConnectionError(null); // Clear any previous errors
       }
       refresh();
     });
+
+    // Handle connection errors
+    if (!ch) {
+      console.error(`❌ Failed to create channel for room:${roomId}`);
+      const errorMsg = "Connection error. Please refresh the page.";
+      addNotification(errorMsg);
+      setConnectionState("disconnected");
+      setConnectionError(errorMsg);
+      return;
+    }
+
+    // Set up error handling for the channel
+    let errorCount = 0;
+    const maxErrors = 3;
+
+    const handleError = (errorMsg: string) => {
+      errorCount++;
+      setConnectionError(errorMsg);
+
+      if (errorCount >= maxErrors) {
+        console.error(`💥 Too many connection errors for room:${roomId}`);
+        addNotification("Connection unstable. Please refresh the page.");
+        setConnectionState("disconnected");
+      }
+    };
 
     if (ch) {
       if (prevConnectionStateRef.current !== "connected") {
@@ -446,11 +698,33 @@ export function useBattleLogic() {
         setConnectionState("connected");
       }
 
-      ch.on("broadcast", { event: "player_joined" }, () => {
+      ch.on("broadcast", { event: "player_joined" }, (payload) => {
+        const eventSequence = payload?.sequence || Date.now();
+        const lastSequence = window.lastEventSequence || 0;
+
+        // Prevent out-of-order event processing
+        if (eventSequence < lastSequence) {
+          console.warn("[SYNC] Ignoring out-of-order player_joined event:", {
+            eventSequence,
+            lastSequence,
+          });
+          return;
+        }
+
+        window.lastEventSequence = eventSequence;
         setLastEventTime(Date.now());
+
+        console.log("[SYNC] Processing player_joined event:", {
+          sequence: eventSequence,
+        });
+
         // Only refresh, don't clear existing state unnecessarily
         setTimeout(() => {
-          refresh();
+          refresh().catch((err) => {
+            console.error("[SYNC] Player joined refresh failed:", err);
+            // Attempt recovery on refresh failure
+            recoverFromStateDesync(roomId, refresh);
+          });
         }, 100); // Small delay to ensure server state is updated
       });
 
@@ -467,6 +741,11 @@ export function useBattleLogic() {
         if (stuckDetectionTimerId) {
           clearTimeout(stuckDetectionTimerId);
           setTimerIds({ stuckDetectionTimerId: null });
+        }
+
+        // Clear any existing stuck detection timer before setting new one
+        if (stuckDetectionTimerId) {
+          clearTimeout(stuckDetectionTimerId);
         }
 
         // Set up stuck detection for first round - if no round_revealed comes in 15 seconds, force refresh
@@ -489,8 +768,28 @@ export function useBattleLogic() {
       });
 
       ch.on("broadcast", { event: "round_revealed" }, (payload) => {
+        const eventSequence = payload?.sequence || Date.now();
+        const lastSequence = window.lastEventSequence || 0;
+
+        // Prevent out-of-order event processing
+        if (eventSequence < lastSequence) {
+          console.warn("[SYNC] Ignoring out-of-order round_revealed event:", {
+            eventSequence,
+            lastSequence,
+            roundNo: payload?.payload?.roundNo,
+          });
+          return;
+        }
+
+        window.lastEventSequence = eventSequence;
         setLastEventTime(Date.now());
+
         const eventRoundNo = payload?.payload?.roundNo;
+        console.log("[SYNC] Processing round_revealed event:", {
+          sequence: eventSequence,
+          roundNo: eventRoundNo,
+        });
+
         // Validate round progression to prevent regression
         const currentLastValid = lastValidRoundRef.current;
         if (
@@ -498,6 +797,7 @@ export function useBattleLogic() {
           eventRoundNo &&
           eventRoundNo < currentLastValid
         ) {
+          console.warn("[SYNC] Round regression detected, ignoring event");
           return;
         }
 
@@ -595,6 +895,11 @@ export function useBattleLogic() {
           setTimerIds({ stuckDetectionTimerId: null });
         }
 
+        // Clear any existing stuck detection timer before setting new one
+        if (stuckDetectionTimerId) {
+          clearTimeout(stuckDetectionTimerId);
+        }
+
         // Start stuck detection timer - if no round_revealed event comes in 12 seconds, mark as stuck
         const timer = setTimeout(() => {
           // Force refresh if stuck
@@ -629,22 +934,49 @@ export function useBattleLogic() {
         refresh();
       });
 
-      ch.subscribe((status) => {
+      ch.subscribe((status, err) => {
         if (status === "SUBSCRIBED") {
           if (prevConnectionStateRef.current !== "connected") {
             prevConnectionStateRef.current = "connected";
             setConnectionState("connected");
+            setConnectionError(null); // Clear any previous errors
           }
+          console.log(`✅ Successfully connected to room:${roomId}`);
+          errorCount = 0; // Reset error count on successful connection
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error(`❌ Connection error for room:${roomId}`, err);
+          const errorMsg =
+            err instanceof Error ? err.message : "Connection error";
+          handleError(`Connection failed: ${errorMsg}`);
+
           if (prevConnectionStateRef.current !== "disconnected") {
             prevConnectionStateRef.current = "disconnected";
             setConnectionState("disconnected");
+            addNotification("Connection lost. Attempting to reconnect...");
           }
         }
       });
 
       return () => {
-        ch.unsubscribe();
+        // Enhanced cleanup with proper error handling
+        if (ch) {
+          ch.unsubscribe()
+            .then(() => {
+              console.log(`✅ Successfully unsubscribed from room:${roomId}`);
+              // Log connection stats after cleanup
+              const connectionStats = getConnectionStats();
+              console.log(
+                `📊 Connection stats after cleanup for room:${roomId}`,
+                connectionStats
+              );
+            })
+            .catch((err) => {
+              console.error(`❌ Error unsubscribing from room:${roomId}`, err);
+            });
+        }
+
+        // Stop connection monitoring
+        connectionMonitor.stopMonitoring();
 
         // Enhanced cleanup using store actions
         clearTimers();
@@ -658,21 +990,44 @@ export function useBattleLogic() {
           localStorage.removeItem(`battle_host_tab_${roomId}`);
           localStorage.removeItem(`battle_host_session_${roomId}`);
         }
+
+        // Enhanced cleanup for all timers to prevent memory leaks
+        if (stuckDetectionTimerId) {
+          clearTimeout(stuckDetectionTimerId);
+        }
+        if (forceProgressTimerId) {
+          clearTimeout(forceProgressTimerId);
+        }
+
+        // Clear any additional timers that might be running
+        // Note: useTimeout and useInterval from usehooks-ts handle their own cleanup
+        // but we ensure Zustand timers are cleared
+        clearTimers();
       };
     }
   }, [roomId]);
 
-  // Polling backup using useInterval from usehooks-ts
+  // Polling backup using useInterval from usehooks-ts with adaptive timing
   const pollingBackupCallback = () => {
     const last = useBattleStore.getState().lastEventTime;
     const timeSinceLastEvent = Date.now() - last;
-    if (timeSinceLastEvent > 15000) {
+
+    // Adaptive threshold based on connection stability
+    const threshold = connectionError ? 30000 : 20000;
+
+    if (timeSinceLastEvent > threshold) {
+      console.log(
+        `[POLL] Backup polling triggered after ${timeSinceLastEvent}ms inactivity`
+      );
       refresh();
     }
   };
 
-  // Run polling backup only when in active game phases
-  useInterval(pollingBackupCallback, shouldRunPolling ? 8000 : null);
+  // Run polling backup only when in active game phases with adaptive interval
+  const backupPollingInterval = shouldRunPolling
+    ? Math.max(pollingInterval || 15000, 10000)
+    : null;
+  useInterval(pollingBackupCallback, backupPollingInterval);
 
   const startBattle = async () => {
     if (!isHost()) {
@@ -920,7 +1275,11 @@ export function useBattleLogic() {
         refresh();
       }, 20000); // 20 second check
 
-      return () => clearTimeout(checkTimer);
+      // Store the timer ID for cleanup
+      // Note: This is a simple case where we just clear on cleanup
+      return () => {
+        clearTimeout(checkTimer);
+      };
     }
   }, [gamePhase, state?.room?.status, state?.activeRound, isHost]);
 
@@ -938,6 +1297,7 @@ export function useBattleLogic() {
     copied,
     isProgressing,
     connectionState,
+    connectionError,
     state,
     notifications,
     answeredCount,
@@ -947,6 +1307,7 @@ export function useBattleLogic() {
     // Functions
     copyRoomLink,
     refresh,
+    forceStateSync,
     startBattle,
     submitAnswer,
     autoCloseRound,

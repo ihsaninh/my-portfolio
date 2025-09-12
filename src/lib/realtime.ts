@@ -1,4 +1,17 @@
+import { RealtimeChannel } from "@supabase/realtime-js";
+
 import { supabaseBrowser, supabaseServer } from "./supabase";
+
+// Connection tracking
+interface ConnectionInfo {
+  channel: RealtimeChannel;
+  userId: string;
+  timestamp: number;
+  roomId: string;
+}
+
+const activeConnections = new Map<string, ConnectionInfo>();
+const MAX_CONNECTIONS_PER_USER = 10;
 
 // Server-side: publish a broadcast event to room channel with retry logic
 export async function publishBattleEvent(params: {
@@ -8,6 +21,12 @@ export async function publishBattleEvent(params: {
 }) {
   const maxRetries = 3;
   let retryCount = 0;
+
+  // Add sequence number for event ordering
+  const eventPayload = {
+    sequence: Date.now(),
+    ...params.payload,
+  };
 
   while (retryCount <= maxRetries) {
     try {
@@ -34,7 +53,7 @@ export async function publishBattleEvent(params: {
       await channel.send({
         type: "broadcast",
         event: params.event,
-        payload: params.payload || {},
+        payload: eventPayload,
       });
 
       await channel.unsubscribe();
@@ -68,17 +87,52 @@ export async function publishBattleEvent(params: {
       params.event
     }`
   );
+
+  // Log connection stats on failure
+  const connectionStats = getConnectionStats();
+  console.log(`📊 Connection stats at time of failure:`, connectionStats);
+}
+
+// Get user identifier for connection limiting
+function getUserId(): string {
+  if (typeof window === "undefined") return "server";
+  return localStorage.getItem("user_id") || "anonymous";
 }
 
 // Client-side helper to create a room channel with enhanced error handling
 export function createRoomChannel(roomId: string) {
-  const sb = supabaseBrowser;
-  if (!sb) {
-    console.error("Supabase browser client not available");
-    return null;
-  }
-
   try {
+    const sb = supabaseBrowser;
+    if (!sb) {
+      console.error("Supabase browser client not available");
+      return null;
+    }
+
+    const userId = getUserId();
+
+    // Check connection limit and clean up excess connections
+    const userConns = Array.from(activeConnections.entries())
+      .filter(([, conn]) => conn.userId === userId)
+      .sort((a, b) => a[1].timestamp - b[1].timestamp);
+
+    if (userConns.length >= MAX_CONNECTIONS_PER_USER) {
+      console.warn(
+        `⚠️ Connection limit reached for user ${userId}. Current: ${userConns.length}, Max: ${MAX_CONNECTIONS_PER_USER}`
+      );
+      // Close oldest connections to make room for new one
+      const excess = userConns.length - MAX_CONNECTIONS_PER_USER + 1;
+      for (let i = 0; i < excess; i++) {
+        const [channelId, conn] = userConns[i];
+        console.log(`🔄 Closing excess connection: ${channelId}`);
+        try {
+          conn.channel.unsubscribe();
+          activeConnections.delete(channelId);
+        } catch (err) {
+          console.error("Error closing excess connection:", err);
+        }
+      }
+    }
+
     const channel = sb.channel(`room:${roomId}`, {
       config: {
         broadcast: { self: false },
@@ -86,11 +140,38 @@ export function createRoomChannel(roomId: string) {
       },
     });
 
+    // Track this connection
+    const channelId = `room:${roomId}`;
+    activeConnections.set(channelId, {
+      channel,
+      userId,
+      timestamp: Date.now(),
+      roomId,
+    });
+
     // Add connection state logging
     channel.on("system", { event: "*" }, (payload) => {
       console.log(`🔗 Channel system event for room:${roomId}:`, payload.type);
     });
 
+    // Handle channel errors
+    channel.on("system", { event: "CHANNEL_ERROR" }, (payload) => {
+      console.error(`💥 Channel error for room:${roomId}:`, payload);
+    });
+
+    // Clean up on unsubscribe
+    const originalUnsubscribe = channel.unsubscribe.bind(channel);
+    channel.unsubscribe = async () => {
+      activeConnections.delete(channelId);
+      console.log(
+        `🧹 Cleaned up connection for room:${roomId}. Active connections: ${activeConnections.size}`
+      );
+      return originalUnsubscribe();
+    };
+
+    console.log(
+      `🔌 New connection established for room:${roomId}. Total active: ${activeConnections.size}`
+    );
     return channel;
   } catch (err) {
     console.error("Failed to create room channel:", err);
@@ -108,32 +189,185 @@ export function createEnhancedRoomChannel(
 
   let reconnectAttempts = 0;
   const maxReconnectAttempts = 5;
+  let isDestroyed = false;
+  let connectionTimeout: NodeJS.Timeout | null = null;
+  let reconnectTimeout: NodeJS.Timeout | null = null;
+  let isReconnecting = false;
+  let lastReconnectTime = 0;
+  const minReconnectInterval = 2000; // Minimum 2 seconds between reconnection attempts
+  const maxReconnectDelay = 30000; // Maximum 30 seconds delay
 
-  const setupReconnectionLogic = () => {
-    channel.on("system", { event: "CHANNEL_ERROR" }, () => {
-      console.warn(
-        `🔄 Channel error for room:${roomId}, attempting reconnection...`
+  // Circuit breaker state
+  let circuitBreakerOpen = false;
+  let circuitBreakerTimeout: NodeJS.Timeout | null = null;
+  const circuitBreakerDuration = 60000; // 1 minute circuit breaker
+
+  // Helper function to attempt reconnection with circuit breaker
+  const attemptReconnection = () => {
+    if (isDestroyed || isReconnecting || circuitBreakerOpen) {
+      return;
+    }
+
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastReconnectTime;
+
+    // Enforce minimum interval between reconnection attempts
+    if (timeSinceLastAttempt < minReconnectInterval) {
+      const waitTime = minReconnectInterval - timeSinceLastAttempt;
+      reconnectTimeout = setTimeout(() => attemptReconnection(), waitTime);
+      return;
+    }
+
+    if (reconnectAttempts >= maxReconnectAttempts) {
+      console.error(
+        `💥 Max reconnection attempts (${maxReconnectAttempts}) reached for room:${roomId}`
       );
 
-      if (reconnectAttempts < maxReconnectAttempts) {
-        reconnectAttempts++;
-        setTimeout(() => {
-          channel.subscribe((status) => {
-            if (status === "SUBSCRIBED") {
-              console.log(`✅ Reconnected to room:${roomId}`);
-              reconnectAttempts = 0;
-              onReconnect?.();
-            }
-          });
-        }, Math.pow(2, reconnectAttempts) * 1000);
-      } else {
-        console.error(
-          `💥 Max reconnection attempts reached for room:${roomId}`
+      // Open circuit breaker
+      circuitBreakerOpen = true;
+      circuitBreakerTimeout = setTimeout(() => {
+        console.log(
+          `🔄 Circuit breaker closed for room:${roomId}, allowing reconnection attempts`
         );
+        circuitBreakerOpen = false;
+        reconnectAttempts = 0; // Reset attempts when circuit breaker closes
+      }, circuitBreakerDuration);
+
+      return;
+    }
+
+    isReconnecting = true;
+    lastReconnectTime = now;
+    reconnectAttempts++;
+
+    console.log(
+      `🔄 Attempting reconnection ${reconnectAttempts}/${maxReconnectAttempts} for room:${roomId}`
+    );
+
+    channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        console.log(
+          `✅ Reconnected to room:${roomId} on attempt ${reconnectAttempts}`
+        );
+        reconnectAttempts = 0;
+        isReconnecting = false;
+        onReconnect?.();
+      } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+        console.error(
+          `❌ Reconnection attempt ${reconnectAttempts} failed for room:${roomId}`
+        );
+        isReconnecting = false;
+
+        // Schedule next attempt with exponential backoff (capped)
+        const delay = Math.min(
+          Math.pow(2, reconnectAttempts) * 1000,
+          maxReconnectDelay
+        );
+        reconnectTimeout = setTimeout(() => attemptReconnection(), delay);
       }
     });
   };
 
+  // Set up connection timeout
+  connectionTimeout = setTimeout(() => {
+    if (!isDestroyed) {
+      console.warn(`⏰ Connection timeout for room:${roomId}`);
+      attemptReconnection();
+    }
+  }, 10000); // 10 second timeout
+
+  const setupReconnectionLogic = () => {
+    channel.on("system", { event: "CHANNEL_ERROR" }, () => {
+      if (isDestroyed) return;
+
+      console.warn(
+        `🔄 Channel error for room:${roomId}, attempting reconnection...`
+      );
+
+      attemptReconnection();
+    });
+
+    // Handle connection close
+    channel.on("system", { event: "CLOSED" }, () => {
+      if (isDestroyed) return;
+      console.log(`🔌 Connection closed for room:${roomId}`);
+      // Clear connection timeout when properly closed
+      if (connectionTimeout) {
+        clearTimeout(connectionTimeout);
+        connectionTimeout = null;
+      }
+    });
+
+    // Handle successful subscription
+    channel.on("system", { event: "SUBSCRIBED" }, () => {
+      // Clear connection timeout when successfully connected
+      if (connectionTimeout) {
+        clearTimeout(connectionTimeout);
+        connectionTimeout = null;
+      }
+    });
+  };
+
+  // Enhanced cleanup function
+  const originalUnsubscribe = channel.unsubscribe.bind(channel);
+  channel.unsubscribe = async () => {
+    isDestroyed = true;
+    // Clear all timeouts on unsubscribe
+    if (connectionTimeout) {
+      clearTimeout(connectionTimeout);
+      connectionTimeout = null;
+    }
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+    if (circuitBreakerTimeout) {
+      clearTimeout(circuitBreakerTimeout);
+      circuitBreakerTimeout = null;
+    }
+    return originalUnsubscribe();
+  };
+
   setupReconnectionLogic();
   return channel;
+}
+
+// Function to get connection statistics
+export function getConnectionStats() {
+  const userId = getUserId();
+  const userConnections = Array.from(activeConnections.values()).filter(
+    (conn: ConnectionInfo) => conn.userId === userId
+  ).length;
+
+  return {
+    totalConnections: activeConnections.size,
+    userConnections,
+    maxUserConnections: MAX_CONNECTIONS_PER_USER,
+    connectionsByUser: Array.from(activeConnections.values()).reduce(
+      (acc: Record<string, number>, conn: ConnectionInfo) => {
+        acc[conn.userId] = (acc[conn.userId] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    ),
+  };
+}
+
+// Function to force cleanup of connections
+export function cleanupConnections() {
+  const connections = Array.from(activeConnections.entries());
+  console.log(`🧹 Cleaning up ${connections.length} connections...`);
+
+  connections.forEach(([channelId, conn]) => {
+    try {
+      conn.channel.unsubscribe();
+      activeConnections.delete(channelId);
+    } catch (err) {
+      console.error(`❌ Error cleaning up connection ${channelId}:`, err);
+    }
+  });
+
+  console.log(
+    `✅ Cleanup complete. Remaining connections: ${activeConnections.size}`
+  );
 }

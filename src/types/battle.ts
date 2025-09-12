@@ -62,6 +62,8 @@ export interface StateResp {
   participants?: BattleParticipant[];
   activeRound?: BattleActiveRound | null;
   currentUser?: BattleCurrentUser;
+  serverTime?: number;
+  clientTimeReceived?: number;
 }
 
 export interface AnswerStatus {

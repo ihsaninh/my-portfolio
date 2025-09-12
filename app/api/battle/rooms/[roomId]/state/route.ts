@@ -124,6 +124,7 @@ export async function GET(
             question: questionSummary, // includes choices for MCQ (without correct id)
           }
         : null,
+      serverTime: Date.now(), // Include server time for accurate client timer
     });
   } catch {
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });

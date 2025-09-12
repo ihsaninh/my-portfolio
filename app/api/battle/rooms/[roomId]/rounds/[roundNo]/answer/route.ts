@@ -42,6 +42,11 @@ export async function POST(
       round.deadline_at &&
       Date.now() > new Date(round.deadline_at).getTime() + GRACE_MS
     ) {
+      console.log(
+        `[DEBUG] Deadline check failed: client_time=${Date.now()}, server_deadline=${new Date(
+          round.deadline_at
+        ).getTime()}, grace=${GRACE_MS}`
+      );
       return NextResponse.json({ error: "Deadline passed" }, { status: 400 });
     }
 
@@ -93,6 +98,9 @@ export async function POST(
         : Date.now();
       const now = Date.now();
       const timeMs = Math.max(0, now - revealedAt);
+      console.log(
+        `[DEBUG] Time calculation: revealedAt=${revealedAt}, now=${now}, timeMs=${timeMs}`
+      );
 
       const tMaxMs = Math.max(1, (room?.round_time_sec || 60) * 1000);
       // Keep scores within 0..100 per DB constraint
@@ -265,6 +273,7 @@ export async function POST(
 
 /**
  * Check if all participants have answered and auto-advance to next round
+ * Uses atomic operations to prevent race conditions
  */
 async function checkAndAutoAdvanceRound(
   roomId: string,
@@ -274,7 +283,97 @@ async function checkAndAutoAdvanceRound(
   const supabase = supabaseAdmin();
 
   try {
-    // Use a transaction-like approach to prevent race conditions
+    // Use RPC function for atomic round closure and score updates
+    const { data: result, error: rpcError } = await supabase.rpc(
+      "close_round_and_update_scores",
+      {
+        p_round_id: roundId,
+        p_room_id: roomId,
+      }
+    );
+
+    if (rpcError) {
+      console.error("[DEBUG] RPC error in auto-advance:", rpcError);
+      // Fallback to original logic if RPC fails
+      return await checkAndAutoAdvanceRoundFallback(roomId, roundId, roundNo);
+    }
+
+    if (!result || !result.round_closed) {
+      return; // Round was already closed or not ready
+    }
+
+    // Get answers for scoreboard (after atomic update)
+    const { data: answers } = await supabase
+      .from("battle_room_answers")
+      .select("session_id, score_final")
+      .eq("round_id", roundId);
+
+    // Get participants for name mapping
+    const { data: participants } = await supabase
+      .from("battle_room_participants")
+      .select("session_id, display_name")
+      .eq("room_id", roomId);
+
+    const nameMap = new Map(
+      (participants || []).map((p) => [p.session_id, p.display_name])
+    );
+
+    const roundScoreboard = (answers || []).map((a) => ({
+      sessionId: a.session_id,
+      displayName: nameMap.get(a.session_id) || "Player",
+      score: a.score_final,
+    }));
+
+    // Broadcast round closed
+    publishBattleEvent({
+      roomId,
+      event: "round_closed",
+      payload: {
+        roundNo,
+        scoreboard: roundScoreboard,
+        reason: "all_answered",
+      },
+    });
+
+    // Check if this was the last round
+    const { count: remainingRounds } = await supabase
+      .from("battle_room_rounds")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId)
+      .eq("status", "pending");
+
+    if (!remainingRounds || remainingRounds === 0) {
+      // Finish the battle
+      await supabase
+        .from("battle_rooms")
+        .update({ status: "finished" })
+        .eq("id", roomId);
+
+      publishBattleEvent({
+        roomId,
+        event: "match_finished",
+        payload: { roomId },
+      });
+    } else {
+      // Auto-reveal next round
+      await autoRevealNextRound(roomId, roundNo + 1);
+    }
+  } catch (error) {
+    console.error("[DEBUG] Error in checkAndAutoAdvanceRound:", error);
+  }
+}
+
+/**
+ * Fallback function for auto-advance when RPC is not available
+ */
+async function checkAndAutoAdvanceRoundFallback(
+  roomId: string,
+  roundId: string,
+  roundNo: number
+) {
+  const supabase = supabaseAdmin();
+
+  try {
     // First, check if the round is still active (not already closed by another request)
     const { data: currentRound } = await supabase
       .from("battle_room_rounds")
@@ -285,6 +384,7 @@ async function checkAndAutoAdvanceRound(
     if (!currentRound || currentRound.status !== "active") {
       return;
     }
+
     // Get total participants in the room
     const { count: totalParticipants } = await supabase
       .from("battle_room_participants")
@@ -322,21 +422,18 @@ async function checkAndAutoAdvanceRound(
         .select("session_id, score_final")
         .eq("round_id", roundId);
 
-      // Update participant totals
+      // Update participant totals with atomic increments
       if (answers && answers.length > 0) {
+        // Use individual updates with retry logic to handle race conditions
         for (const a of answers) {
-          const { data: curr } = await supabase
-            .from("battle_room_participants")
-            .select("total_score")
-            .eq("room_id", roomId)
-            .eq("session_id", a.session_id)
-            .single();
-          const next = (curr?.total_score || 0) + (a.score_final || 0);
-          await supabase
-            .from("battle_room_participants")
-            .update({ total_score: next })
-            .eq("room_id", roomId)
-            .eq("session_id", a.session_id);
+          if (a.score_final && a.score_final > 0) {
+            await updateParticipantScoreAtomic(
+              supabase,
+              roomId,
+              a.session_id,
+              a.score_final
+            );
+          }
         }
       }
 
@@ -392,6 +489,71 @@ async function checkAndAutoAdvanceRound(
       }
     }
   } catch {}
+}
+
+/**
+ * Atomically update participant score with retry logic to handle race conditions
+ */
+async function updateParticipantScoreAtomic(
+  supabase: ReturnType<typeof supabaseAdmin>,
+  roomId: string,
+  sessionId: string,
+  scoreIncrement: number,
+  maxRetries: number = 3
+) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      // Use raw SQL for atomic increment
+      const { error } = await supabase.rpc("increment_participant_score", {
+        p_room_id: roomId,
+        p_session_id: sessionId,
+        p_score_increment: scoreIncrement,
+      });
+
+      if (!error) {
+        return; // Success
+      }
+
+      // If RPC doesn't exist, fallback to conditional update
+      const { data: current } = await supabase
+        .from("battle_room_participants")
+        .select("total_score")
+        .eq("room_id", roomId)
+        .eq("session_id", sessionId)
+        .single();
+
+      if (current) {
+        const newScore = (current.total_score || 0) + scoreIncrement;
+        const { error: updateError } = await supabase
+          .from("battle_room_participants")
+          .update({ total_score: newScore })
+          .eq("room_id", roomId)
+          .eq("session_id", sessionId)
+          .eq("total_score", current.total_score); // Optimistic locking
+
+        if (!updateError) {
+          return; // Success
+        }
+      }
+
+      // If we get here, there was a conflict, retry after a short delay
+      if (attempt < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
+      }
+    } catch (error) {
+      console.error(
+        `[DEBUG] Score update attempt ${attempt + 1} failed:`,
+        error
+      );
+      if (attempt < maxRetries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
+      }
+    }
+  }
+
+  console.error(
+    `[DEBUG] Failed to update score for session ${sessionId} after ${maxRetries} attempts`
+  );
 }
 
 /**
