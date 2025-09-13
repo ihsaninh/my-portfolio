@@ -143,6 +143,7 @@ export interface BattleState {
   copied: boolean;
   isProgressing: boolean;
   connectionState: ConnectionState;
+  connectionError: string | null;
   lastEventTime: number;
   isHostCache: boolean | null;
   tabId: string;
@@ -169,6 +170,7 @@ export interface BattleState {
   setCopied: (copied: boolean) => void;
   setIsProgressing: (isProgressing: boolean) => void;
   setConnectionState: (connectionState: ConnectionState) => void;
+  setConnectionError: (connectionError: string | null) => void;
   setLastEventTime: (time: number) => void;
   setIsHostCache: (isHost: boolean | null) => void;
   setState: (state: StateResp | null) => void;
