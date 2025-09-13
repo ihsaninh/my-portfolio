@@ -13,6 +13,139 @@ interface ConnectionInfo {
 const activeConnections = new Map<string, ConnectionInfo>();
 const MAX_CONNECTIONS_PER_USER = 10;
 
+// Event buffering for out-of-order event handling
+interface BufferedEvent {
+  sequence: number;
+  event: string;
+  payload: Record<string, unknown>;
+  timestamp: number;
+  processed: boolean;
+}
+
+class EventBuffer {
+  private buffer = new Map<string, BufferedEvent[]>();
+  private maxBufferSize = 50;
+  private processingTimeout = 100; // Process buffered events after 100ms
+
+  addEvent(roomId: string, event: BufferedEvent) {
+    if (!this.buffer.has(roomId)) {
+      this.buffer.set(roomId, []);
+    }
+
+    const roomBuffer = this.buffer.get(roomId)!;
+
+    // Prevent buffer overflow
+    if (roomBuffer.length >= this.maxBufferSize) {
+      console.warn(
+        `[BUFFER] Buffer overflow for room ${roomId}, dropping oldest event`
+      );
+      roomBuffer.shift();
+    }
+
+    roomBuffer.push(event);
+
+    // Sort by sequence number
+    roomBuffer.sort((a, b) => a.sequence - b.sequence);
+
+    // Process events in order after a short delay
+    setTimeout(() => this.processEvents(roomId), this.processingTimeout);
+  }
+
+  processEvents(roomId: string) {
+    const roomBuffer = this.buffer.get(roomId);
+    if (!roomBuffer || roomBuffer.length === 0) return;
+
+    // Process events in sequence order
+    const unprocessedEvents = roomBuffer.filter((event) => !event.processed);
+
+    for (const event of unprocessedEvents) {
+      if (this.canProcessEvent(roomId, event.sequence)) {
+        event.processed = true;
+        this.emitEvent(roomId, event);
+      }
+    }
+
+    // Clean up processed events
+    const remainingEvents = roomBuffer.filter((event) => !event.processed);
+    if (remainingEvents.length === 0) {
+      this.buffer.delete(roomId);
+    } else {
+      this.buffer.set(roomId, remainingEvents);
+    }
+  }
+
+  private canProcessEvent(roomId: string, sequence: number): boolean {
+    const roomBuffer = this.buffer.get(roomId);
+    if (!roomBuffer) return true;
+
+    // Check if all previous events have been processed
+    const previousEvents = roomBuffer.filter(
+      (event) => event.sequence < sequence && !event.processed
+    );
+
+    return previousEvents.length === 0;
+  }
+
+  private emitEvent(roomId: string, event: BufferedEvent) {
+    // Emit the event to registered listeners
+    const listeners = eventListeners.get(roomId) || [];
+    listeners.forEach((listener) => {
+      try {
+        listener(event.event, event.payload);
+      } catch (err) {
+        console.error(
+          `[BUFFER] Error in event listener for ${event.event}:`,
+          err
+        );
+      }
+    });
+  }
+
+  clearBuffer(roomId: string) {
+    this.buffer.delete(roomId);
+  }
+}
+
+const eventBuffer = new EventBuffer();
+const eventListeners = new Map<
+  string,
+  Array<(event: string, payload: Record<string, unknown>) => void>
+>();
+
+// Type for our custom event listeners
+type BattleEventListener = (
+  event: string,
+  payload: Record<string, unknown>
+) => void;
+
+// Function to register event listeners for buffered events
+export function addBattleEventListener(
+  roomId: string,
+  listener: BattleEventListener
+) {
+  if (!eventListeners.has(roomId)) {
+    eventListeners.set(roomId, []);
+  }
+  eventListeners.get(roomId)!.push(listener);
+}
+
+// Function to remove event listeners
+export function removeBattleEventListener(
+  roomId: string,
+  listener: BattleEventListener
+) {
+  const listeners = eventListeners.get(roomId);
+  if (listeners) {
+    const index = listeners.indexOf(listener);
+    if (index > -1) {
+      listeners.splice(index, 1);
+    }
+    if (listeners.length === 0) {
+      eventListeners.delete(roomId);
+    }
+  }
+}
+
 // Server-side: publish a broadcast event to room channel with retry logic
 export async function publishBattleEvent(params: {
   roomId: string;
@@ -179,13 +312,35 @@ export function createRoomChannel(roomId: string) {
   }
 }
 
-// Enhanced client-side connection with reconnection logic
+// Enhanced client-side connection with reconnection logic and event buffering
 export function createEnhancedRoomChannel(
   roomId: string,
   onReconnect?: () => void
 ) {
   const channel = createRoomChannel(roomId);
   if (!channel) return null;
+
+  // Set up event buffering for this room
+  const bufferedEventHandler = (
+    eventType: string,
+    payload: Record<string, unknown>
+  ) => {
+    const sequence = (payload?.sequence as number) || Date.now();
+
+    eventBuffer.addEvent(roomId, {
+      sequence,
+      event: eventType,
+      payload,
+      timestamp: Date.now(),
+      processed: false,
+    });
+  };
+
+  // Set up broadcast event listener with buffering
+  channel.on("broadcast", { event: "*" }, (payload) => {
+    const eventType = payload.event as string;
+    bufferedEventHandler(eventType, payload.payload as Record<string, unknown>);
+  });
 
   let reconnectAttempts = 0;
   const maxReconnectAttempts = 5;

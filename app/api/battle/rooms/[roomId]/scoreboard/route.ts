@@ -10,6 +10,7 @@ export async function GET(
     const { roomId } = await context.params;
     const supabase = supabaseAdmin();
 
+    // Fetch participants and their scores
     const { data: participants, error: pErr } = await supabase
       .from("battle_room_participants")
       .select("id, session_id, display_name, total_score")

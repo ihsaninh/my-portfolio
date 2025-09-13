@@ -569,6 +569,10 @@ export function useBattleLogic() {
   const refreshInProgress = useRef(false);
   const lastRefreshTime = useRef(0);
 
+  // Request deduplication for answer submissions
+  const submitInProgress = useRef(false);
+  const lastSubmitTime = useRef(0);
+
   // Enhanced refresh function using TanStack Query with deduplication
   const refresh = async () => {
     const now = Date.now();
@@ -1079,11 +1083,41 @@ export function useBattleLogic() {
       return;
     }
 
+    // Prevent multiple simultaneous submissions
+    if (submitInProgress.current) {
+      console.log("[SUBMIT] Submission already in progress, skipping");
+      return;
+    }
+
+    // Throttle submissions to prevent spam
+    const now = Date.now();
+    if (now - lastSubmitTime.current < 1000) {
+      console.log("[SUBMIT] Submission throttled, too frequent");
+      addNotification("Please wait before submitting again");
+      return;
+    }
+
+    submitInProgress.current = true;
+    lastSubmitTime.current = now;
+
+    // Store original state for potential rollback
+    const originalHasSubmitted = hasSubmitted;
+    const originalAnswer = answer;
+    const originalSelectedChoiceId = selectedChoiceId ?? null;
+
+    // Optimistic update - immediately show as submitted
+    setHasSubmitted(true);
+    setAnswer(""); // Clear input
+    setSelectedChoiceId(null); // Clear selection
+
+    // Add loading indicator
+    setIsProgressing(true);
+
     try {
       const currentRound = state?.activeRound?.roundNo || 1;
-      const payload = state?.activeRound?.question?.choices?.length
-        ? { choice_id: selectedChoiceId || undefined }
-        : { answer_text: answer };
+      const payload = hasChoices
+        ? { choice_id: originalSelectedChoiceId || undefined }
+        : { answer_text: originalAnswer };
 
       await submitAnswerMutation.mutateAsync({
         roomId: roomId!,
@@ -1091,13 +1125,27 @@ export function useBattleLogic() {
         payload,
       });
 
-      setHasSubmitted(true);
-      // According to project specs, intermediate scoreboards are completely removed
-      // Stay in answering phase even after submission
+      // Success - refresh to get updated state
       await refresh();
     } catch (err) {
+      // Rollback optimistic updates on failure
+      console.error("[SUBMIT] Answer submission failed, rolling back:", err);
+      setHasSubmitted(originalHasSubmitted);
+      setAnswer(originalAnswer);
+      setSelectedChoiceId(originalSelectedChoiceId);
+
       const message = err instanceof Error ? err.message : "Unknown error";
-      addNotification(`Submit error: ${message}`);
+      addNotification(`Failed to submit answer: ${message}`);
+
+      // Add retry option for network errors
+      if (message.includes("network") || message.includes("timeout")) {
+        setTimeout(() => {
+          addNotification("Network error - you can try submitting again");
+        }, 3000);
+      }
+    } finally {
+      setIsProgressing(false);
+      submitInProgress.current = false;
     }
   };
 
