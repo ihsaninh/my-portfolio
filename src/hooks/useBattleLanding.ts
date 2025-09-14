@@ -25,6 +25,7 @@ export function useBattleLanding() {
   const [joinRoomId, setJoinRoomId] = useState("");
   const [log, setLog] = useState<string>("");
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
+  const [createdRoomCode, setCreatedRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Compute loading state from mutations
@@ -44,8 +45,9 @@ export function useBattleLanding() {
         skipSessionCreation: false,
       });
 
-      // Store room ID and switch to success view
+      // Store room ID and code, switch to success view
       setCreatedRoomId(result.roomId);
+      setCreatedRoomCode(result.roomCode);
       setJoinRoomId(result.roomId);
 
       // Hide the form and show success message
@@ -75,7 +77,7 @@ export function useBattleLanding() {
     }
 
     if (!roomId || typeof roomId !== "string" || !roomId.trim()) {
-      setLog("Please enter a valid Room ID");
+      setLog("Please enter a valid Room Code");
       return;
     }
     if (!playerName || typeof playerName !== "string" || !playerName.trim()) {
@@ -85,7 +87,7 @@ export function useBattleLanding() {
 
     setLog("");
     try {
-      await joinRoomMutation.mutateAsync({
+      const result = await joinRoomMutation.mutateAsync({
         roomId,
         payload: { displayName: playerName.trim() },
         skipSessionCreation,
@@ -94,8 +96,9 @@ export function useBattleLanding() {
       // Small delay to ensure the join is processed on the server
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      // Redirect to room using Next.js router
-      router.push(`/battle/rooms/${roomId}`);
+      // Redirect to room using the actual room ID from response
+      const actualRoomId = result.roomId || roomId;
+      router.push(`/battle/rooms/${actualRoomId}`);
     } catch (err: unknown) {
       console.error("Join error:", err);
       setLog(
@@ -104,10 +107,10 @@ export function useBattleLanding() {
     }
   };
 
-  const copyRoomId = async () => {
-    if (createdRoomId) {
+  const copyRoomCode = async () => {
+    if (createdRoomCode) {
       try {
-        const fullUrl = `${window.location.origin}/battle?roomId=${createdRoomId}`;
+        const fullUrl = `${window.location.origin}/battle?roomCode=${createdRoomCode}`;
         await navigator.clipboard.writeText(fullUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -126,6 +129,7 @@ export function useBattleLanding() {
     loading,
     log,
     createdRoomId,
+    createdRoomCode,
     copied,
 
     // State setters
@@ -135,11 +139,12 @@ export function useBattleLanding() {
     setJoinRoomId,
     setLog,
     setCreatedRoomId,
+    setCreatedRoomCode,
     setCopied,
 
     // Functions
     createRoom,
     handleJoinRoom,
-    copyRoomId,
+    copyRoomCode,
   };
 }

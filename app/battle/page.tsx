@@ -25,7 +25,7 @@ function BattleLandingContent() {
     joinRoomId,
     loading,
     log,
-    createdRoomId,
+    createdRoomCode,
     copied,
 
     // State setters
@@ -34,20 +34,21 @@ function BattleLandingContent() {
     setJoinPlayerName,
     setJoinRoomId,
     setLog,
-    setCreatedRoomId,
+    setCreatedRoomCode,
     // setCopied is used in the hook but not directly in the component
 
     // Functions
     createRoom,
     handleJoinRoom,
-    copyRoomId,
+    copyRoomCode,
   } = useBattleLanding();
 
-  // Auto-populate join form if roomId is provided in URL
+  // Auto-populate join form if roomId or roomCode is provided in URL
   useEffect(() => {
-    const urlRoomId = searchParams?.get("roomId");
-    if (urlRoomId && joinRoomId !== urlRoomId) {
-      setJoinRoomId(urlRoomId);
+    const urlRoomCode =
+      searchParams?.get("roomCode") || searchParams?.get("roomId");
+    if (urlRoomCode && joinRoomId !== urlRoomCode) {
+      setJoinRoomId(urlRoomCode);
       setGameMode("join"); // Automatically switch to join mode
     }
   }, [searchParams, joinRoomId, setJoinRoomId, setGameMode]);
@@ -107,7 +108,7 @@ function BattleLandingContent() {
           <BattleHeader />
 
           {/* Game Mode Selection */}
-          {!gameMode && !createdRoomId && (
+          {!gameMode && !createdRoomCode && (
             <GameModeSelection onSetGameMode={setGameMode} />
           )}
 
@@ -141,16 +142,16 @@ function BattleLandingContent() {
 
           {/* Room Created Success View */}
           <AnimatePresence>
-            {createdRoomId && (
+            {createdRoomCode && (
               <RoomCreatedSuccess
-                createdRoomId={createdRoomId}
+                createdRoomCode={createdRoomCode}
                 createPayload={createPayload}
                 loading={loading}
                 copied={copied}
-                onSetCreatedRoomId={setCreatedRoomId}
+                onSetCreatedRoomCode={setCreatedRoomCode}
                 onSetGameMode={setGameMode}
                 onSetLog={setLog}
-                onCopyRoomId={copyRoomId}
+                onCopyRoomCode={copyRoomCode}
                 onHandleJoinRoom={handleJoinRoom}
               />
             )}

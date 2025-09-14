@@ -4,16 +4,16 @@ import { motion } from "framer-motion";
 import { FaCopy, FaCrown, FaTrophy } from "react-icons/fa";
 
 interface RoomCreatedSuccessProps {
-  createdRoomId: string | null;
+  createdRoomCode: string | null;
   createPayload: {
     hostDisplayName: string;
   };
   loading: boolean;
   copied: boolean;
-  onSetCreatedRoomId: (id: string | null) => void;
+  onSetCreatedRoomCode: (code: string | null) => void;
   onSetGameMode: (mode: "create" | "join" | null) => void;
   onSetLog: (log: string) => void;
-  onCopyRoomId: () => void;
+  onCopyRoomCode: () => void;
   onHandleJoinRoom: (
     nameOverride?: string,
     skipSessionCreation?: boolean
@@ -21,14 +21,14 @@ interface RoomCreatedSuccessProps {
 }
 
 export function RoomCreatedSuccess({
-  createdRoomId,
+  createdRoomCode,
   createPayload,
   loading,
   copied,
-  onSetCreatedRoomId,
+  onSetCreatedRoomCode,
   onSetGameMode,
   onSetLog,
-  onCopyRoomId,
+  onCopyRoomCode,
   onHandleJoinRoom,
 }: RoomCreatedSuccessProps) {
   return (
@@ -43,7 +43,7 @@ export function RoomCreatedSuccess({
         <button
           type="button"
           onClick={() => {
-            onSetCreatedRoomId(null);
+            onSetCreatedRoomCode(null);
             onSetGameMode(null);
             onSetLog("");
           }}
@@ -69,19 +69,19 @@ export function RoomCreatedSuccess({
         </h2>
 
         <p className="text-green-200 mb-6">
-          Room ID: <span className="font-bold">{createdRoomId}</span>
+          Room Code: <span className="font-bold">{createdRoomCode}</span>
         </p>
 
         <p className="text-green-300 mb-6">
-          Share this Room ID with your friends:
+          Share this Room Code with your friends:
         </p>
 
         <div className="flex items-center justify-center gap-3 mb-8">
           <code className="bg-white/10 px-4 py-3 rounded-xl text-white text-lg font-mono">
-            {createdRoomId}
+            {createdRoomCode}
           </code>
           <button
-            onClick={onCopyRoomId}
+            onClick={onCopyRoomCode}
             className="px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl transition-colors flex items-center gap-2"
           >
             <FaCopy className="w-4 h-4" />

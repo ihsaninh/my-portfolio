@@ -27,12 +27,25 @@ export async function POST(
 
     const supabase = supabaseAdmin();
 
-    // Validate room is joinable
-    const { data: room, error: roomErr } = await supabase
+    // Validate room is joinable - try roomId first, then roomCode
+    let roomQuery = supabase
       .from("battle_rooms")
-      .select("id, status, capacity")
-      .eq("id", roomId)
-      .single();
+      .select("id, status, capacity, host_session_id")
+      .eq("id", roomId);
+
+    let { data: room, error: roomErr } = await roomQuery.single();
+
+    // If not found by roomId, try roomCode
+    if (roomErr && roomErr.code === "PGRST116") {
+      roomQuery = supabase
+        .from("battle_rooms")
+        .select("id, status, capacity, host_session_id")
+        .eq("room_code", roomId);
+
+      const roomCodeResult = await roomQuery.single();
+      room = roomCodeResult.data;
+      roomErr = roomCodeResult.error;
+    }
 
     if (roomErr || !room) {
       return NextResponse.json({ error: "Room not found" }, { status: 404 });
@@ -50,7 +63,7 @@ export async function POST(
       const { count } = await supabase
         .from("battle_room_participants")
         .select("id", { count: "exact", head: true })
-        .eq("room_id", roomId);
+        .eq("room_id", room.id);
       if ((count ?? 0) >= room.capacity) {
         return NextResponse.json({ error: "Room is full" }, { status: 400 });
       }
@@ -76,19 +89,13 @@ export async function POST(
       (sRec?.display_name as string) || body.displayName || "Player";
 
     // Check if this session is the room host
-    const { data: roomInfo } = await supabase
-      .from("battle_rooms")
-      .select("host_session_id")
-      .eq("id", roomId)
-      .single();
-
-    const isHost = roomInfo?.host_session_id === sessionId;
+    const isHost = room.host_session_id === sessionId;
 
     // Insert participant (idempotent by unique constraint)
     const { data: participant, error: joinErr } = await supabase
       .from("battle_room_participants")
       .insert({
-        room_id: roomId,
+        room_id: room.id,
         session_id: sessionId,
         display_name: resolvedName,
         is_host: isHost, // Set host status based on session check
@@ -102,7 +109,7 @@ export async function POST(
         const { data: existing } = await supabase
           .from("battle_room_participants")
           .select("id")
-          .eq("room_id", roomId)
+          .eq("room_id", room.id)
           .eq("session_id", sessionId)
           .single();
 
@@ -111,7 +118,7 @@ export async function POST(
           await supabase
             .from("battle_room_participants")
             .update({ is_host: true, display_name: resolvedName })
-            .eq("room_id", roomId)
+            .eq("room_id", room.id)
             .eq("session_id", sessionId);
         }
 
@@ -126,12 +133,15 @@ export async function POST(
 
     // Broadcast player joined (idempotent if duplicate join handled)
     publishBattleEvent({
-      roomId,
+      roomId: room.id,
       event: "player_joined",
       payload: { participantId: participant?.id, displayName: resolvedName },
     });
 
-    return NextResponse.json({ participantId: participant?.id });
+    return NextResponse.json({
+      participantId: participant?.id,
+      roomId: room.id,
+    });
   } catch (e: unknown) {
     console.error("Join room exception", e);
     if (e && typeof e === "object" && "issues" in e) {

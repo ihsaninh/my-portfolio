@@ -19,6 +19,7 @@ export interface CreateRoomPayload {
 
 export interface CreateRoomResponse {
   roomId: string;
+  roomCode: string;
 }
 
 export interface JoinRoomPayload {
@@ -26,7 +27,9 @@ export interface JoinRoomPayload {
 }
 
 export interface JoinRoomResponse {
-  success: boolean;
+  participantId?: string;
+  roomId?: string;
+  success?: boolean;
   message?: string;
 }
 

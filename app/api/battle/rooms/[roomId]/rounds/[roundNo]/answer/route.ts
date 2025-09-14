@@ -118,7 +118,7 @@ export async function POST(
         : 0;
       const finalScore = Math.max(0, Math.min(100, base + timeBonus));
 
-      const id = `bra-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const id = `ans-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const { error: ansErr } = await supabase
         .from("battle_room_answers")
         .insert({
@@ -223,7 +223,7 @@ export async function POST(
     });
 
     // Insert answer
-    const id = `bra-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const id = `ans-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
     const { error: ansErr } = await supabase
       .from("battle_room_answers")

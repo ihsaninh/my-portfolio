@@ -50,11 +50,11 @@ export function JoinRoomForm({
           <p className="text-cyan-200 text-lg">
             {joinRoomId
               ? "Ready to join this battle!"
-              : "Enter the Room ID to join an existing battle"}
+              : "Enter the Room Code to join an existing battle"}
           </p>
           {joinRoomId && (
             <p className="text-cyan-300 text-sm mt-2">
-              Room ID:{" "}
+              Room Code:{" "}
               <code className="bg-white/10 px-2 py-1 rounded">
                 {joinRoomId}
               </code>
@@ -78,11 +78,11 @@ export function JoinRoomForm({
 
           <div>
             <label className="block text-sm font-medium text-cyan-200 mb-2">
-              Room ID *
+              Room Code *
             </label>
             <input
               className="w-full px-4 py-4 rounded-xl bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all text-center text-xl font-mono"
-              placeholder="room-xxxx-xxxx"
+              placeholder="ABC123"
               value={joinRoomId}
               onChange={(e) => onSetJoinRoomId(e.target.value)}
               required

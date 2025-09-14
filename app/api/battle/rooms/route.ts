@@ -11,6 +11,19 @@ const serverConnections = new Map<
   { roomId: string; timestamp: number }
 >();
 
+// Helper function to check if room code is already taken
+async function isRoomCodeTaken(
+  supabase: ReturnType<typeof supabaseAdmin>,
+  roomCode: string
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("battle_rooms")
+    .select("id")
+    .eq("room_code", roomCode)
+    .single();
+  return !!data;
+}
+
 function trackServerConnection(roomId: string, sessionId: string) {
   serverConnections.set(sessionId, {
     roomId,
@@ -93,9 +106,30 @@ export async function POST(req: NextRequest) {
       .toString(36)
       .slice(2, 8)}`;
 
+    // Generate unique short room code
+    let roomCode: string;
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    do {
+      roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      attempts++;
+    } while (
+      attempts < maxAttempts &&
+      (await isRoomCodeTaken(supabase, roomCode))
+    );
+
+    if (attempts >= maxAttempts) {
+      return NextResponse.json(
+        { error: "Failed to generate unique room code" },
+        { status: 500 }
+      );
+    }
+
     // Create room
     const { error: roomErr } = await supabase.from("battle_rooms").insert({
       id: roomId,
+      room_code: roomCode,
       host_session_id: hostSessionId,
       topic: body.topic ?? null,
       category_id: body.categoryId ?? null,
@@ -119,7 +153,7 @@ export async function POST(req: NextRequest) {
     trackServerConnection(roomId, hostSessionId);
 
     // Room created successfully - host will join manually
-    return NextResponse.json({ roomId });
+    return NextResponse.json({ roomId, roomCode });
   } catch (e: unknown) {
     console.error("Create room exception", e);
     return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
