@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 import {
   useAnswerStatus,
@@ -102,7 +102,7 @@ export function useBattleRoomState(): {
   state: StateResp | undefined;
   answerStatus: AnswerStatus | undefined;
   stateLoading: boolean;
-  refresh: () => Promise<void>;
+  refresh: (force?: boolean) => Promise<void>;
   forceStateSync: () => Promise<void>;
   lastValidRoundRef: React.MutableRefObject<number | null>;
 } {
@@ -161,55 +161,59 @@ export function useBattleRoomState(): {
   const refreshInProgress = useRef(false);
   const lastRefreshTime = useRef(0);
 
-  const refresh = async () => {
-    const now = Date.now();
+  const refresh = useCallback(
+    async (force = false) => {
+      const now = Date.now();
 
-    // Prevent multiple simultaneous refresh requests
-    if (refreshInProgress.current) {
-      console.log("[POLL] Refresh already in progress, skipping");
-      return;
-    }
+      // Prevent multiple simultaneous refresh requests
+      if (refreshInProgress.current) {
+        console.log("[POLL] Refresh already in progress, skipping");
+        return;
+      }
 
-    // Throttle refresh requests to prevent spam
-    if (now - lastRefreshTime.current < 1000) {
-      console.log("[POLL] Refresh throttled, too frequent");
-      return;
-    }
+      // Throttle refresh requests to prevent spam (unless forced)
+      if (!force && now - lastRefreshTime.current < 1000) {
+        console.log("[POLL] Refresh throttled, too frequent");
+        return;
+      }
 
-    refreshInProgress.current = true;
-    lastRefreshTime.current = now;
+      refreshInProgress.current = true;
+      lastRefreshTime.current = now;
 
-    try {
-      console.log("[POLL] Executing refresh");
-      await refreshBattleData();
-      useBattleStore.getState().setLastEventTime(now);
+      try {
+        console.log("[POLL] Executing refresh", force ? "(forced)" : "");
+        await refreshBattleData();
+        useBattleStore.getState().setLastEventTime(now);
 
-      // Validate state after refresh
-      if (state) {
-        const isValid = validateStateSync(
-          state,
-          useBattleStore.getState().gamePhase
-        );
-        if (!isValid) {
-          console.warn(
-            "[SYNC] State validation failed after refresh, attempting recovery"
+        // Validate state after refresh
+        const currentState = useBattleStore.getState().state;
+        if (currentState) {
+          const isValid = validateStateSync(
+            currentState,
+            useBattleStore.getState().gamePhase
           );
-          // Don't call recoverFromStateDesync here to avoid infinite loop
+          if (!isValid) {
+            console.warn(
+              "[SYNC] State validation failed after refresh, attempting recovery"
+            );
+            // Don't call recoverFromStateDesync here to avoid infinite loop
+          }
         }
-      }
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      console.error("[SYNC] Refresh error:", message);
-      useBattleStore.getState().addNotification(`Refresh error: ${message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        console.error("[SYNC] Refresh error:", message);
+        useBattleStore.getState().addNotification(`Refresh error: ${message}`);
 
-      // Trigger recovery on refresh failure
-      if (roomId) {
-        setTimeout(() => recoverFromStateDesync(roomId, refresh), 2000);
+        // Trigger recovery on refresh failure
+        if (roomId) {
+          setTimeout(() => recoverFromStateDesync(roomId, refresh), 2000);
+        }
+      } finally {
+        refreshInProgress.current = false;
       }
-    } finally {
-      refreshInProgress.current = false;
-    }
-  };
+    },
+    [refreshBattleData, roomId]
+  );
 
   // Manual state recovery function for user-triggered sync
   const forceStateSync = async () => {
@@ -361,6 +365,25 @@ export function useBattleRoomState(): {
       } catch {}
     }
   }, [state?.room?.status]);
+
+  // Aggressive polling when in answering phase but question not loaded
+  useEffect(() => {
+    const store = useBattleStore.getState();
+    if (
+      store.gamePhase === "answering" &&
+      state?.activeRound?.status === "active" &&
+      !state?.activeRound?.question
+    ) {
+      console.log(
+        "[SYNC] Question missing in answering phase, starting aggressive polling"
+      );
+      const interval = setInterval(() => {
+        refresh(true);
+      }, 2000); // Poll every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [state?.activeRound?.question, state?.activeRound?.status, refresh]);
 
   // Cleanup refs when component unmounts
   useEffect(() => {

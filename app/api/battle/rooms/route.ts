@@ -1,63 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { checkRateLimit, generalLimiter } from "@/src/lib/rate-limit";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
-
-// Simple type validation without zod
-interface CreateRoomBody {
-  topic?: string | null;
-  categoryId?: string | null;
-  language?: string;
-  numQuestions?: number;
-  roundTimeSec?: number;
-  capacity?: number | null;
-  hostDisplayName?: string | null;
-  questionType?: "open-ended" | "multiple-choice";
-}
-
-function validateCreateRoomBody(body: unknown): body is CreateRoomBody {
-  if (!body || typeof body !== "object") return false;
-
-  const obj = body as Record<string, unknown>;
-
-  // Basic validation
-  if (
-    obj.language !== undefined &&
-    (typeof obj.language !== "string" ||
-      (obj.language as string).length < 2 ||
-      (obj.language as string).length > 5)
-  )
-    return false;
-  if (
-    obj.numQuestions !== undefined &&
-    (typeof obj.numQuestions !== "number" ||
-      (obj.numQuestions as number) < 1 ||
-      (obj.numQuestions as number) > 20)
-  )
-    return false;
-  if (
-    obj.roundTimeSec !== undefined &&
-    (typeof obj.roundTimeSec !== "number" ||
-      (obj.roundTimeSec as number) < 5 ||
-      (obj.roundTimeSec as number) > 600)
-  )
-    return false;
-  if (
-    obj.capacity !== undefined &&
-    (typeof obj.capacity !== "number" ||
-      (obj.capacity as number) < 2 ||
-      (obj.capacity as number) > 100)
-  )
-    return false;
-  if (
-    obj.questionType !== undefined &&
-    obj.questionType !== "open-ended" &&
-    obj.questionType !== "multiple-choice"
-  )
-    return false;
-
-  return true;
-}
+import { createRoomSchema, validateRequest } from "@/src/lib/validation";
 
 // Simple in-memory connection tracking for server-side
 const serverConnections = new Map<
@@ -86,26 +32,24 @@ function trackServerConnection(roomId: string, sessionId: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Check rate limit
+    const rateLimit = checkRateLimit(req, generalLimiter);
+    if (rateLimit.limited) {
+      return rateLimit.response!;
+    }
+
     const json = await req.json();
 
     // Validate request body
-    if (!validateCreateRoomBody(json)) {
+    const validation = validateRequest(createRoomSchema, json);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid request body" },
+        { error: validation.error, details: validation.details },
         { status: 400 }
       );
     }
 
-    const body = {
-      topic: json.topic ?? null,
-      categoryId: json.categoryId ?? null,
-      language: json.language ?? "en",
-      numQuestions: json.numQuestions ?? 10,
-      roundTimeSec: json.roundTimeSec ?? 30,
-      capacity: json.capacity ?? null,
-      hostDisplayName: json.hostDisplayName ?? null,
-      questionType: json.questionType ?? "open-ended",
-    };
+    const body = validation.data;
 
     const supabase = supabaseAdmin();
     const hostSessionId = getSessionIdFromCookies(req);

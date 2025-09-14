@@ -2,6 +2,7 @@ import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { evaluateAnswer } from "@/src/lib/ai-scoring";
+import { answerSubmitLimiter, checkRateLimit } from "@/src/lib/rate-limit";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -16,6 +17,12 @@ export async function POST(
   context: { params: Promise<{ roomId: string; roundNo: string }> }
 ) {
   try {
+    // Check rate limit for answer submissions
+    const rateLimit = checkRateLimit(req, answerSubmitLimiter);
+    if (rateLimit.limited) {
+      return rateLimit.response!;
+    }
+
     const { roomId, roundNo } = await context.params;
     const raw = await req.json();
     const sessionId = getSessionIdFromCookies(req);

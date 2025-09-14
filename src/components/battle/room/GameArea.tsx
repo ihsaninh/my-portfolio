@@ -78,13 +78,18 @@ export function GameArea({
         )}
         {gamePhase === "answering" &&
           state?.activeRound?.status === "active" &&
-          state?.activeRound?.question && (
+          (state?.activeRound?.question ? (
             <AnsweringPhase
               onSubmitAnswer={onSubmitAnswer}
               iHaveAnswered={iHaveAnswered}
               loading={loading}
             />
-          )}
+          ) : (
+            <div className="text-center p-6">
+              <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-white/70">Loading question...</p>
+            </div>
+          ))}
         {gamePhase === "finished" && <FinishedPhase />}
         {gamePhase === "playing" && !state?.activeRound && <PlayingPhase />}
       </div>

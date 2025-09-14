@@ -12,7 +12,7 @@ import type { StateResp } from "@/src/types/battle";
 export function useRealtime(
   roomId: string | undefined,
   state: StateResp | undefined,
-  refresh: () => Promise<void>,
+  refresh: (force?: boolean) => Promise<void>,
   autoCloseRound: () => Promise<void>
 ) {
   const {
@@ -44,14 +44,18 @@ export function useRealtime(
       console.log(
         `[POLL] Backup polling triggered after ${timeSinceLastEvent}ms inactivity`
       );
-      refresh();
+      refresh(true); // Force refresh for backup polling
     }
   };
 
   // Run polling backup only when in active game phases
   const shouldRunPolling =
     roomId && (gamePhase === "answering" || gamePhase === "playing");
-  const pollingInterval = shouldRunPolling ? 15000 : null; // Base 15 seconds
+  const pollingInterval = shouldRunPolling
+    ? gamePhase === "answering"
+      ? 5000
+      : 15000
+    : null; // 5 seconds for answering, 15 for playing
   useInterval(pollingBackupCallback, pollingInterval);
 
   // Debounced refresh using useDebounceCallback
@@ -225,8 +229,22 @@ export function useRealtime(
           setGamePhase("answering");
         }
 
-        // Use debounced refresh
-        debouncedRefresh();
+        // Immediate refresh for round transitions to ensure answers appear (bypass throttling)
+        refresh(true);
+
+        // Additional safety: if question not loaded after 1 second, force refresh
+        setTimeout(() => {
+          const currentState = useBattleStore.getState();
+          if (
+            currentState.gamePhase === "answering" &&
+            !currentState.state?.activeRound?.question
+          ) {
+            console.log(
+              "[SYNC] Question not loaded, forcing additional refresh"
+            );
+            refresh(true);
+          }
+        }, 1000);
       });
 
       ch.on("broadcast", { event: "answer_received" }, () => {
