@@ -1,6 +1,8 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useDebounceCallback, useInterval } from "usehooks-ts";
 
+import { battleQueryKeys } from "@/src/hooks/useBattleQueries";
 import { useBattleStore } from "@/src/lib/battle-store";
 import { connectionMonitor } from "@/src/lib/connection-monitor";
 import {
@@ -15,6 +17,7 @@ export function useRealtime(
   refresh: (force?: boolean) => Promise<void>,
   autoCloseRound: () => Promise<void>
 ) {
+  const queryClient = useQueryClient();
   const {
     gamePhase,
     setGamePhase,
@@ -218,7 +221,13 @@ export function useRealtime(
         useBattleStore.getState().setAnswer("");
         useBattleStore.getState().setSelectedChoiceId(null);
         useBattleStore.getState().setAnsweredCount(0);
+        useBattleStore.getState().setAnswerStatus(null); // Reset server answer status for new round
         setIsProgressing(false);
+
+        // Invalidate answer status cache to ensure fresh data for new round
+        queryClient.invalidateQueries({
+          queryKey: battleQueryKeys.answerStatus(roomId || ""),
+        });
 
         // Clear stuck detection timer
         if (stuckDetectionTimerId) {
