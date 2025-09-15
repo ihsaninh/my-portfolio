@@ -130,7 +130,9 @@ export async function POST(
             num: room.num_questions,
             seed: `${roomId}-${Date.now()}`,
           });
+          console.log(aiQs, "generate");
           if (aiQs.length > 0) {
+            console.log(aiQs, "mcq");
             inserts = aiQs.map((q, idx) => ({
               id: `round-${roomId}-${idx + 1}`,
               room_id: roomId,
@@ -163,6 +165,7 @@ export async function POST(
           }
         }
       } catch (e) {
+        console.log(e);
         aiError = (e as Error).message;
       }
     }

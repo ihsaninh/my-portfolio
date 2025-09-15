@@ -69,7 +69,7 @@ export function UserAnswers({
                     </span>
                     {answer.question && (
                       <span className="bg-purple-500/20 text-purple-300 px-2 py-1 rounded-lg text-xs">
-                        Difficulty: {answer.question.difficulty}/5
+                        Difficulty: {answer.question.difficulty}/3
                       </span>
                     )}
                   </div>

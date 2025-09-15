@@ -64,7 +64,10 @@ Rules:
 }
 
 // MCQ generation
-export const McqChoiceSchema = z.object({ id: z.string().min(1), text: z.string().min(1).max(120) });
+export const McqChoiceSchema = z.object({
+  id: z.string().min(1),
+  text: z.string().min(1),
+});
 export const GeneratedMcqQuestionSchema = z.object({
   prompt: z.string().min(10),
   difficulty: z.number().int().min(1).max(3).default(2),
@@ -88,26 +91,74 @@ export async function generateMcqQuestions(params: {
   const { topic, categoryName, categoryId, language, num, seed } = params;
   const categoryLabel = topic || categoryName || categoryId || "general";
 
-  const prompt = `You are generating multiple-choice quiz questions.
+  // Enhanced creative contexts for MCQ questions
+  const creativeContexts = [
+    "real-world application scenario",
+    "historical case study context",
+    "problem-solving situation",
+    "comparative analysis format",
+    "cause-and-effect relationship",
+    "critical thinking challenge",
+    "practical implementation example",
+    "conceptual understanding test",
+    "analytical reasoning question",
+    "application-based scenario",
+  ];
 
-Category: ${categoryLabel}
+  const questionFormats = [
+    "What would happen if...",
+    "In a situation where..., which approach...",
+    "When comparing X and Y, what is the key difference in...",
+    "A professional needs to..., what should they consider first?",
+    "Given the following scenario..., what is the best explanation for...",
+    "If you were to implement..., which factor would be most critical?",
+    "In the context of..., why does... occur?",
+    "What is the primary reason that... leads to...?",
+    "Which statement best describes the relationship between... and...?",
+    "In practical applications, how does... typically affect...?",
+  ];
+
+  const prompt = `You are an expert quiz creator generating diverse, creative multiple-choice questions that avoid repetition and boredom.
+
+Topic: ${categoryLabel}
 Language: ${language}
 Count: ${num}
 Seed: ${seed ?? "none"}
 
-Rules:
-- Output exactly ${num} items as JSON.
-- Each item must have: prompt (1–2 sentences), integer difficulty 1..3, language, category, choices (exactly 4 unique concise options with id and text), and correctChoiceId.
-- Use natural, unambiguous wording; no code execution required.
-- Ensure exactly one correctChoiceId matches one of the provided choices.
-- Use the specified language for prompt and choices.
-`;
+CREATIVITY REQUIREMENTS:
+- Use varied contexts: ${creativeContexts.slice(0, 5).join(", ")}
+- Apply different question formats: ${questionFormats.slice(0, 5).join("; ")}
+- Include real-world scenarios, case studies, comparisons, problem-solving situations
+- Vary difficulty levels and approaches to the same concept
+- Create questions that test understanding from different angles
+
+CONTENT RULES:
+- Each question must have a unique context or scenario, even if testing the same core concept
+- Use diverse question stems: scenario-based, analytical, comparative, application-focused
+- Make each question intellectually engaging and thought-provoking
+- Avoid generic "What is..." questions - instead use "How does...", "Why would...", "Which approach...", "In what scenario..."
+- Create plausible distractors that test common misconceptions
+- Ensure questions require actual understanding, not just memorization
+
+OUTPUT FORMAT:
+- Exactly ${num} items as JSON
+- Each item: prompt (2-3 sentences with context), difficulty (1-3), language, category, choices (exactly 4 options with id: "a"/"b"/"c"/"d" and concise text), correctChoiceId
+- Make prompts contextual and scenario-based
+- Ensure all choices are plausible and test different aspects of knowledge
+- Use natural, professional language appropriate for the topic
+
+EXAMPLES OF CREATIVE APPROACHES:
+- Instead of "What is photosynthesis?" → "Sarah, a marine biologist, was exploring a coral reef when she noticed that the coral polyps seemed more active during daylight hours. She observed tiny algae living symbiotically within the coral tissues, producing oxygen bubbles that rose to the surface. What biological process were these algae performing that benefits both the algae and the coral?"
+- Instead of "What is democracy?" → "The small island nation of Pacifica recently gained independence and its 50,000 citizens are debating how to structure their new government. The elder council suggests that every major decision should be made by having all citizens vote directly. However, some worry this might be impractical for complex issues. What type of political system would best balance citizen participation with effective governance?"
+- Instead of "What is gravity?" → "Commander Lopez was conducting experiments aboard the International Space Station when she accidentally dropped her pen and a metal wrench at the same time. Her colleague on Earth asked her what she observed. What would accurately describe what happened to both objects in the microgravity environment?"
+
+Generate questions that make learners think critically and apply knowledge in realistic contexts.`;
 
   const result = await generateObject({
     model: google("gemini-2.5-flash-lite"),
     schema: GeneratedMcqQuestionsSchema,
     prompt,
-    temperature: 0.4,
+    temperature: 0.7, // Increased temperature for more creativity
   });
 
   const items = (result.object || []).map((q) => ({
@@ -129,7 +180,10 @@ Rules:
     return {
       ...q,
       choices: dedupChoices.slice(0, 4),
-      correctChoiceId: hasCorrect && dedupChoices.length >= 3 ? q.correctChoiceId : (dedupChoices[0]?.id || q.correctChoiceId),
+      correctChoiceId:
+        hasCorrect && dedupChoices.length >= 3
+          ? q.correctChoiceId
+          : dedupChoices[0]?.id || q.correctChoiceId,
     } satisfies GeneratedMcqQuestion;
   });
 
