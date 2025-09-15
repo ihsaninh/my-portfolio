@@ -1,5 +1,6 @@
 export * from "./AnsweringPhase";
 export * from "./FinishedPhase";
+export * from "./FloatingParticipantsButton";
 export * from "./GameArea";
 export * from "./Participants";
 export * from "./PlayingPhase";

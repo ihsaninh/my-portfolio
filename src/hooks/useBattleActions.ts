@@ -109,9 +109,9 @@ export function useBattleActions(
       return;
     }
 
-    // Throttle submissions to prevent spam
+    // Throttle submissions to prevent spam (increased from 1s to 3s)
     const now = Date.now();
-    if (now - lastSubmitTime.current < 1000) {
+    if (now - lastSubmitTime.current < 3000) {
       console.log("[SUBMIT] Submission throttled, too frequent");
       addNotification("Please wait before submitting again");
       return;

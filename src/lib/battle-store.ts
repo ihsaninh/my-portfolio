@@ -47,9 +47,17 @@ export const useBattleStore = create<BattleState>()(
       setAnsweredCount: (answeredCount) => set({ answeredCount }),
       setAnswerStatus: (answerStatus) => set({ answerStatus }),
       addNotification: (message) =>
-        set((state) => ({
-          notifications: [message, ...state.notifications.slice(0, 2)],
-        })),
+        set((state) => {
+          // Prevent duplicate notifications (check last 3 notifications)
+          const recentNotifications = state.notifications.slice(0, 3);
+          if (recentNotifications.includes(message)) {
+            return state; // Don't add duplicate
+          }
+
+          return {
+            notifications: [message, ...state.notifications.slice(0, 2)],
+          };
+        }),
       clearTimers: () =>
         set((state) => {
           // Clear existing timers

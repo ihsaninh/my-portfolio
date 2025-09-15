@@ -4,12 +4,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  FloatingParticipantsButton,
   GameArea,
   Participants,
   RoomHeader,
   RoomInfo,
 } from "@/src/components/battle";
 import { useBattleLogic } from "@/src/hooks/useBattleLogic";
+import { useBattleStore } from "@/src/lib/battle-store";
 
 export default function BattleRoom() {
   const [mounted, setMounted] = useState(false);
@@ -36,6 +38,21 @@ export default function BattleRoom() {
   } = useBattleLogic();
 
   useEffect(() => setMounted(true), []);
+
+  // Auto-hide notifications after 5 seconds
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const timer = setTimeout(() => {
+        const store = useBattleStore.getState();
+        // Remove the oldest notification (first in array)
+        const updatedNotifications = store.notifications.slice(1);
+        store.setNotifications(updatedNotifications);
+      }, 5000); // 5 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [notifications]);
+
   const orbPositions = useMemo(() => {
     if (!mounted) return [] as Array<{ left: string; top: string }>;
     // 6 orbs with client-only random positions to avoid SSR mismatch
@@ -164,7 +181,35 @@ export default function BattleRoom() {
             className="fixed top-4 right-4 z-50 bg-purple-600/90 backdrop-blur-xl border border-purple-500/30 rounded-xl px-4 py-3 text-white text-sm shadow-lg"
             style={{ top: `${1 + index * 4}rem` }}
           >
-            {notification}
+            <div className="flex items-center gap-2">
+              <span className="flex-1">{notification}</span>
+              <button
+                onClick={() => {
+                  // Remove this specific notification
+                  const store = useBattleStore.getState();
+                  const updatedNotifications = store.notifications.filter(
+                    (_: string, i: number) => i !== index
+                  );
+                  store.setNotifications(updatedNotifications);
+                }}
+                className="text-purple-200 hover:text-white transition-colors"
+                aria-label="Dismiss notification"
+              >
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </motion.div>
         ))}
       </AnimatePresence>
@@ -181,8 +226,8 @@ export default function BattleRoom() {
           />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Room Info & Participants */}
-            <div className="lg:col-span-1 space-y-6">
+            {/* Left Column - Room Info & Participants - Hidden on mobile */}
+            <div className="hidden lg:block lg:col-span-1 space-y-6">
               {/* Room Info */}
               <RoomInfo roomId={roomId} />
 
@@ -190,8 +235,8 @@ export default function BattleRoom() {
               <Participants roomId={roomId} />
             </div>
 
-            {/* Right Column - Game Area */}
-            <div className="lg:col-span-2">
+            {/* Right Column - Game Area - Full width on mobile */}
+            <div className="col-span-1 lg:col-span-2">
               <GameArea
                 timeLeft={timeLeft}
                 answeredCount={answeredCount}
@@ -203,6 +248,12 @@ export default function BattleRoom() {
               />
             </div>
           </div>
+
+          {/* Floating Participants Button - Only on mobile */}
+          <FloatingParticipantsButton
+            roomId={roomId}
+            participantCount={state?.participants?.length || 0}
+          />
         </div>
       </div>
     </div>
