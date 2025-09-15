@@ -31,7 +31,7 @@ export async function POST(
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
       .select(
-        "id, host_session_id, status, num_questions, category_id, language, round_time_sec, topic, question_type"
+        "id, host_session_id, status, num_questions, category_id, language, round_time_sec, topic, question_type, capacity"
       )
       .eq("id", roomId)
       .single();
@@ -72,6 +72,28 @@ export async function POST(
         code: "ROOM_ALREADY_STARTED",
         message: "This battle has already been started.",
         retryable: false,
+        statusCode: 400,
+      });
+    }
+
+    // Check if there are enough participants
+    const { data: participants, error: participantsErr } = await supabase
+      .from("battle_room_participants")
+      .select("id")
+      .eq("room_id", roomId);
+
+    if (participantsErr) {
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+    }
+
+    const participantCount = participants?.length || 0;
+    const minParticipants = Math.min(2, room.capacity || 2); // At least 2 players, or room capacity if smaller
+
+    if (participantCount < minParticipants) {
+      return createErrorResponse({
+        code: "INSUFFICIENT_PARTICIPANTS",
+        message: `Need at least ${minParticipants} participants to start the battle. Currently ${participantCount} participant(s) in the room.`,
+        retryable: true,
         statusCode: 400,
       });
     }
@@ -208,10 +230,7 @@ export async function POST(
       payload: { startTime: new Date().toISOString() },
     });
 
-    // Small delay to ensure all clients receive room_started before round_revealed
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Auto-reveal first round (Round 1)
+    // Auto-reveal first round immediately (no artificial delay)
     const now = new Date();
     const deadline = new Date(now.getTime() + room.round_time_sec * 1000);
 
@@ -227,8 +246,9 @@ export async function POST(
 
     if (revealErr) {
       // Don't fail the entire start operation, just log the error
+      console.error("[START_BATTLE] Failed to reveal first round:", revealErr);
     } else {
-      // Broadcast first round revealed
+      // Broadcast first round revealed immediately
       publishBattleEvent({
         roomId,
         event: "round_revealed",

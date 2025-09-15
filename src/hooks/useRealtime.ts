@@ -167,46 +167,52 @@ export function useRealtime(
           setTimerIds({ stuckDetectionTimerId: null });
         }
 
-        // Set up stuck detection for first round
-        const timer = setTimeout(() => {
-          refresh();
+        // Clear any existing force progress timer
+        if (forceProgressTimerId) {
+          clearTimeout(forceProgressTimerId);
+          setTimerIds({ forceProgressTimerId: null });
+        }
 
-          // If still stuck after another 10 seconds, try to trigger round generation manually
-          const retryTimer = setTimeout(() => {
-            if (gamePhase === "playing" && !state?.activeRound) {
-              addNotification("Attempting to recover from stuck state...");
-              refresh();
-            }
-          }, 10000);
-          setTimerIds({ forceProgressTimerId: retryTimer });
-        }, 15000);
-        setTimerIds({ stuckDetectionTimerId: timer });
+        // Simplified stuck detection - single timer with single retry
+        const stuckTimer = setTimeout(() => {
+          const currentState = useBattleStore.getState();
+          if (
+            currentState.gamePhase === "playing" &&
+            !currentState.state?.activeRound
+          ) {
+            console.log(
+              "[STUCK] First round not revealed, attempting recovery"
+            );
+            refresh(true);
+
+            // Single retry after 5 seconds
+            const retryTimer = setTimeout(() => {
+              const retryState = useBattleStore.getState();
+              if (
+                retryState.gamePhase === "playing" &&
+                !retryState.state?.activeRound
+              ) {
+                console.log("[STUCK] Recovery failed, forcing refresh");
+                addNotification("Attempting to recover from stuck state...");
+                refresh(true);
+              }
+            }, 5000);
+            setTimerIds({ forceProgressTimerId: retryTimer });
+          }
+        }, 10000); // Reduced from 15s to 10s
+        setTimerIds({ stuckDetectionTimerId: stuckTimer });
 
         refresh();
       });
 
       ch.on("broadcast", { event: "round_revealed" }, (payload) => {
-        const eventSequence = payload?.sequence || Date.now();
-        const lastSequence = window.lastEventSequence || 0;
+        console.log(
+          "[ROUND_REVEALED] Processing event for round:",
+          payload?.payload?.roundNo
+        );
 
-        // Prevent out-of-order event processing
-        if (eventSequence < lastSequence) {
-          console.warn("[SYNC] Ignoring out-of-order round_revealed event:", {
-            eventSequence,
-            lastSequence,
-            roundNo: payload?.payload?.roundNo,
-          });
-          return;
-        }
-
-        window.lastEventSequence = eventSequence;
+        // Simplified: Skip sequence checking to reduce complexity
         setLastEventTime(Date.now());
-
-        const eventRoundNo = payload?.payload?.roundNo;
-        console.log("[SYNC] Processing round_revealed event:", {
-          sequence: eventSequence,
-          roundNo: eventRoundNo,
-        });
 
         // Only proceed if room is still active
         if (useBattleStore.getState().state?.room?.status !== "active") {
@@ -220,16 +226,17 @@ export function useRealtime(
         useBattleStore.getState().setAnsweredCount(0);
         setIsProgressing(false);
 
-        // Clear stuck detection timer
+        // Clear existing timers
         if (stuckDetectionTimerId) {
           clearTimeout(stuckDetectionTimerId);
           setTimerIds({ stuckDetectionTimerId: null });
         }
-
-        // Clear force progression timer
         if (forceProgressTimerId) {
           clearTimeout(forceProgressTimerId);
           setTimerIds({ forceProgressTimerId: null });
+        }
+        if (questionLoadTimeoutRef.current) {
+          clearTimeout(questionLoadTimeoutRef.current);
         }
 
         // Set phase to answering
@@ -238,32 +245,21 @@ export function useRealtime(
           setGamePhase("answering");
         }
 
-        // Immediate refresh for round transitions to ensure answers appear (bypass throttling)
+        // Immediate refresh for round transitions
         refresh(true);
-
-        // Update last event time to prevent aggressive polling from interfering
         setLastEventTime(Date.now());
 
-        // Additional safety: if question not loaded after 2 seconds, force refresh (but don't interfere with aggressive polling)
-        if (questionLoadTimeoutRef.current) {
-          clearTimeout(questionLoadTimeoutRef.current);
-        }
+        // Single safety timeout for question loading
         questionLoadTimeoutRef.current = setTimeout(() => {
           const currentState = useBattleStore.getState();
-          const timeSinceLastEvent = Date.now() - currentState.lastEventTime;
-
-          // Only trigger if we haven't had recent events (avoid interfering with round transitions)
           if (
-            timeSinceLastEvent > 3000 && // Wait 3 seconds after last event
             currentState.gamePhase === "answering" &&
             !currentState.state?.activeRound?.question
           ) {
-            console.log(
-              "[SYNC] Question not loaded after round reveal, forcing additional refresh"
-            );
+            console.log("[QUESTION_LOAD] Forcing refresh after delay");
             refresh(true);
           }
-        }, 2000); // Increased from 1 to 2 seconds to give more time
+        }, 1000);
       });
 
       ch.on("broadcast", { event: "answer_received" }, () => {
@@ -298,19 +294,23 @@ export function useRealtime(
           return;
         }
 
-        // Clear existing timers
+        // Clear existing timers to prevent conflicts
         if (stuckDetectionTimerId) {
           clearTimeout(stuckDetectionTimerId);
           setTimerIds({ stuckDetectionTimerId: null });
         }
-
-        // Start stuck detection timer
         if (roundClosedTimeoutRef.current) {
           clearTimeout(roundClosedTimeoutRef.current);
         }
+
+        // Simplified round transition timer - single timer, no complex logic
         roundClosedTimeoutRef.current = setTimeout(() => {
-          refresh();
-        }, 12000);
+          const currentState = useBattleStore.getState();
+          if (currentState.gamePhase === "playing") {
+            console.log("[ROUND_CLOSED] Round transition timer triggered");
+            refresh(true);
+          }
+        }, 8000); // Reduced from 12s to 8s
         setTimerIds({ stuckDetectionTimerId: roundClosedTimeoutRef.current });
 
         debouncedRefresh();
