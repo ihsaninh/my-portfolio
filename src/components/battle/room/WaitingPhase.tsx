@@ -17,6 +17,16 @@ export function WaitingPhase({
   const minParticipants = Math.min(2, roomCapacity);
   const canStart = participantCount >= minParticipants;
 
+  // Debug logging for participant count issues
+  console.log("[WAITING_PHASE] Participant count:", {
+    count: participantCount,
+    capacity: roomCapacity,
+    minParticipants,
+    canStart,
+    participants: state?.participants,
+    roomId: state?.room?.id,
+  });
+
   return (
     <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
       <motion.div

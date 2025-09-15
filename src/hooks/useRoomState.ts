@@ -171,8 +171,8 @@ export function useBattleRoomState(): {
         return;
       }
 
-      // Throttle refresh requests to prevent spam (unless forced)
-      if (!force && now - lastRefreshTime.current < 1000) {
+      // Less aggressive throttling for participant updates (unless forced)
+      if (!force && now - lastRefreshTime.current < 500) {
         console.log("[POLL] Refresh throttled, too frequent");
         return;
       }

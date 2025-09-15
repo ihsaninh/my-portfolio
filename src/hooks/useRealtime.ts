@@ -122,34 +122,29 @@ export function useRealtime(
       }
 
       ch.on("broadcast", { event: "player_joined" }, (payload) => {
-        const eventSequence = payload?.sequence || Date.now();
-        const lastSequence = window.lastEventSequence || 0;
-
-        // Prevent out-of-order event processing
-        if (eventSequence < lastSequence) {
-          console.warn("[SYNC] Ignoring out-of-order player_joined event:", {
-            eventSequence,
-            lastSequence,
-          });
-          return;
-        }
-
-        window.lastEventSequence = eventSequence;
-        setLastEventTime(Date.now());
-
-        console.log("[SYNC] Processing player_joined event:", {
-          sequence: eventSequence,
+        console.log("[PLAYER_JOINED] Processing player joined event:", {
+          participantId: payload?.payload?.participantId,
+          displayName: payload?.payload?.displayName,
         });
 
-        // Only refresh, don't clear existing state unnecessarily
+        // Simplified: Skip sequence checking to reduce complexity
+        setLastEventTime(Date.now());
+
+        // Clear any existing timeout
         if (playerJoinedTimeoutRef.current) {
           clearTimeout(playerJoinedTimeoutRef.current);
         }
-        playerJoinedTimeoutRef.current = setTimeout(() => {
-          refresh().catch((err) => {
-            console.error("[SYNC] Player joined refresh failed:", err);
+
+        // Immediate refresh for participant updates - critical for UI state
+        refresh(true)
+          .then(() => {
+            console.log(
+              "[PLAYER_JOINED] Refresh completed, participant count should update"
+            );
+          })
+          .catch((err) => {
+            console.error("[PLAYER_JOINED] Refresh failed:", err);
           });
-        }, 100);
       });
 
       ch.on("broadcast", { event: "room_started" }, () => {
