@@ -11,7 +11,7 @@ interface ConnectionInfo {
 }
 
 const activeConnections = new Map<string, ConnectionInfo>();
-const MAX_CONNECTIONS_PER_USER = 10;
+const MAX_CONNECTIONS_PER_USER = 3;
 
 // Event buffering for out-of-order event handling
 interface BufferedEvent {
@@ -343,13 +343,13 @@ export function createEnhancedRoomChannel(
   });
 
   let reconnectAttempts = 0;
-  const maxReconnectAttempts = 5;
+  const maxReconnectAttempts = 3;
   let isDestroyed = false;
   let connectionTimeout: NodeJS.Timeout | null = null;
   let reconnectTimeout: NodeJS.Timeout | null = null;
   let isReconnecting = false;
   let lastReconnectTime = 0;
-  const minReconnectInterval = 2000; // Minimum 2 seconds between reconnection attempts
+  const minReconnectInterval = 5000; // Minimum 5 seconds between reconnection attempts
   const maxReconnectDelay = 30000; // Maximum 30 seconds delay
 
   // Circuit breaker state

@@ -38,7 +38,7 @@ export function useRealtime(
     const timeSinceLastEvent = Date.now() - last;
 
     // Fixed threshold for backup polling
-    const threshold = 20000;
+    const threshold = 45000;
 
     if (timeSinceLastEvent > threshold) {
       console.log(
@@ -53,9 +53,9 @@ export function useRealtime(
     roomId && (gamePhase === "answering" || gamePhase === "playing");
   const pollingInterval = shouldRunPolling
     ? gamePhase === "answering"
-      ? 5000
-      : 15000
-    : null; // 5 seconds for answering, 15 for playing
+      ? 10000
+      : 30000
+    : null; // 10 seconds for answering, 30 for playing
   useInterval(pollingBackupCallback, pollingInterval);
 
   // Debounced refresh using useDebounceCallback
