@@ -5,6 +5,7 @@ import {
   generateMcqQuestions,
   generateQuestions,
 } from "@/src/lib/ai-question-gen";
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -20,10 +21,7 @@ export async function POST(
     const body = StartSchema.parse(await req.json().catch(() => ({})));
     const hostSessionId = getSessionIdFromCookies(req);
     if (!hostSessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
     const supabase = supabaseAdmin();
 
@@ -38,7 +36,7 @@ export async function POST(
       .eq("id", roomId)
       .single();
     if (roomErr || !room) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
     }
     if (room.host_session_id !== hostSessionId) {
       // Check if the client claims to be the original host
@@ -60,18 +58,22 @@ export async function POST(
           // Allow the start - this handles the case where session cookies got mixed up
           // but the current user is still a host participant
         } else {
-          return NextResponse.json(
-            { error: "Only host can start" },
-            { status: 403 }
-          );
+          return createErrorResponse({
+            code: "NOT_HOST",
+            message: "Only the room host can start the battle.",
+            retryable: false,
+            statusCode: 403,
+          });
         }
       }
     }
     if (room.status !== "waiting") {
-      return NextResponse.json(
-        { error: "Room already started" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: "ROOM_ALREADY_STARTED",
+        message: "This battle has already been started.",
+        retryable: false,
+        statusCode: 400,
+      });
     }
 
     // Prefer AI generation if enabled; fallback to bank
@@ -146,10 +148,13 @@ export async function POST(
     if (inserts.length === 0) {
       // If MCQ is requested but AI failed and no inserts, abort early (no bank fallback for MCQ in MVP)
       if (room.question_type === "multiple-choice") {
-        return NextResponse.json(
-          { error: "Failed to prepare MCQ questions" },
-          { status: 500 }
-        );
+        return createErrorResponse({
+          code: "QUESTION_GENERATION_FAILED",
+          message:
+            "Failed to generate multiple choice questions. Please try again.",
+          retryable: true,
+          statusCode: 500,
+        });
       }
 
       const { data: questions, error: qErr } = await supabase
@@ -160,16 +165,16 @@ export async function POST(
         .order("created_at")
         .limit(room.num_questions);
       if (qErr) {
-        return NextResponse.json(
-          { error: "Failed to prepare questions" },
-          { status: 500 }
-        );
+        return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
       }
       if (!questions || questions.length === 0) {
-        return NextResponse.json(
-          { error: "No questions available" },
-          { status: 400 }
-        );
+        return createErrorResponse({
+          code: "NO_QUESTIONS_AVAILABLE",
+          message:
+            "No questions are available for the selected language and category.",
+          retryable: false,
+          statusCode: 400,
+        });
       }
       inserts = questions.map((q, idx) => ({
         id: `round-${roomId}-${idx + 1}`,
@@ -184,10 +189,7 @@ export async function POST(
       .from("battle_room_rounds")
       .insert(inserts);
     if (rErr) {
-      return NextResponse.json(
-        { error: "Failed to create rounds" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Mark room active and set start time
@@ -196,10 +198,7 @@ export async function POST(
       .update({ status: "active", start_time: new Date().toISOString() })
       .eq("id", roomId);
     if (updErr) {
-      return NextResponse.json(
-        { error: "Failed to start room" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Broadcast room started
@@ -249,11 +248,6 @@ export async function POST(
       ...(aiError ? { aiError } : {}),
     });
   } catch (e: unknown) {
-    if (e && typeof e === "object" && "issues" in e)
-      return NextResponse.json(
-        { error: (e as { issues: unknown }).issues },
-        { status: 400 }
-      );
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

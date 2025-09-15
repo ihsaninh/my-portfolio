@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseServer } from "@/src/lib/supabase";
@@ -17,10 +18,7 @@ export async function POST(
     const supabase = supabaseServer();
     const hostSessionId = getSessionIdFromCookies(req);
     if (!hostSessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
 
     // Validate host
@@ -29,13 +27,14 @@ export async function POST(
       .select("id, host_session_id, status")
       .eq("id", roomId)
       .single();
-    if (rErr || !room)
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+    if (rErr || !room) return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
     if (room.host_session_id !== hostSessionId)
-      return NextResponse.json(
-        { error: "Only host can finish" },
-        { status: 403 }
-      );
+      return createErrorResponse({
+        code: "NOT_HOST",
+        message: "Only the room host can finish the battle.",
+        retryable: false,
+        statusCode: 403,
+      });
 
     // Ensure all rounds are closed
     const { count: openCount } = await supabase
@@ -44,10 +43,13 @@ export async function POST(
       .eq("room_id", roomId)
       .neq("status", "closed");
     if (openCount && openCount > 0) {
-      return NextResponse.json(
-        { error: "There are still active/pending rounds" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: "ROUNDS_STILL_ACTIVE",
+        message:
+          "Cannot finish battle while there are still active or pending rounds.",
+        retryable: false,
+        statusCode: 400,
+      });
     }
 
     // Fetch final standings from participants totals
@@ -57,10 +59,7 @@ export async function POST(
       .eq("room_id", roomId);
     if (pErr) {
       console.error(pErr);
-      return NextResponse.json(
-        { error: "Failed to compute standings" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     const standings = (participants || [])
@@ -78,10 +77,7 @@ export async function POST(
       .eq("id", roomId);
     if (updErr) {
       console.error(updErr);
-      return NextResponse.json(
-        { error: "Failed to finish room" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Broadcast match finished with standings (names + totals only)
@@ -94,11 +90,6 @@ export async function POST(
     return NextResponse.json({ ok: true, standings });
   } catch (e: unknown) {
     console.error("Finish exception", e);
-    if (e && typeof e === "object" && "issues" in e)
-      return NextResponse.json(
-        { error: (e as { issues: unknown }).issues },
-        { status: 400 }
-      );
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

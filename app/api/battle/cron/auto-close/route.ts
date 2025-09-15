@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { createErrorResponse } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
@@ -16,7 +17,15 @@ export async function POST() {
       .eq("status", "active")
       .lte("deadline_at", nowIso)
       .limit(100); // batch
-    if (listErr) throw listErr;
+    if (listErr) {
+      console.error("Failed to list due rounds:", listErr);
+      return createErrorResponse({
+        code: "INTERNAL_ERROR",
+        message: "Failed to process auto-close operation.",
+        retryable: true,
+        statusCode: 500,
+      });
+    }
 
     for (const r of dueRounds || []) {
       // Double-check current status
@@ -141,6 +150,6 @@ export async function POST() {
     return NextResponse.json({ ok: true, processed: (dueRounds || []).length });
   } catch (e: unknown) {
     console.error("auto-close failed", e);
-    return NextResponse.json({ error: "auto-close failed" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

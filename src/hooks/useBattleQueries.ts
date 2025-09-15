@@ -8,6 +8,7 @@ import {
   type StartBattlePayload,
   type SubmitAnswerPayload,
 } from "@/src/api/battle";
+import { handleApiError } from "@/src/lib/client-error-handler";
 
 // Query Keys
 export const battleQueryKeys = {
@@ -101,23 +102,43 @@ export const useCreateRoom = () => {
     mutationFn: async (
       payload: CreateRoomPayload & { skipSessionCreation?: boolean }
     ) => {
-      const { skipSessionCreation, ...roomPayload } = payload;
+      try {
+        const { skipSessionCreation, ...roomPayload } = payload;
 
-      // Create session first if not skipping
-      if (!skipSessionCreation) {
-        const sessionCreated = await ensureSession(roomPayload.hostDisplayName);
-        if (!sessionCreated) {
-          throw new Error("Failed to create session");
+        // Create session first if not skipping
+        if (!skipSessionCreation) {
+          const sessionCreated = await ensureSession(
+            roomPayload.hostDisplayName
+          );
+          if (!sessionCreated) {
+            throw new Error("Failed to create session");
+          }
+          // Small delay to ensure cookie is set
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
-        // Small delay to ensure cookie is set
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
 
-      return battleApi.createRoom(roomPayload);
+        return await battleApi.createRoom(roomPayload);
+      } catch (error) {
+        // Handle API errors with standardized client error handling
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            // You can integrate with your notification system here
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        // Re-throw the original error for React Query to handle
+        throw error;
+      }
     },
     onSuccess: () => {
       // Invalidate rooms queries
       queryClient.invalidateQueries({ queryKey: battleQueryKeys.rooms() });
+    },
+    onError: (error) => {
+      // Additional error handling if needed
+      console.error("Create room failed:", error);
     },
   });
 };
@@ -136,23 +157,41 @@ export const useJoinRoom = () => {
       payload: JoinRoomPayload;
       skipSessionCreation?: boolean;
     }) => {
-      // Create session first if not skipping
-      if (!skipSessionCreation) {
-        const sessionCreated = await ensureSession(payload.displayName);
-        if (!sessionCreated) {
-          throw new Error("Failed to create session");
+      try {
+        // Create session first if not skipping
+        if (!skipSessionCreation) {
+          const sessionCreated = await ensureSession(payload.displayName);
+          if (!sessionCreated) {
+            throw new Error("Failed to create session");
+          }
+          // Small delay to ensure cookie is set
+          await new Promise((resolve) => setTimeout(resolve, 100));
         }
-        // Small delay to ensure cookie is set
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
 
-      return battleApi.joinRoom(roomId, payload);
+        return await battleApi.joinRoom(roomId, payload);
+      } catch (error) {
+        // Handle API errors with standardized client error handling
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            // You can integrate with your notification system here
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        // Re-throw the original error for React Query to handle
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       // Invalidate room state for the joined room
       queryClient.invalidateQueries({
         queryKey: battleQueryKeys.roomState(variables.roomId),
       });
+    },
+    onError: (error) => {
+      // Additional error handling if needed
+      console.error("Join room failed:", error);
     },
   });
 };
@@ -171,13 +210,31 @@ export const useStartBattle = () => {
       payload: StartBattlePayload;
       headers?: Record<string, string>;
     }) => {
-      return battleApi.startBattle(roomId, payload, headers);
+      try {
+        return await battleApi.startBattle(roomId, payload, headers);
+      } catch (error) {
+        // Handle API errors with standardized client error handling
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            // You can integrate with your notification system here
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        // Re-throw the original error for React Query to handle
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       // Invalidate room state
       queryClient.invalidateQueries({
         queryKey: battleQueryKeys.roomState(variables.roomId),
       });
+    },
+    onError: (error) => {
+      // Additional error handling if needed
+      console.error("Start battle failed:", error);
     },
   });
 };
@@ -196,7 +253,21 @@ export const useSubmitAnswer = () => {
       roundNo: number;
       payload: SubmitAnswerPayload;
     }) => {
-      return battleApi.submitAnswer(roomId, roundNo, payload);
+      try {
+        return await battleApi.submitAnswer(roomId, roundNo, payload);
+      } catch (error) {
+        // Handle API errors with standardized client error handling
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            // You can integrate with your notification system here
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        // Re-throw the original error for React Query to handle
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       // Invalidate answer status and room state
@@ -206,6 +277,10 @@ export const useSubmitAnswer = () => {
       queryClient.invalidateQueries({
         queryKey: battleQueryKeys.roomState(variables.roomId),
       });
+    },
+    onError: (error) => {
+      // Additional error handling if needed
+      console.error("Submit answer failed:", error);
     },
   });
 };
@@ -222,7 +297,21 @@ export const useCloseRound = () => {
       roomId: string;
       roundNo: number;
     }) => {
-      return battleApi.closeRound(roomId, roundNo);
+      try {
+        return await battleApi.closeRound(roomId, roundNo);
+      } catch (error) {
+        // Handle API errors with standardized client error handling
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            // You can integrate with your notification system here
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        // Re-throw the original error for React Query to handle
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       // Invalidate room state and answer status
@@ -232,6 +321,10 @@ export const useCloseRound = () => {
       queryClient.invalidateQueries({
         queryKey: battleQueryKeys.answerStatus(variables.roomId),
       });
+    },
+    onError: (error) => {
+      // Additional error handling if needed
+      console.error("Close round failed:", error);
     },
   });
 };
@@ -248,13 +341,31 @@ export const useRevealNextRound = () => {
       roomId: string;
       roundNo: number;
     }) => {
-      return battleApi.revealNextRound(roomId, roundNo);
+      try {
+        return await battleApi.revealNextRound(roomId, roundNo);
+      } catch (error) {
+        // Handle API errors with standardized client error handling
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            // You can integrate with your notification system here
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        // Re-throw the original error for React Query to handle
+        throw error;
+      }
     },
     onSuccess: (data, variables) => {
       // Invalidate room state
       queryClient.invalidateQueries({
         queryKey: battleQueryKeys.roomState(variables.roomId),
       });
+    },
+    onError: (error) => {
+      // Additional error handling if needed
+      console.error("Reveal next round failed:", error);
     },
   });
 };

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
 export async function GET(
@@ -17,10 +18,7 @@ export async function GET(
       .eq("room_id", roomId);
     if (pErr) {
       console.error(pErr);
-      return NextResponse.json(
-        { error: "Failed to fetch participants" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Sum answer times (MCQ) per session for tie-breaker
@@ -61,6 +59,6 @@ export async function GET(
     return NextResponse.json({ scoreboard: board });
   } catch (e) {
     console.error("Scoreboard exception", e);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

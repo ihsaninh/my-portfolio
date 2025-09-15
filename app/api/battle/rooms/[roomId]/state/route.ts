@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
 import type { ApiParticipant } from "@/src/types/battle";
@@ -31,7 +32,7 @@ export async function GET(
       .eq("id", roomId)
       .single();
     if (roomErr || !room)
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
 
     // Get participants with session_id for proper mapping
     // Order by participant ID to maintain consistent ordering
@@ -126,7 +127,7 @@ export async function GET(
         : null,
       serverTime: Date.now(), // Include server time for accurate client timer
     });
-  } catch {
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  } catch (e: unknown) {
+    return createErrorResponse(e);
   }
 }

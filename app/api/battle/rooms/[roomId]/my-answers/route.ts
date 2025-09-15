@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
@@ -36,10 +37,7 @@ export async function GET(
     const sessionId = getSessionIdFromCookies(req);
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
 
     const supabase = supabaseAdmin();
@@ -69,10 +67,7 @@ export async function GET(
 
     if (answersErr) {
       console.error("Failed to fetch user answers:", answersErr);
-      return NextResponse.json(
-        { error: "Failed to fetch answers" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Get questions for rounds that have question_id (from question bank)
@@ -184,6 +179,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get user answers exception:", error);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(error);
   }
 }

@@ -2,6 +2,7 @@ import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { evaluateAnswer } from "@/src/lib/ai-scoring";
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { answerSubmitLimiter, checkRateLimit } from "@/src/lib/rate-limit";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
@@ -27,10 +28,7 @@ export async function POST(
     const raw = await req.json();
     const sessionId = getSessionIdFromCookies(req);
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
     const supabase = supabaseAdmin();
 
@@ -42,9 +40,9 @@ export async function POST(
       .eq("round_no", Number(roundNo))
       .single();
     if (roundErr || !round)
-      return NextResponse.json({ error: "Round not found" }, { status: 404 });
+      return createErrorResponse(ERROR_TYPES.ROUND_NOT_FOUND);
     if (round.status !== "active")
-      return NextResponse.json({ error: "Round not active" }, { status: 400 });
+      return createErrorResponse(ERROR_TYPES.ROUND_NOT_ACTIVE);
     if (
       round.deadline_at &&
       Date.now() > new Date(round.deadline_at).getTime() + GRACE_MS
@@ -54,7 +52,7 @@ export async function POST(
           round.deadline_at
         ).getTime()}, grace=${GRACE_MS}`
       );
-      return NextResponse.json({ error: "Deadline passed" }, { status: 400 });
+      return createErrorResponse(ERROR_TYPES.DEADLINE_PASSED);
     }
 
     // Ensure participant is in room
@@ -65,7 +63,7 @@ export async function POST(
       .eq("session_id", sessionId)
       .single();
     if (partErr || !part)
-      return NextResponse.json({ error: "Not a participant" }, { status: 403 });
+      return createErrorResponse(ERROR_TYPES.NOT_PARTICIPANT);
 
     // Determine question type for this room
     const { data: room } = await supabase
@@ -269,12 +267,7 @@ export async function POST(
 
     return NextResponse.json({ score: ai.score, feedback: ai.feedback });
   } catch (e: unknown) {
-    if (e && typeof e === "object" && "issues" in e)
-      return NextResponse.json(
-        { error: (e as { issues: unknown }).issues },
-        { status: 400 }
-      );
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }
 

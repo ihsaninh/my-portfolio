@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -20,10 +21,7 @@ export async function GET(
     const sessionId = getSessionIdFromCookies(req);
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
 
     const supabase = supabaseAdmin();
@@ -113,6 +111,6 @@ export async function GET(
     });
   } catch (error) {
     console.error("Get answer status exception:", error);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(error);
   }
 }

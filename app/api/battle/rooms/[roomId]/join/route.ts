@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -19,10 +20,7 @@ export async function POST(
     const body = JoinRoomSchema.parse(json);
     const sessionId = getSessionIdFromCookies(req);
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
 
     const supabase = supabaseAdmin();
@@ -48,14 +46,16 @@ export async function POST(
     }
 
     if (roomErr || !room) {
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
     }
 
     if (room.status !== "waiting") {
-      return NextResponse.json(
-        { error: "Room is not open for joining" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: "ROOM_NOT_JOINABLE",
+        message: "This room is not currently accepting new participants.",
+        retryable: false,
+        statusCode: 400,
+      });
     }
 
     // Enforce capacity if set
@@ -65,7 +65,12 @@ export async function POST(
         .select("id", { count: "exact", head: true })
         .eq("room_id", room.id);
       if ((count ?? 0) >= room.capacity) {
-        return NextResponse.json({ error: "Room is full" }, { status: 400 });
+        return createErrorResponse({
+          code: "ROOM_FULL",
+          message: "This room has reached its maximum capacity.",
+          retryable: false,
+          statusCode: 400,
+        });
       }
     }
 
@@ -76,7 +81,7 @@ export async function POST(
       .eq("id", sessionId)
       .single();
     if (sessionErr || !session) {
-      return NextResponse.json({ error: "Invalid session" }, { status: 400 });
+      return createErrorResponse(ERROR_TYPES.INVALID_SESSION);
     }
 
     // Resolve display name from session (single source of truth)
@@ -125,10 +130,7 @@ export async function POST(
         return NextResponse.json({ participantId: existing?.id });
       }
       console.error("Join room error", joinErr);
-      return NextResponse.json(
-        { error: "Failed to join room" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Broadcast player joined (idempotent if duplicate join handled)
@@ -144,12 +146,6 @@ export async function POST(
     });
   } catch (e: unknown) {
     console.error("Join room exception", e);
-    if (e && typeof e === "object" && "issues" in e) {
-      return NextResponse.json(
-        { error: (e as { issues: unknown }).issues },
-        { status: 400 }
-      );
-    }
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

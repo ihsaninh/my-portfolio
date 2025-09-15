@@ -26,6 +26,7 @@ class EventBuffer {
   private buffer = new Map<string, BufferedEvent[]>();
   private maxBufferSize = 50;
   private processingTimeout = 100; // Process buffered events after 100ms
+  private processingTimeouts = new Map<string, NodeJS.Timeout>(); // Track processing timeouts
 
   addEvent(roomId: string, event: BufferedEvent) {
     if (!this.buffer.has(roomId)) {
@@ -47,8 +48,19 @@ class EventBuffer {
     // Sort by sequence number
     roomBuffer.sort((a, b) => a.sequence - b.sequence);
 
+    // Clear existing timeout for this room
+    const existingTimeout = this.processingTimeouts.get(roomId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+    }
+
     // Process events in order after a short delay
-    setTimeout(() => this.processEvents(roomId), this.processingTimeout);
+    const timeout = setTimeout(() => {
+      this.processEvents(roomId);
+      this.processingTimeouts.delete(roomId); // Clean up after processing
+    }, this.processingTimeout);
+
+    this.processingTimeouts.set(roomId, timeout);
   }
 
   processEvents(roomId: string) {
@@ -102,6 +114,13 @@ class EventBuffer {
   }
 
   clearBuffer(roomId: string) {
+    // Clear any pending processing timeout
+    const timeout = this.processingTimeouts.get(roomId);
+    if (timeout) {
+      clearTimeout(timeout);
+      this.processingTimeouts.delete(roomId);
+    }
+
     this.buffer.delete(roomId);
   }
 }

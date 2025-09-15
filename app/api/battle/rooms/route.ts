@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { checkRateLimit, generalLimiter } from "@/src/lib/rate-limit";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -56,10 +57,13 @@ export async function POST(req: NextRequest) {
     // Validate request body
     const validation = validateRequest(createRoomSchema, json);
     if (!validation.success) {
-      return NextResponse.json(
-        { error: validation.error, details: validation.details },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: "VALIDATION_ERROR",
+        message: "Invalid room creation data",
+        details: validation.details,
+        retryable: false,
+        statusCode: 400,
+      });
     }
 
     const body = validation.data;
@@ -67,10 +71,7 @@ export async function POST(req: NextRequest) {
     const supabase = supabaseAdmin();
     const hostSessionId = getSessionIdFromCookies(req);
     if (!hostSessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
 
     // Track server connection
@@ -93,10 +94,7 @@ export async function POST(req: NextRequest) {
       console.log(
         `[DEBUG] RLS check: session lookup failed for ${hostSessionId}`
       );
-      return NextResponse.json(
-        { error: "Invalid host session. Please refresh and try again." },
-        { status: 400 }
-      );
+      return createErrorResponse(ERROR_TYPES.INVALID_SESSION);
     }
     console.log(
       `[DEBUG] RLS check: session lookup succeeded for ${hostSessionId}`
@@ -120,10 +118,7 @@ export async function POST(req: NextRequest) {
     );
 
     if (attempts >= maxAttempts) {
-      return NextResponse.json(
-        { error: "Failed to generate unique room code" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Create room
@@ -143,10 +138,7 @@ export async function POST(req: NextRequest) {
 
     if (roomErr) {
       console.error("Create room error", roomErr);
-      return NextResponse.json(
-        { error: "Failed to create room" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Update connection tracking with actual room ID
@@ -156,6 +148,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ roomId, roomCode });
   } catch (e: unknown) {
     console.error("Create room exception", e);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
@@ -18,9 +19,14 @@ export async function POST(
       .eq("id", roomId)
       .single();
     if (roomErr || !room)
-      return NextResponse.json({ error: "Room not found" }, { status: 404 });
+      return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
     if (room.status !== "active")
-      return NextResponse.json({ error: "Room not active" }, { status: 400 });
+      return createErrorResponse({
+        code: "ROOM_NOT_ACTIVE",
+        message: "The battle has not been started yet.",
+        retryable: false,
+        statusCode: 400,
+      });
 
     const now = new Date();
     const deadline = new Date(now.getTime() + room.round_time_sec * 1000);
@@ -38,10 +44,7 @@ export async function POST(
 
     if (updErr) {
       console.error(updErr);
-      return NextResponse.json(
-        { error: "Failed to reveal round" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Broadcast
@@ -60,8 +63,8 @@ export async function POST(
       revealedAt: now.toISOString(),
       deadlineAt: deadline.toISOString(),
     });
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("Reveal round exception", e);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(e);
   }
 }

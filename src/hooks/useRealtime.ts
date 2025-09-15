@@ -32,6 +32,12 @@ export function useRealtime(
   const prevConnectionStateRef = useRef<string | null>(null);
   const prevGamePhaseRef = useRef<string | null>(null);
 
+  // Refs for timeout tracking to prevent memory leaks
+  const playerJoinedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const questionLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const roundClosedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Refs for polling
   const pollingBackupCallback = () => {
     const last = useBattleStore.getState().lastEventTime;
@@ -136,7 +142,10 @@ export function useRealtime(
         });
 
         // Only refresh, don't clear existing state unnecessarily
-        setTimeout(() => {
+        if (playerJoinedTimeoutRef.current) {
+          clearTimeout(playerJoinedTimeoutRef.current);
+        }
+        playerJoinedTimeoutRef.current = setTimeout(() => {
           refresh().catch((err) => {
             console.error("[SYNC] Player joined refresh failed:", err);
           });
@@ -233,7 +242,10 @@ export function useRealtime(
         refresh(true);
 
         // Additional safety: if question not loaded after 1 second, force refresh
-        setTimeout(() => {
+        if (questionLoadTimeoutRef.current) {
+          clearTimeout(questionLoadTimeoutRef.current);
+        }
+        questionLoadTimeoutRef.current = setTimeout(() => {
           const currentState = useBattleStore.getState();
           if (
             currentState.gamePhase === "answering" &&
@@ -258,7 +270,10 @@ export function useRealtime(
         // If I'm the host, trigger auto-close after a short delay
         const isHost = useBattleStore.getState().isHostCache;
         if (isHost) {
-          setTimeout(() => {
+          if (autoCloseTimeoutRef.current) {
+            clearTimeout(autoCloseTimeoutRef.current);
+          }
+          autoCloseTimeoutRef.current = setTimeout(() => {
             autoCloseRound();
           }, 2000);
         }
@@ -283,10 +298,13 @@ export function useRealtime(
         }
 
         // Start stuck detection timer
-        const timer = setTimeout(() => {
+        if (roundClosedTimeoutRef.current) {
+          clearTimeout(roundClosedTimeoutRef.current);
+        }
+        roundClosedTimeoutRef.current = setTimeout(() => {
           refresh();
         }, 12000);
-        setTimerIds({ stuckDetectionTimerId: timer });
+        setTimerIds({ stuckDetectionTimerId: roundClosedTimeoutRef.current });
 
         debouncedRefresh();
       });
@@ -367,7 +385,25 @@ export function useRealtime(
           localStorage.removeItem(`battle_host_session_${roomId}`);
         }
 
-        // Clear timers
+        // Clear all tracked timeouts
+        if (playerJoinedTimeoutRef.current) {
+          clearTimeout(playerJoinedTimeoutRef.current);
+          playerJoinedTimeoutRef.current = null;
+        }
+        if (questionLoadTimeoutRef.current) {
+          clearTimeout(questionLoadTimeoutRef.current);
+          questionLoadTimeoutRef.current = null;
+        }
+        if (autoCloseTimeoutRef.current) {
+          clearTimeout(autoCloseTimeoutRef.current);
+          autoCloseTimeoutRef.current = null;
+        }
+        if (roundClosedTimeoutRef.current) {
+          clearTimeout(roundClosedTimeoutRef.current);
+          roundClosedTimeoutRef.current = null;
+        }
+
+        // Clear existing timers from store
         if (stuckDetectionTimerId) {
           clearTimeout(stuckDetectionTimerId);
         }

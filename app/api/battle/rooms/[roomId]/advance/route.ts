@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
@@ -17,10 +18,7 @@ export async function POST(
     const sessionId = getSessionIdFromCookies(req);
 
     if (!sessionId) {
-      return NextResponse.json(
-        { error: "Missing session token" },
-        { status: 401 }
-      );
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
 
     const supabase = supabaseAdmin();
@@ -34,18 +32,22 @@ export async function POST(
       .single();
 
     if (!participant) {
-      return NextResponse.json(
-        { error: "Not a participant in this room" },
-        { status: 403 }
-      );
+      return createErrorResponse({
+        code: "NOT_PARTICIPANT",
+        message: "You are not a participant in this room.",
+        retryable: false,
+        statusCode: 403,
+      });
     }
 
     // Only hosts can manually advance
     if (!participant.is_host) {
-      return NextResponse.json(
-        { error: "Only the host can advance rounds" },
-        { status: 403 }
-      );
+      return createErrorResponse({
+        code: "NOT_HOST",
+        message: "Only the room host can advance rounds.",
+        retryable: false,
+        statusCode: 403,
+      });
     }
 
     // Get the current room status
@@ -56,10 +58,12 @@ export async function POST(
       .single();
 
     if (!room || room.status !== "active") {
-      return NextResponse.json(
-        { error: "Room is not active" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: "ROOM_NOT_ACTIVE",
+        message: "The battle has not been started yet.",
+        retryable: false,
+        statusCode: 400,
+      });
     }
 
     // Check if there's a closed round that needs to be advanced
@@ -73,10 +77,12 @@ export async function POST(
       .maybeSingle();
 
     if (!lastClosedRound) {
-      return NextResponse.json(
-        { error: "No closed round found to advance from" },
-        { status: 400 }
-      );
+      return createErrorResponse({
+        code: "NO_CLOSED_ROUND",
+        message: "No closed round found to advance from.",
+        retryable: false,
+        statusCode: 400,
+      });
     }
 
     const nextRoundNo = lastClosedRound.round_no + 1;
@@ -119,10 +125,7 @@ export async function POST(
       .single();
 
     if (revealErr || !revealedRound) {
-      return NextResponse.json(
-        { error: "Failed to reveal next round" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Broadcast round revealed
@@ -144,6 +147,6 @@ export async function POST(
     });
   } catch (error) {
     console.error("Manual advance failed:", error);
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+    return createErrorResponse(error);
   }
 }

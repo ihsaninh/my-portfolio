@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
 import { publishBattleEvent } from "@/src/lib/realtime";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
@@ -19,7 +20,12 @@ export async function POST(
       .eq("round_no", Number(roundNo))
       .single();
     if (rErr || !round)
-      return NextResponse.json({ error: "Round not found" }, { status: 404 });
+      return createErrorResponse({
+        code: "ROUND_NOT_FOUND",
+        message: "The specified round was not found.",
+        retryable: false,
+        statusCode: 404,
+      });
 
     let justClosed = false;
     if (round.status !== "closed") {
@@ -28,10 +34,7 @@ export async function POST(
         .update({ status: "closed" })
         .eq("id", round.id);
       if (updErr) {
-        return NextResponse.json(
-          { error: "Failed to close round" },
-          { status: 500 }
-        );
+        return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
       }
       justClosed = true;
     }
@@ -42,10 +45,7 @@ export async function POST(
       .select("session_id, score_final")
       .eq("round_id", round.id);
     if (aErr) {
-      return NextResponse.json(
-        { error: "Failed to get answers" },
-        { status: 500 }
-      );
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
     // Increment participant totals only once when transitioning to closed
@@ -121,7 +121,7 @@ export async function POST(
       roundScoreboard: scoreboard,
       finished,
     });
-  } catch {
-    return NextResponse.json({ error: "Unexpected error" }, { status: 500 });
+  } catch (e: unknown) {
+    return createErrorResponse(e);
   }
 }
