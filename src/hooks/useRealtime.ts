@@ -1,8 +1,6 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import { useDebounceCallback, useInterval } from "usehooks-ts";
 
-import { battleQueryKeys } from "@/src/hooks/useBattleQueries";
 import { useBattleStore } from "@/src/lib/battle-store";
 import { connectionMonitor } from "@/src/lib/connection-monitor";
 import {
@@ -17,7 +15,6 @@ export function useRealtime(
   refresh: (force?: boolean) => Promise<void>,
   autoCloseRound: () => Promise<void>
 ) {
-  const queryClient = useQueryClient();
   const {
     gamePhase,
     setGamePhase,
@@ -221,13 +218,7 @@ export function useRealtime(
         useBattleStore.getState().setAnswer("");
         useBattleStore.getState().setSelectedChoiceId(null);
         useBattleStore.getState().setAnsweredCount(0);
-        useBattleStore.getState().setAnswerStatus(null); // Reset server answer status for new round
         setIsProgressing(false);
-
-        // Invalidate answer status cache to ensure fresh data for new round
-        queryClient.invalidateQueries({
-          queryKey: battleQueryKeys.answerStatus(roomId || ""),
-        });
 
         // Clear stuck detection timer
         if (stuckDetectionTimerId) {
@@ -250,22 +241,29 @@ export function useRealtime(
         // Immediate refresh for round transitions to ensure answers appear (bypass throttling)
         refresh(true);
 
-        // Additional safety: if question not loaded after 1 second, force refresh
+        // Update last event time to prevent aggressive polling from interfering
+        setLastEventTime(Date.now());
+
+        // Additional safety: if question not loaded after 2 seconds, force refresh (but don't interfere with aggressive polling)
         if (questionLoadTimeoutRef.current) {
           clearTimeout(questionLoadTimeoutRef.current);
         }
         questionLoadTimeoutRef.current = setTimeout(() => {
           const currentState = useBattleStore.getState();
+          const timeSinceLastEvent = Date.now() - currentState.lastEventTime;
+
+          // Only trigger if we haven't had recent events (avoid interfering with round transitions)
           if (
+            timeSinceLastEvent > 3000 && // Wait 3 seconds after last event
             currentState.gamePhase === "answering" &&
             !currentState.state?.activeRound?.question
           ) {
             console.log(
-              "[SYNC] Question not loaded, forcing additional refresh"
+              "[SYNC] Question not loaded after round reveal, forcing additional refresh"
             );
             refresh(true);
           }
-        }, 1000);
+        }, 2000); // Increased from 1 to 2 seconds to give more time
       });
 
       ch.on("broadcast", { event: "answer_received" }, () => {

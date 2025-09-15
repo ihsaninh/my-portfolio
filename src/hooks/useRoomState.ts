@@ -366,7 +366,7 @@ export function useBattleRoomState(): {
     }
   }, [state?.room?.status]);
 
-  // Aggressive polling when in answering phase but question not loaded
+  // Gentle polling when in answering phase but question not loaded (avoid interference with round transitions)
   useEffect(() => {
     const store = useBattleStore.getState();
     if (
@@ -374,14 +374,32 @@ export function useBattleRoomState(): {
       state?.activeRound?.status === "active" &&
       !state?.activeRound?.question
     ) {
-      console.log(
-        "[SYNC] Question missing in answering phase, starting aggressive polling"
-      );
-      const interval = setInterval(() => {
-        refresh(true);
-      }, 2000); // Poll every 2 seconds
+      // Only poll if we haven't had a recent event (avoid interfering with round transitions)
+      const lastEventTime = store.lastEventTime;
+      const timeSinceLastEvent = Date.now() - lastEventTime;
 
-      return () => clearInterval(interval);
+      // Wait at least 3 seconds after last event before starting gentle polling
+      if (timeSinceLastEvent > 3000) {
+        console.log(
+          "[SYNC] Question missing in answering phase, starting gentle polling"
+        );
+        const interval = setInterval(() => {
+          // Check again if we still need to poll (might have been resolved by round transition)
+          const currentStore = useBattleStore.getState();
+          if (
+            currentStore.gamePhase === "answering" &&
+            currentStore.state?.activeRound?.status === "active" &&
+            !currentStore.state?.activeRound?.question
+          ) {
+            refresh(true);
+          } else {
+            // Question loaded or phase changed, stop polling
+            clearInterval(interval);
+          }
+        }, 5000); // Poll every 5 seconds (less aggressive)
+
+        return () => clearInterval(interval);
+      }
     }
   }, [state?.activeRound?.question, state?.activeRound?.status, refresh]);
 
