@@ -64,6 +64,34 @@ export function useRealtime(
     : null; // 10 seconds for answering, 30 for playing
   useInterval(pollingBackupCallback, pollingInterval);
 
+  // Production fallback: aggressive polling for participant updates in waiting phase
+  const productionParticipantPolling = () => {
+    if (
+      process.env.NODE_ENV === "production" &&
+      roomId &&
+      gamePhase === "waiting"
+    ) {
+      const lastEventTime = useBattleStore.getState().lastEventTime;
+      const timeSinceLastEvent = Date.now() - lastEventTime;
+
+      // Poll every 3 seconds in production waiting phase to catch missed participant joins
+      if (timeSinceLastEvent > 3000) {
+        console.log("[PRODUCTION_POLL] Participant polling in waiting phase");
+        refresh(true).catch((err) => {
+          console.error("[PRODUCTION_POLL] Participant polling failed:", err);
+        });
+      }
+    }
+  };
+
+  // Run production participant polling every 3 seconds when in waiting phase
+  const shouldRunParticipantPolling =
+    process.env.NODE_ENV === "production" && roomId && gamePhase === "waiting";
+  useInterval(
+    productionParticipantPolling,
+    shouldRunParticipantPolling ? 3000 : null
+  );
+
   // Debounced refresh using useDebounceCallback
   const debouncedRefresh = useDebounceCallback(() => {
     refresh();
@@ -91,6 +119,54 @@ export function useRealtime(
       }
       refresh();
     });
+
+    // Production connection health monitoring
+    let connectionHealthCheckInterval: NodeJS.Timeout | null = null;
+    if (process.env.NODE_ENV === "production") {
+      let lastHealthyEvent = Date.now();
+      let missedEventsCount = 0;
+
+      // Monitor for missed events in production
+      connectionHealthCheckInterval = setInterval(() => {
+        const timeSinceLastEvent = Date.now() - lastHealthyEvent;
+        const timeSinceLastRefresh =
+          Date.now() - useBattleStore.getState().lastEventTime;
+
+        // If we haven't seen events for 15 seconds in production, force refresh
+        if (timeSinceLastEvent > 15000 && timeSinceLastRefresh > 15000) {
+          missedEventsCount++;
+          console.warn(
+            `[CONNECTION_HEALTH] Missed events for ${timeSinceLastEvent}ms, count: ${missedEventsCount}`
+          );
+
+          if (missedEventsCount >= 2) {
+            console.log(
+              "[CONNECTION_HEALTH] Forcing refresh due to missed events"
+            );
+            refresh(true).catch((err) => {
+              console.error(
+                "[CONNECTION_HEALTH] Health check refresh failed:",
+                err
+              );
+            });
+            missedEventsCount = 0; // Reset counter after forced refresh
+          }
+        } else {
+          missedEventsCount = 0; // Reset if we're getting events
+        }
+      }, 10000); // Check every 10 seconds
+
+      // Update last healthy event timestamp when we receive events
+      const updateHealthTimestamp = () => {
+        lastHealthyEvent = Date.now();
+        missedEventsCount = 0;
+      };
+
+      // Attach health monitoring to all event handlers
+      if (ch) {
+        ch.on("broadcast", { event: "*" }, updateHealthTimestamp);
+      }
+    }
 
     // Handle connection errors
     if (!ch) {
@@ -144,7 +220,37 @@ export function useRealtime(
           })
           .catch((err) => {
             console.error("[PLAYER_JOINED] Refresh failed:", err);
+
+            // Production fallback: retry refresh after delay
+            if (process.env.NODE_ENV === "production") {
+              console.log(
+                "[PLAYER_JOINED] Production fallback: retrying refresh in 2s"
+              );
+              setTimeout(() => {
+                refresh(true).catch((retryErr) => {
+                  console.error(
+                    "[PLAYER_JOINED] Production fallback refresh also failed:",
+                    retryErr
+                  );
+                });
+              }, 2000);
+            }
           });
+
+        // Production safeguard: additional refresh after 3 seconds to ensure state is updated
+        if (process.env.NODE_ENV === "production") {
+          playerJoinedTimeoutRef.current = setTimeout(() => {
+            console.log(
+              "[PLAYER_JOINED] Production safeguard: additional refresh"
+            );
+            refresh(true).catch((err) => {
+              console.error(
+                "[PLAYER_JOINED] Production safeguard refresh failed:",
+                err
+              );
+            });
+          }, 3000);
+        }
       });
 
       ch.on("broadcast", { event: "room_started" }, () => {
@@ -403,6 +509,12 @@ export function useRealtime(
         if (roundClosedTimeoutRef.current) {
           clearTimeout(roundClosedTimeoutRef.current);
           roundClosedTimeoutRef.current = null;
+        }
+
+        // Clear production connection health check interval
+        if (connectionHealthCheckInterval) {
+          clearInterval(connectionHealthCheckInterval);
+          connectionHealthCheckInterval = null;
         }
 
         // Clear existing timers from store
