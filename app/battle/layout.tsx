@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 
+import SWRegister from "./sw-register";
+
 export const metadata: Metadata = {
   title: "Battle Arena | Ihsan Nurul Habib - Portfolio",
   description:
@@ -14,6 +16,7 @@ export const metadata: Metadata = {
     "AI",
     "interactive",
   ],
+  manifest: "/manifest.json",
   openGraph: {
     title: "Battle Arena - Real-time Knowledge Battles",
     description:
@@ -43,5 +46,10 @@ export default function BattleLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return (
+    <>
+      <SWRegister />
+      {children}
+    </>
+  );
 }
