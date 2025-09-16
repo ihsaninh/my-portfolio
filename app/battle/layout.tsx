@@ -17,6 +17,20 @@ export const metadata: Metadata = {
     "interactive",
   ],
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Battle Arena",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  other: {
+    "apple-touch-icon": "/images/battle-icon.svg",
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "default",
+    "apple-mobile-web-app-title": "Battle Arena",
+  },
   openGraph: {
     title: "Battle Arena - Real-time Knowledge Battles",
     description:
