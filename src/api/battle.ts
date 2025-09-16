@@ -64,7 +64,7 @@ export const battleApi = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to create room");
+      throw new Error(error.error?.message || "Failed to create room");
     }
 
     return response.json();
@@ -84,7 +84,7 @@ export const battleApi = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to join room");
+      throw new Error(error.error?.message || "Failed to join room");
     }
 
     return response.json();
@@ -134,7 +134,7 @@ export const battleApi = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to start battle");
+      throw new Error(error.error?.message || "Failed to start battle");
     }
   },
 
@@ -156,7 +156,7 @@ export const battleApi = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to submit answer");
+      throw new Error(error.error?.message || "Failed to submit answer");
     }
 
     return response.json();
@@ -175,7 +175,7 @@ export const battleApi = {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(error.error || "Failed to close round");
+      throw new Error(error.error?.message || "Failed to close round");
     }
   },
 
