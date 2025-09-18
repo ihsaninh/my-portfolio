@@ -55,7 +55,8 @@ export function useBattleLogic() {
   // Redirect to results after 2.5 seconds using useTimeout
   useTimeout(
     () => {
-      router.push(`/battle/result/${roomId}`);
+      if (!roomId) return;
+      router.replace(`/battle/result/${roomId}`);
       setShouldRedirect(false);
     },
     shouldRedirect ? 2500 : null
@@ -105,16 +106,13 @@ export function useBattleLogic() {
 
   // Redirect when gamePhase becomes finished (most robust trigger)
   useEffect(() => {
-    if (gamePhase === "finished" && !hasRedirectedRef.current) {
-      // Additional safety: don't redirect if we just entered a new room
-      const timeSinceRoomChange = Date.now() - (window.lastRoomChangeTime || 0);
-      if (timeSinceRoomChange > 3000) {
-        // Wait at least 3 seconds after room change
-        hasRedirectedRef.current = true;
-        setShouldRedirect(true);
-      }
-    }
-  }, [gamePhase, roomId]);
+    if (hasRedirectedRef.current) return;
+    if (gamePhase !== "finished") return;
+    if (state?.room?.status !== "finished") return;
+
+    hasRedirectedRef.current = true;
+    setShouldRedirect(true);
+  }, [gamePhase, state?.room?.status]);
 
   return {
     // State values

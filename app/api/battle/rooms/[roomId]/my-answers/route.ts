@@ -5,12 +5,6 @@ import { getSessionIdFromCookies } from "@/src/lib/session";
 import { supabaseAdmin } from "@/src/lib/supabase";
 
 // Define types for better type safety
-interface BattleRoomRound {
-  round_no: number;
-  question_id: string | null;
-  question_json: AIQuestion | null;
-}
-
 interface BankQuestion {
   id: string;
   prompt: string;
@@ -70,18 +64,28 @@ export async function GET(
       return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
 
+    // Fetch all rounds for this room to ensure unanswered rounds are included
+    const { data: rounds, error: roundsErr } = await supabase
+      .from("battle_room_rounds")
+      .select("id, round_no, question_id, question_json")
+      .eq("room_id", roomId)
+      .order("round_no", { ascending: true });
+
+    if (roundsErr) {
+      console.error("Failed to fetch room rounds:", roundsErr);
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+    }
+
+    const allRounds = rounds || [];
+
     // Get questions for rounds that have question_id (from question bank)
-    const questionIds =
-      answers
-        ?.map((a) => {
-          const roundData = a.battle_room_rounds as
-            | BattleRoomRound
-            | BattleRoomRound[];
-          return Array.isArray(roundData)
-            ? roundData[0]?.question_id
-            : roundData?.question_id;
-        })
-        .filter(Boolean) || [];
+    const questionIds = Array.from(
+      new Set(
+        allRounds
+          .map((round) => round.question_id)
+          .filter((id): id is string => Boolean(id))
+      )
+    );
 
     let bankQuestions: BankQuestion[] = [];
     if (questionIds.length > 0) {
@@ -93,84 +97,123 @@ export async function GET(
       bankQuestions = questions || [];
     }
 
-    // Format the response and sort by round number
-    const userAnswers = (answers || [])
-      .map((answer) => {
-        const roundData = answer.battle_room_rounds as
-          | BattleRoomRound
-          | BattleRoomRound[];
-        // Handle both array and single object cases
-        const round = Array.isArray(roundData) ? roundData[0] : roundData;
-        let questionData = null;
-        let mcq = null as null | {
-          chosenId?: string;
-          chosenText?: string;
-          correctId?: string;
-          correctText?: string;
-          isCorrect?: boolean;
-        };
+    const bankQuestionMap = new Map(
+      bankQuestions.map((q) => [q.id, q])
+    );
 
-        if (round) {
-          if (round.question_id) {
-            // Question from bank
-            const bankQuestion = bankQuestions.find(
-              (q) => q.id === round.question_id
-            );
-            if (bankQuestion) {
-              questionData = {
-                prompt: bankQuestion.prompt,
-                difficulty: bankQuestion.difficulty,
-                language: bankQuestion.language,
-                category: bankQuestion.category_id,
-              };
+    type AnswerRecord = NonNullable<typeof answers>[number];
+
+    const answersByRoundId = new Map<string, AnswerRecord>();
+    (answers || []).forEach((answer) => {
+      if (answer.round_id) {
+        answersByRoundId.set(answer.round_id, answer);
+      }
+    });
+
+    const userAnswers = allRounds.map((round) => {
+      const answer = round.id ? answersByRoundId.get(round.id) : undefined;
+      const wasAnswered = !!answer;
+
+      let questionData = null as {
+        prompt: string;
+        difficulty: number;
+        language: string;
+        category?: string;
+      } | null;
+
+      let answerText = "No answer submitted";
+      let feedback = "";
+      let correctAnswer: string | undefined;
+      let isCorrect: boolean | undefined;
+      let timeMs: number | null = null;
+
+      if (round.question_id) {
+        const bankQuestion = bankQuestionMap.get(round.question_id);
+        if (bankQuestion) {
+          questionData = {
+            prompt: bankQuestion.prompt,
+            difficulty: bankQuestion.difficulty,
+            language: bankQuestion.language,
+            category: bankQuestion.category_id,
+          };
+        }
+        if (wasAnswered) {
+          answerText = answer?.answer_text || "";
+          feedback = answer?.feedback || "No feedback available";
+        }
+      } else if (round.question_json) {
+        const q = round.question_json as AIQuestion;
+        if (q) {
+          questionData = {
+            prompt: q.prompt,
+            difficulty: q.difficulty,
+            language: q.language,
+            category: q.category,
+          };
+
+          if (q.choices && Array.isArray(q.choices)) {
+            const choices = q.choices;
+            const chosen = choices.find((c) => c.id === answer?.choice_id);
+            const correct = choices.find((c) => c.id === q.correctChoiceId);
+            answerText = wasAnswered
+              ? chosen?.text || "No answer submitted"
+              : "No answer submitted";
+            const correctText = correct?.text;
+            if (correctText !== undefined) {
+              correctAnswer = correctText;
             }
-          } else if (round.question_json) {
-            // AI-generated question
-            const q = round.question_json;
-            if (q) {
-              questionData = {
-                prompt: q.prompt,
-                difficulty: q.difficulty,
-                language: q.language,
-                category: q.category,
-              };
-              if (q.choices && Array.isArray(q.choices)) {
-                const choices = q.choices;
-                const chosen = choices.find((c) => c.id === answer.choice_id);
-                const correct = choices.find((c) => c.id === q.correctChoiceId);
-                mcq = {
-                  chosenId: answer.choice_id || undefined,
-                  chosenText: chosen?.text,
-                  correctId: q.correctChoiceId,
-                  correctText: correct?.text,
-                  isCorrect:
-                    answer.is_correct ??
-                    (answer.choice_id && q.correctChoiceId
-                      ? answer.choice_id === q.correctChoiceId
-                      : undefined),
-                };
-              }
-            }
+            isCorrect = wasAnswered
+              ? answer?.is_correct ??
+                (answer?.choice_id && q.correctChoiceId
+                  ? answer.choice_id === q.correctChoiceId
+                  : false)
+              : false;
+            timeMs = wasAnswered ? answer?.time_ms || null : null;
+          } else if (wasAnswered) {
+            answerText = answer?.answer_text || "";
+            feedback = answer?.feedback || "No feedback available";
           }
         }
+      } else if (wasAnswered) {
+        answerText = answer?.answer_text || "";
+        feedback = answer?.feedback || "No feedback available";
+      }
 
-        return {
-          id: answer.id,
-          roundNo: round?.round_no || 0,
-          question: questionData,
-          answer: mcq?.chosenText || answer.answer_text,
-          score: answer.score_final || 0,
-          feedback: mcq ? "" : answer.feedback || "No feedback available",
-          ...(mcq
-            ? {
-                correctAnswer: mcq.correctText || "",
-                isCorrect: !!mcq.isCorrect,
-                timeMs: answer.time_ms || null,
-              }
-            : {}),
-        };
-      })
-      .sort((a, b) => a.roundNo - b.roundNo); // Sort by round number
+      if (
+        !wasAnswered &&
+        correctAnswer === undefined &&
+        round.question_json?.correctChoiceId
+      ) {
+        const q = round.question_json as AIQuestion;
+        if (q?.choices) {
+          const correct = q.choices.find((c) => c.id === q.correctChoiceId);
+          if (correct?.text !== undefined) {
+            correctAnswer = correct.text;
+          }
+        }
+      }
+
+      const score = wasAnswered ? answer?.score_final || 0 : 0;
+
+      return {
+        id: wasAnswered
+          ? answer!.id
+          : `unanswered-${round.id || round.round_no || Math.random()}`,
+        roundNo: round.round_no || 0,
+        question: questionData,
+        answer: answerText,
+        score,
+        feedback,
+        ...(correctAnswer !== undefined
+          ? {
+              correctAnswer,
+              isCorrect: isCorrect ?? false,
+              timeMs,
+            }
+          : {}),
+        wasAnswered,
+      };
+    });
 
     return NextResponse.json({
       roomId,

@@ -6,7 +6,6 @@ import { Suspense, useCallback, useEffect } from "react";
 import {
   BattleHeader,
   BattlePageShell,
-  ErrorDisplay,
   JoinRoomForm,
 } from "@/src/components/battle";
 import { useBattleLanding } from "@/src/hooks/useBattleLanding";
@@ -26,18 +25,15 @@ function BattleJoinContent() {
     joinPlayerName,
     joinRoomId,
     loading,
-    log,
     setGameMode,
     setJoinPlayerName,
     setJoinRoomId,
-    setLog,
     handleJoinRoom,
   } = useBattleLanding();
 
   useEffect(() => {
     setGameMode("join");
-    setLog("");
-  }, [setGameMode, setLog]);
+  }, [setGameMode]);
 
   useEffect(() => {
     const urlRoomCode =
@@ -67,7 +63,6 @@ function BattleJoinContent() {
         onHandleJoinRoom={handleJoinRoom}
         onSetGameMode={handleNavigateToLanding}
       />
-      <ErrorDisplay log={log} />
     </BattlePageShell>
   );
 }

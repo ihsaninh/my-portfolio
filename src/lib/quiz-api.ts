@@ -150,6 +150,23 @@ export async function getSessionByFingerprint(
   return data;
 }
 
+export async function updateSessionDisplayName(
+  sessionId: string,
+  displayName: string
+): Promise<void> {
+  const supabase = supabaseServer();
+
+  const { error } = await supabase
+    .from("quiz_sessions")
+    .update({ display_name: displayName })
+    .eq("id", sessionId);
+
+  if (error) {
+    console.error("Error updating session display name:", error);
+    throw new Error("Failed to update session");
+  }
+}
+
 // Attempts API
 export async function createAttempt(attemptData: {
   id: string;

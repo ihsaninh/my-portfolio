@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createSession, getSessionByFingerprint } from "@/src/lib/quiz-api";
+import {
+  createSession,
+  getSessionByFingerprint,
+  updateSessionDisplayName,
+} from "@/src/lib/quiz-api";
 import { SESSION_COOKIE } from "@/src/lib/session";
 
 export async function POST(request: NextRequest) {
@@ -30,10 +34,23 @@ export async function POST(request: NextRequest) {
     // Check if session already exists with this fingerprint
     const existingSession = await getSessionByFingerprint(fingerprintHash);
     if (existingSession) {
-      return NextResponse.json({
+      if (displayName && existingSession.display_name !== displayName) {
+        await updateSessionDisplayName(existingSession.id, displayName);
+        existingSession.display_name = displayName;
+      }
+
+      const res = NextResponse.json({
         sessionId: existingSession.id,
         ...existingSession,
       });
+      res.cookies.set(SESSION_COOKIE, existingSession.id, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+      });
+      return res;
     }
 
     // Create new session

@@ -16,9 +16,11 @@ export function UserAnswers({
 }: UserAnswersProps) {
   if (userAnswers.length === 0) return null;
 
+  const totalQuestions = totalAnswers || userAnswers.length;
+  const answeredCount = userAnswers.filter((a) => a.wasAnswered).length;
   const totalScore = userAnswers.reduce((sum, a) => sum + a.score, 0);
   const avgScore =
-    userAnswers.length > 0 ? Math.round(totalScore / userAnswers.length) : 0;
+    totalQuestions > 0 ? Math.round(totalScore / totalQuestions) : 0;
 
   return (
     <motion.div
@@ -35,7 +37,7 @@ export function UserAnswers({
           <FaQuestionCircle className="w-6 h-6 text-blue-400" />
           Your Quiz Performance
           <span className="text-lg text-gray-400 font-normal">
-            ({totalAnswers} answers)
+            ({answeredCount}/{totalQuestions} answered)
           </span>
         </h3>
         {showAnswers ? (
@@ -93,8 +95,22 @@ export function UserAnswers({
                   <h4 className="text-gray-300 text-sm font-medium mb-1">
                     Your Answer:
                   </h4>
-                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
-                    <p className="text-cyan-100">{answer.answer}</p>
+                  <div
+                    className={`rounded-lg border p-3 ${
+                      answer.wasAnswered
+                        ? "bg-cyan-500/10 border-cyan-500/20"
+                        : "bg-gray-500/10 border-gray-500/20"
+                    }`}
+                  >
+                    <p
+                      className={
+                        answer.wasAnswered
+                          ? "text-cyan-100"
+                          : "text-gray-300 italic"
+                      }
+                    >
+                      {answer.answer}
+                    </p>
                   </div>
                 </div>
 
@@ -114,7 +130,7 @@ export function UserAnswers({
                         {answer.correctAnswer}
                         {answer.isCorrect === true
                           ? " ✅"
-                          : answer.isCorrect === false
+                          : answer.wasAnswered
                           ? " ❌"
                           : ""}
                       </p>
@@ -148,7 +164,7 @@ export function UserAnswers({
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-xl p-4 text-center">
               <div className="text-2xl font-bold text-blue-300">
-                {totalAnswers}
+                {answeredCount}
               </div>
               <div className="text-sm text-gray-300">Questions Answered</div>
             </div>

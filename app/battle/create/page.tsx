@@ -8,7 +8,6 @@ import {
   BattleHeader,
   BattlePageShell,
   CreateRoomForm,
-  ErrorDisplay,
   RoomCreatedSuccess,
 } from "@/src/components/battle";
 import { useBattleLanding } from "@/src/hooks/useBattleLanding";
@@ -18,13 +17,11 @@ export default function BattleCreatePage() {
   const {
     createPayload,
     loading,
-    log,
     createdRoomCode,
     copied,
     setCreatePayload,
     setCreatedRoomCode,
     setGameMode,
-    setLog,
     copyRoomCode,
     createRoom,
     handleJoinRoom,
@@ -32,8 +29,7 @@ export default function BattleCreatePage() {
 
   useEffect(() => {
     setGameMode("create");
-    setLog("");
-  }, [setGameMode, setLog]);
+  }, [setGameMode]);
 
   const handleNavigateToLanding = useCallback(
     (mode: "create" | "join" | null) => {
@@ -55,7 +51,6 @@ export default function BattleCreatePage() {
             copied={copied}
             onSetCreatedRoomCode={setCreatedRoomCode}
             onSetGameMode={handleNavigateToLanding}
-            onSetLog={setLog}
             onCopyRoomCode={copyRoomCode}
             onHandleJoinRoom={handleJoinRoom}
           />
@@ -70,7 +65,6 @@ export default function BattleCreatePage() {
           />
         )}
       </AnimatePresence>
-      <ErrorDisplay log={log} />
     </BattlePageShell>
   );
 }

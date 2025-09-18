@@ -3,6 +3,8 @@
 import { motion } from "framer-motion";
 import { FaCopy, FaCrown, FaTrophy } from "react-icons/fa";
 
+import { useBattleStore } from "@/src/lib/battle-store";
+
 interface RoomCreatedSuccessProps {
   createdRoomCode: string | null;
   createPayload: {
@@ -12,7 +14,6 @@ interface RoomCreatedSuccessProps {
   copied: boolean;
   onSetCreatedRoomCode: (code: string | null) => void;
   onSetGameMode: (mode: "create" | "join" | null) => void;
-  onSetLog: (log: string) => void;
   onCopyRoomCode: () => void;
   onHandleJoinRoom: (
     nameOverride?: string,
@@ -27,10 +28,11 @@ export function RoomCreatedSuccess({
   copied,
   onSetCreatedRoomCode,
   onSetGameMode,
-  onSetLog,
   onCopyRoomCode,
   onHandleJoinRoom,
 }: RoomCreatedSuccessProps) {
+  const addNotification = useBattleStore((state) => state.addNotification);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -45,7 +47,6 @@ export function RoomCreatedSuccess({
           onClick={() => {
             onSetCreatedRoomCode(null);
             onSetGameMode(null);
-            onSetLog("");
           }}
           className="p-2.5 md:p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white"
         >
@@ -97,7 +98,7 @@ export function RoomCreatedSuccess({
                 // Skip session creation since it was already done during room creation
                 onHandleJoinRoom(hostName, true);
               } else {
-                onSetLog("Host name is required to join the room");
+                addNotification("Host name is required to join the room");
               }
             }}
             disabled={loading}

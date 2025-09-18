@@ -158,6 +158,26 @@ export const useJoinRoom = () => {
       skipSessionCreation?: boolean;
     }) => {
       try {
+        // Ensure room is joinable before creating a session
+        const availability = await battleApi.checkRoomAvailability(roomId);
+        if (!availability.joinable) {
+          const message =
+            availability.message ||
+            (availability.status === "finished"
+              ? "Battle ini sudah selesai."
+              : "Room ini tidak menerima peserta baru saat ini.");
+
+          throw {
+            error: {
+              code: "ROOM_NOT_JOINABLE",
+              message,
+              retryable: false,
+            },
+          };
+        }
+
+        const resolvedRoomId = availability.roomId || roomId;
+
         // Create session first if not skipping
         if (!skipSessionCreation) {
           const sessionCreated = await ensureSession(payload.displayName);
@@ -168,7 +188,12 @@ export const useJoinRoom = () => {
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
-        return await battleApi.joinRoom(roomId, payload);
+        const joinResponse = await battleApi.joinRoom(resolvedRoomId, payload);
+
+        return {
+          ...joinResponse,
+          roomId: joinResponse.roomId || resolvedRoomId,
+        };
       } catch (error) {
         // Handle API errors with standardized client error handling
         handleApiError(
@@ -184,9 +209,10 @@ export const useJoinRoom = () => {
       }
     },
     onSuccess: (data, variables) => {
+      const resolvedRoomId = data?.roomId || variables.roomId;
       // Invalidate room state for the joined room
       queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(variables.roomId),
+        queryKey: battleQueryKeys.roomState(resolvedRoomId),
       });
     },
     onError: (error) => {

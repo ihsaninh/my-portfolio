@@ -96,6 +96,7 @@ export interface UserAnswer {
   correctAnswer?: string;
   isCorrect?: boolean;
   timeMs?: number | null;
+  wasAnswered?: boolean;
 }
 
 export interface UserAnswersResponse {

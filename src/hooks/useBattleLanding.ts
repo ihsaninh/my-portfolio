@@ -2,6 +2,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useCreateRoom, useJoinRoom } from "@/src/hooks/useBattleQueries";
+import { useBattleStore } from "@/src/lib/battle-store";
+import { handleApiError } from "@/src/lib/client-error-handler";
 
 type GameMode = "create" | "join" | null;
 
@@ -23,10 +25,10 @@ export function useBattleLanding() {
   });
   const [joinPlayerName, setJoinPlayerName] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");
-  const [log, setLog] = useState<string>("");
   const [createdRoomId, setCreatedRoomId] = useState<string | null>(null);
   const [createdRoomCode, setCreatedRoomCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const addNotification = useBattleStore((state) => state.addNotification);
 
   // Compute loading state from mutations
   const loading = createRoomMutation.isPending || joinRoomMutation.isPending;
@@ -34,11 +36,10 @@ export function useBattleLanding() {
   const createRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!createPayload.hostDisplayName.trim()) {
-      setLog("Please enter your name to continue");
+      addNotification("Please enter your name to continue");
       return;
     }
 
-    setLog("");
     try {
       const result = await createRoomMutation.mutateAsync({
         ...createPayload,
@@ -53,11 +54,11 @@ export function useBattleLanding() {
       // Hide the form and show success message
       setGameMode(null);
     } catch (err: unknown) {
-      setLog(
-        `Failed to create room: ${
-          err instanceof Error ? err.message : "Unknown error"
-        }`
-      );
+      const message =
+        err instanceof Error
+          ? `Failed to create room: ${err.message}`
+          : "Failed to create room due to an unexpected error.";
+      addNotification(message);
     }
   };
 
@@ -77,15 +78,14 @@ export function useBattleLanding() {
     }
 
     if (!roomId || typeof roomId !== "string" || !roomId.trim()) {
-      setLog("Please enter a valid Room Code");
+      addNotification("Please enter a valid Room Code");
       return;
     }
     if (!playerName || typeof playerName !== "string" || !playerName.trim()) {
-      setLog("Please enter your player name");
+      addNotification("Please enter your player name");
       return;
     }
 
-    setLog("");
     try {
       const result = await joinRoomMutation.mutateAsync({
         roomId,
@@ -100,10 +100,8 @@ export function useBattleLanding() {
       const actualRoomId = result.roomId || roomId;
       router.push(`/battle/rooms/${actualRoomId}`);
     } catch (err: unknown) {
-      console.error("Join error:", err);
-      setLog(
-        `Join error: ${err instanceof Error ? err.message : "Unknown error"}`
-      );
+      const clientError = handleApiError(err);
+      addNotification(clientError.message);
     }
   };
 
@@ -127,7 +125,6 @@ export function useBattleLanding() {
     joinPlayerName,
     joinRoomId,
     loading,
-    log,
     createdRoomId,
     createdRoomCode,
     copied,
@@ -137,7 +134,6 @@ export function useBattleLanding() {
     setCreatePayload,
     setJoinPlayerName,
     setJoinRoomId,
-    setLog,
     setCreatedRoomId,
     setCreatedRoomCode,
     setCopied,
