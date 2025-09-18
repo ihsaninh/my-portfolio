@@ -10,7 +10,7 @@ interface ParticipantsProps {
   variant?: "default" | "compact";
 }
 
-export function Participants({ roomId: _roomId, variant = "default" }: ParticipantsProps) {
+export function Participants({ variant = "default" }: ParticipantsProps) {
   const { state, answerStatus, gamePhase } = useBattleStore();
   const isCompact = variant === "compact";
 
@@ -99,5 +99,3 @@ export function Participants({ roomId: _roomId, variant = "default" }: Participa
     </motion.div>
   );
 }
-
-// FaUsers is already imported above

@@ -10,7 +10,7 @@ interface RoomInfoProps {
   variant?: "default" | "compact";
 }
 
-export function RoomInfo({ roomId: _roomId, variant = "default" }: RoomInfoProps) {
+export function RoomInfo({ variant = "default" }: RoomInfoProps) {
   const { state } = useBattleStore();
   const isCompact = variant === "compact";
 
