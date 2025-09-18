@@ -14,14 +14,21 @@ export function useBattleLogic() {
   const router = useRouter();
   const roomId = useMemo(() => params?.id, [params]);
   const hasRedirectedRef = useRef(false);
+  const accessDeniedRef = useRef(false);
 
   // Local state for timeouts
   const [shouldResetCopy, setShouldResetCopy] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
   // Use the smaller hooks
-  const { state, answerStatus, stateLoading, refresh, forceStateSync } =
-    useBattleRoomState();
+  const {
+    state,
+    answerStatus,
+    stateLoading,
+    stateError,
+    refresh,
+    forceStateSync,
+  } = useBattleRoomState();
 
   const { isHost } = useHostDetection(roomId, state);
 
@@ -42,6 +49,28 @@ export function useBattleLogic() {
 
   // Initialize realtime with dependencies
   useRealtime(roomId, state, refresh, autoCloseRound);
+
+  useEffect(() => {
+    if (!stateError || accessDeniedRef.current) return;
+
+    const err = stateError as Error & { status?: number; code?: string };
+    const status = err.status;
+    if (!status) return;
+
+    if ([401, 403, 404].includes(status)) {
+      accessDeniedRef.current = true;
+      const store = useBattleStore.getState();
+      let message = "Unable to access this battle room.";
+      const notJoinedCodes = new Set(["MISSING_SESSION", "NOT_PARTICIPANT"]);
+      if (notJoinedCodes.has(err.code ?? "") || [401, 403].includes(status)) {
+        message = "You haven't joined this battle room yet.";
+      } else if (status === 404) {
+        message = "This battle room doesn't exist or is no longer available.";
+      }
+      store.addNotification(message);
+      router.replace("/battle");
+    }
+  }, [stateError, router]);
 
   // Reset copy state after 2 seconds using useTimeout
   useTimeout(

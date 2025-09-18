@@ -1,25 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { publishBattleEvent } from "@/src/lib/battle/realtime";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/lib/services/session";
 import { supabaseAdmin } from "@/src/lib/services/supabase";
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   context: { params: Promise<{ roomId: string; roundNo: string }> }
 ) {
   try {
     const { roomId, roundNo } = await context.params;
+    const sessionId = getSessionIdFromCookies(req);
+    if (!sessionId) {
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
+    }
     const supabase = supabaseAdmin();
 
     // Load room for timer
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
-      .select("id, status, round_time_sec")
+      .select("id, status, round_time_sec, host_session_id")
       .eq("id", roomId)
       .single();
-    if (roomErr || !room)
+    if (roomErr || !room) {
       return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
+    }
+
+    const { data: membership, error: membershipErr } = await supabase
+      .from("battle_room_participants")
+      .select("is_host")
+      .eq("room_id", roomId)
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    if (membershipErr && membershipErr.code !== "PGRST116") {
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+    }
+
+    const isHostSession = room.host_session_id === sessionId;
+
+    if (!isHostSession && !membership?.is_host) {
+      return createErrorResponse({
+        code: "NOT_HOST",
+        message: "Only the room host can reveal rounds.",
+        retryable: false,
+        statusCode: 403,
+      });
+    }
+
     if (room.status !== "active")
       return createErrorResponse({
         code: "ROOM_NOT_ACTIVE",

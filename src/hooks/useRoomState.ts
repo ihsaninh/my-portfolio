@@ -102,6 +102,7 @@ export function useBattleRoomState(): {
   state: StateResp | undefined;
   answerStatus: AnswerStatus | undefined;
   stateLoading: boolean;
+  stateError: unknown;
   refresh: (force?: boolean) => Promise<void>;
   forceStateSync: () => Promise<void>;
   lastValidRoundRef: React.MutableRefObject<number | null>;
@@ -147,7 +148,11 @@ export function useBattleRoomState(): {
   }, [roomId, queryClient]);
 
   // TanStack Query hooks
-  const { data: state, isLoading: stateLoading } = useRoomState(roomId, {
+  const {
+    data: state,
+    isLoading: stateLoading,
+    error: stateError,
+  } = useRoomState(roomId, {
     enabled: !!roomId,
   });
 
@@ -418,6 +423,7 @@ export function useBattleRoomState(): {
     state,
     answerStatus,
     stateLoading,
+    stateError,
     refresh,
     forceStateSync,
     lastValidRoundRef,

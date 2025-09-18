@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { publishBattleEvent } from "@/src/lib/battle/realtime";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/lib/services/api-errors";
 import { getSessionIdFromCookies } from "@/src/lib/services/session";
 import { supabaseAdmin } from "@/src/lib/services/supabase";
 
@@ -25,6 +28,33 @@ export async function GET(
     }
 
     const supabase = supabaseAdmin();
+
+    const { data: room, error: roomErr } = await supabase
+      .from("battle_rooms")
+      .select("host_session_id")
+      .eq("id", roomId)
+      .single();
+
+    if (roomErr || !room) {
+      return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
+    }
+
+    const { data: membership, error: membershipErr } = await supabase
+      .from("battle_room_participants")
+      .select("session_id, is_host")
+      .eq("room_id", roomId)
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    if (membershipErr && membershipErr.code !== "PGRST116") {
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+    }
+
+    const isHostSession = room.host_session_id === sessionId;
+
+    if (!isHostSession && !membership) {
+      return createErrorResponse(ERROR_TYPES.NOT_PARTICIPANT);
+    }
 
     // Get the current active round
     const { data: activeRound } = await supabase

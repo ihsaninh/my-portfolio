@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/lib/services/api-errors";
 import { getSessionIdFromCookies } from "@/src/lib/services/session";
 import { supabaseAdmin } from "@/src/lib/services/supabase";
 import type { ApiParticipant } from "@/src/types/battle";
@@ -21,18 +24,51 @@ export async function GET(
   try {
     const { roomId } = await context.params;
     const sessionId = getSessionIdFromCookies(req);
+    if (!sessionId) {
+      return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
+    }
+
     const supabase = supabaseAdmin();
 
     // Get room info with capacity
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
       .select(
-        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity, question_type, room_code"
+        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity, question_type, room_code, host_session_id"
       )
       .eq("id", roomId)
       .single();
     if (roomErr || !room)
       return createErrorResponse(ERROR_TYPES.ROOM_NOT_FOUND);
+
+    const { data: membership, error: membershipErr } = await supabase
+      .from("battle_room_participants")
+      .select(
+        "id, session_id, display_name, is_host, connection_status, total_score"
+      )
+      .eq("room_id", roomId)
+      .eq("session_id", sessionId)
+      .maybeSingle();
+
+    if (membershipErr && membershipErr.code !== "PGRST116") {
+      return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+    }
+
+    const isHostSession = room.host_session_id === sessionId;
+
+    if (!isHostSession && !membership) {
+      return createErrorResponse(ERROR_TYPES.NOT_PARTICIPANT);
+    }
+
+    let hostDisplayName: string | null = null;
+    if (isHostSession && !membership) {
+      const { data: hostSession } = await supabase
+        .from("quiz_sessions")
+        .select("display_name")
+        .eq("id", sessionId)
+        .maybeSingle();
+      hostDisplayName = hostSession?.display_name ?? null;
+    }
 
     // Get participants with session_id for proper mapping
     // Order by participant ID to maintain consistent ordering
@@ -43,20 +79,22 @@ export async function GET(
       )
       .eq("room_id", roomId)
       .order("id", { ascending: true }); // Use participant ID for consistent ordering
-    // Find current user if session exists
+    // Build current user response from membership or host session
     let currentUser = null;
-    if (sessionId && participants) {
-      const currentParticipant = participants.find(
-        (p: ApiParticipant) => p.session_id === sessionId
-      );
-      if (currentParticipant) {
-        currentUser = {
-          session_id: currentParticipant.session_id,
-          display_name: currentParticipant.display_name,
-          is_host: currentParticipant.is_host,
-          total_score: currentParticipant.total_score,
-        };
-      }
+    if (membership) {
+      currentUser = {
+        session_id: membership.session_id,
+        display_name: membership.display_name,
+        is_host: membership.is_host,
+        total_score: membership.total_score,
+      };
+    } else if (isHostSession) {
+      currentUser = {
+        session_id: sessionId,
+        display_name: hostDisplayName,
+        is_host: true,
+        total_score: 0,
+      };
     }
 
     // Active round snapshot (if any)

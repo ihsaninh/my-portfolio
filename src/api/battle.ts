@@ -108,12 +108,9 @@ export const battleApi = {
   checkRoomAvailability: async (
     roomId: string
   ): Promise<RoomAvailabilityResponse> => {
-    const response = await fetch(
-      `${API_BASE}/rooms/${roomId}/availability`,
-      {
-        credentials: "include",
-      }
-    );
+    const response = await fetch(`${API_BASE}/rooms/${roomId}/availability`, {
+      credentials: "include",
+    });
 
     if (!response.ok) {
       const error = await response.json().catch(() => null);
@@ -133,7 +130,22 @@ export const battleApi = {
     });
 
     if (!response.ok) {
-      throw new Error(`State API returned ${response.status}`);
+      let details: { error?: { code?: string; message?: string } } | null =
+        null;
+      try {
+        details = await response.json();
+      } catch {
+        details = null;
+      }
+
+      const error = new Error(
+        details?.error?.message || `State API returned ${response.status}`
+      ) as Error & { status?: number; code?: string };
+      error.status = response.status;
+      if (details?.error?.code) {
+        error.code = details.error.code;
+      }
+      throw error;
     }
 
     return response.json();
@@ -146,7 +158,23 @@ export const battleApi = {
     });
 
     if (!response.ok) {
-      throw new Error(`Answer status API returned ${response.status}`);
+      let details: { error?: { code?: string; message?: string } } | null =
+        null;
+      try {
+        details = await response.json();
+      } catch {
+        details = null;
+      }
+
+      const error = new Error(
+        details?.error?.message ||
+          `Answer status API returned ${response.status}`
+      ) as Error & { status?: number; code?: string };
+      error.status = response.status;
+      if (details?.error?.code) {
+        error.code = details.error.code;
+      }
+      throw error;
     }
 
     return response.json();
@@ -304,7 +332,9 @@ export const ensureSession = async (displayName: string): Promise<boolean> => {
 
       if (!fingerprint) {
         const random =
-          typeof window !== "undefined" && "crypto" in window && window.crypto?.randomUUID
+          typeof window !== "undefined" &&
+          "crypto" in window &&
+          window.crypto?.randomUUID
             ? window.crypto.randomUUID()
             : `gen-${Math.random().toString(36).slice(2)}`;
         fingerprint = `fp-${random}`;
@@ -319,7 +349,9 @@ export const ensureSession = async (displayName: string): Promise<boolean> => {
         }
 
         if (typeof document !== "undefined") {
-          document.cookie = `${cookieKey}=${fingerprint}; path=/; max-age=${60 * 60 * 24 * 30}`;
+          document.cookie = `${cookieKey}=${fingerprint}; path=/; max-age=${
+            60 * 60 * 24 * 30
+          }`;
         }
       }
     }
@@ -351,7 +383,9 @@ export const ensureSession = async (displayName: string): Promise<boolean> => {
       }
 
       if (typeof document !== "undefined") {
-        document.cookie = `${cookieKey}=${fingerprint}; path=/; max-age=${60 * 60 * 24 * 30}`;
+        document.cookie = `${cookieKey}=${fingerprint}; path=/; max-age=${
+          60 * 60 * 24 * 30
+        }`;
       }
     }
 
