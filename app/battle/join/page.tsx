@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 
 import {
   BattleHeader,
@@ -12,6 +12,14 @@ import {
 import { useBattleLanding } from "@/src/hooks/useBattleLanding";
 
 export default function BattleJoinPage() {
+  return (
+    <Suspense fallback={<BattleJoinFallback />}>
+      <BattleJoinContent />
+    </Suspense>
+  );
+}
+
+function BattleJoinContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -60,6 +68,17 @@ export default function BattleJoinPage() {
         onSetGameMode={handleNavigateToLanding}
       />
       <ErrorDisplay log={log} />
+    </BattlePageShell>
+  );
+}
+
+function BattleJoinFallback() {
+  return (
+    <BattlePageShell>
+      <BattleHeader />
+      <div className="flex items-center justify-center py-10 text-white/70">
+        Loading room details…
+      </div>
     </BattlePageShell>
   );
 }
