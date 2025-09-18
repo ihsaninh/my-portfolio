@@ -1,9 +1,10 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 
 import {
+  BattleNotifications,
   FloatingParticipantsButton,
   GameArea,
   Participants,
@@ -11,7 +12,6 @@ import {
   RoomInfo,
 } from "@/src/components/battle";
 import { useBattleLogic } from "@/src/hooks/useBattleLogic";
-import { useBattleStore } from "@/src/lib/battle/battle-store";
 
 export default function BattleRoom() {
   const [mounted, setMounted] = useState(false);
@@ -21,7 +21,6 @@ export default function BattleRoom() {
     roomId,
     timeLeft,
     state,
-    notifications,
     answeredCount,
     iHaveAnswered,
     loading,
@@ -51,20 +50,6 @@ export default function BattleRoom() {
 
     return () => window.removeEventListener("resize", updateViewport);
   }, [mounted]);
-
-  // Auto-hide notifications after 5 seconds
-  useEffect(() => {
-    if (notifications.length > 0) {
-      const timer = setTimeout(() => {
-        const store = useBattleStore.getState();
-        // Remove the oldest notification (first in array)
-        const updatedNotifications = store.notifications.slice(1);
-        store.setNotifications(updatedNotifications);
-      }, 5000); // 5 seconds
-
-      return () => clearTimeout(timer);
-    }
-  }, [notifications]);
 
   const orbPositions = useMemo(() => {
     if (!mounted) return [] as Array<{ left: string; top: string }>;
@@ -185,66 +170,21 @@ export default function BattleRoom() {
       </div>
 
       {/* Notifications */}
-      <AnimatePresence>
-        {notifications.map((notification, index) => {
-          const offset = (isMobile ? 6 : 1) + index * 4;
-          return (
-            <motion.div
-              key={`${notification}-${index}`}
-              initial={{ opacity: 0, x: isMobile ? 0 : 100, y: isMobile ? 20 : 0 }}
-              animate={{ opacity: 1, x: 0, y: 0 }}
-              exit={{ opacity: 0, x: isMobile ? 0 : 100, y: isMobile ? 20 : 0 }}
-              className={`fixed z-50 bg-purple-600/90 backdrop-blur-xl border border-purple-500/30 rounded-xl px-4 py-3 text-white text-sm shadow-lg ${
-                isMobile
-                  ? "left-1/2 w-[calc(100%-2.5rem)] max-w-sm -translate-x-1/2"
-                  : "right-4"
-              }`}
-              style={{ top: `${offset}rem` }}
-            >
-              <div className="flex items-center gap-2">
-                <span className="flex-1">{notification}</span>
-                <button
-                  onClick={() => {
-                    // Remove this specific notification
-                    const store = useBattleStore.getState();
-                    const updatedNotifications = store.notifications.filter(
-                      (_: string, i: number) => i !== index
-                    );
-                    store.setNotifications(updatedNotifications);
-                  }}
-                  className="text-purple-200 hover:text-white transition-colors"
-                  aria-label="Dismiss notification"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
-                </button>
-              </div>
-            </motion.div>
-          );
-        })}
-      </AnimatePresence>
+      <BattleNotifications
+        mobileBreakpoint={1024}
+        desktopPositionClass="right-4"
+      />
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
           <div className="md:rounded-3xl md:border md:border-white/10 md:bg-white/5 md:p-8 md:backdrop-blur-2xl md:shadow-2xl md:shadow-purple-500/10">
             {/* Room Header */}
-          <RoomHeader
-            roomId={roomId}
-            onCopyRoomLink={copyRoomLink}
-            roomStatus={state?.room?.status || "waiting"}
-          />
+            <RoomHeader
+              roomId={roomId}
+              onCopyRoomLink={copyRoomLink}
+              roomStatus={state?.room?.status || "waiting"}
+            />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Room Info & Participants - Hidden on mobile */}

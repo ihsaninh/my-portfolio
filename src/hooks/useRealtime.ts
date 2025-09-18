@@ -24,9 +24,23 @@ export function useRealtime(
     addNotification,
     clearTimers,
     setTimerIds,
-    stuckDetectionTimerId,
-    forceProgressTimerId,
   } = useBattleStore();
+
+  const clearStuckDetectionTimer = () => {
+    const { stuckDetectionTimerId } = useBattleStore.getState();
+    if (stuckDetectionTimerId) {
+      clearTimeout(stuckDetectionTimerId);
+      setTimerIds({ stuckDetectionTimerId: null });
+    }
+  };
+
+  const clearForceProgressTimer = () => {
+    const { forceProgressTimerId } = useBattleStore.getState();
+    if (forceProgressTimerId) {
+      clearTimeout(forceProgressTimerId);
+      setTimerIds({ forceProgressTimerId: null });
+    }
+  };
 
   // Refs for connection state tracking
   const prevConnectionStateRef = useRef<string | null>(null);
@@ -65,7 +79,8 @@ export function useRealtime(
       setConnectionState("reconnecting");
 
       if (!roomId) return;
-      refreshRef.current?.(true)
+      refreshRef
+        .current?.(true)
         .then(() => {
           if (prevConnectionStateRef.current !== "connected") {
             prevConnectionStateRef.current = "connected";
@@ -319,16 +334,10 @@ export function useRealtime(
         }
 
         // Clear any existing stuck detection timer
-        if (stuckDetectionTimerId) {
-          clearTimeout(stuckDetectionTimerId);
-          setTimerIds({ stuckDetectionTimerId: null });
-        }
+        clearStuckDetectionTimer();
 
         // Clear any existing force progress timer
-        if (forceProgressTimerId) {
-          clearTimeout(forceProgressTimerId);
-          setTimerIds({ forceProgressTimerId: null });
-        }
+        clearForceProgressTimer();
 
         // Simplified stuck detection - single timer with single retry
         const stuckTimer = setTimeout(() => {
@@ -384,14 +393,8 @@ export function useRealtime(
         setIsProgressing(false);
 
         // Clear existing timers
-        if (stuckDetectionTimerId) {
-          clearTimeout(stuckDetectionTimerId);
-          setTimerIds({ stuckDetectionTimerId: null });
-        }
-        if (forceProgressTimerId) {
-          clearTimeout(forceProgressTimerId);
-          setTimerIds({ forceProgressTimerId: null });
-        }
+        clearStuckDetectionTimer();
+        clearForceProgressTimer();
         if (questionLoadTimeoutRef.current) {
           clearTimeout(questionLoadTimeoutRef.current);
         }
@@ -444,7 +447,10 @@ export function useRealtime(
       ch.on("broadcast", { event: "round_closed" }, (p) => {
         setLastEventTime(Date.now());
         const roundNo = p?.payload?.roundNo || "?";
-        const totalRounds = state?.room?.num_questions || 0;
+        const totalRounds =
+          useBattleStore.getState().state?.room?.num_questions ??
+          state?.room?.num_questions ??
+          0;
 
         // Check if this was the last round
         if (Number(roundNo) >= totalRounds) {
@@ -452,10 +458,7 @@ export function useRealtime(
         }
 
         // Clear existing timers to prevent conflicts
-        if (stuckDetectionTimerId) {
-          clearTimeout(stuckDetectionTimerId);
-          setTimerIds({ stuckDetectionTimerId: null });
-        }
+        clearStuckDetectionTimer();
         if (roundClosedTimeoutRef.current) {
           clearTimeout(roundClosedTimeoutRef.current);
         }
@@ -484,10 +487,7 @@ export function useRealtime(
         }
 
         // Clear timers
-        if (stuckDetectionTimerId) {
-          clearTimeout(stuckDetectionTimerId);
-          setTimerIds({ stuckDetectionTimerId: null });
-        }
+        clearStuckDetectionTimer();
 
         refresh();
       });
@@ -579,16 +579,10 @@ export function useRealtime(
         }
 
         // Clear existing timers from store
-        if (stuckDetectionTimerId) {
-          clearTimeout(stuckDetectionTimerId);
-        }
-        if (forceProgressTimerId) {
-          clearTimeout(forceProgressTimerId);
-        }
+        clearStuckDetectionTimer();
+        clearForceProgressTimer();
         clearTimers();
       };
     }
   }, [roomId]);
-
-  return {};
 }
