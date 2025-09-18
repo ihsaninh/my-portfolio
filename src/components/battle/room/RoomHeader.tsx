@@ -9,14 +9,12 @@ import { useBattleStore } from "@/src/lib/battle-store";
 interface RoomHeaderProps {
   roomId: string;
   onCopyRoomLink: () => void;
-  onRefresh: () => void;
   roomStatus?: string;
 }
 
 export function RoomHeader({
   roomId,
   onCopyRoomLink,
-  onRefresh,
   roomStatus = "waiting",
 }: RoomHeaderProps) {
   const { copied, connectionState } = useBattleStore();
@@ -38,37 +36,41 @@ export function RoomHeader({
     <motion.div
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-8"
+      className="mb-6 md:mb-8"
     >
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Link
-            href="/battle"
-            className="p-3 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-white"
-          >
-            ← Back
-          </Link>
-          <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white mb-1">
-              ⚔️ Battle Room
-            </h1>
-            <div className="flex items-center gap-2 text-sm text-gray-300">
-              <span>ID: {roomId}</span>
-              <span
-                className={`px-2 py-1 rounded-full border text-xs ${getRoomStatusColor(
-                  roomStatus
-                )}`}
-              >
-                {roomStatus.toUpperCase()}
-              </span>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between lg:items-center">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/battle"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+            >
+              <span className="text-lg">←</span>
+              <span className="hidden sm:block">Back</span>
+            </Link>
+            <div className="text-left">
+              <h1 className="text-xl font-bold text-white sm:text-2xl lg:text-3xl">
+                ⚔️ Battle Room
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-300 sm:text-sm">
+                <span className="rounded-full bg-white/5 px-3 py-1 font-mono text-xs text-gray-200">
+                  ID: {roomId}
+                </span>
+                <span
+                  className={`px-3 py-1 rounded-full border text-[0.7rem] sm:text-xs tracking-wide uppercase ${getRoomStatusColor(
+                    roomStatus
+                  )}`}
+                >
+                  {roomStatus}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Connection Status Indicator */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 justify-start sm:justify-end">
           <div
-            className={`flex items-center gap-2 px-3 py-1 rounded-full text-xs border ${
+            className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm font-semibold uppercase tracking-wide ${
               connectionState === "connected"
                 ? "bg-green-500/20 text-green-300 border-green-500/30"
                 : connectionState === "reconnecting"
@@ -77,29 +79,23 @@ export function RoomHeader({
             }`}
           >
             <div
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2.5 h-2.5 rounded-full ${
                 connectionState === "connected"
                   ? "bg-green-400 animate-pulse"
                   : connectionState === "reconnecting"
-                  ? "bg-yellow-400 animate-spin"
+                  ? "bg-yellow-400 animate-pulse"
                   : "bg-red-400"
               }`}
             />
-            {connectionState}
+            <span className="capitalize">{connectionState}</span>
           </div>
 
           <button
             onClick={onCopyRoomLink}
-            className="px-4 py-2 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 text-cyan-300 rounded-xl transition-all flex items-center gap-2"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-500/30 bg-cyan-600/20 px-4 py-2 text-sm font-semibold text-cyan-200 transition hover:bg-cyan-600/30"
           >
-            <FaCopy className="w-4 h-4" />
+            <FaCopy className="h-4 w-4" />
             {copied ? "Copied!" : "Share Room"}
-          </button>
-          <button
-            onClick={onRefresh}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-colors text-white"
-          >
-            🔄
           </button>
         </div>
       </div>

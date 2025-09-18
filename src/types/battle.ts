@@ -18,6 +18,8 @@ export interface BattleRoom {
   status: RoomStatus;
   start_time?: string;
   capacity: number;
+  room_code?: string;
+  question_type?: string;
 }
 
 export interface BattleParticipant {

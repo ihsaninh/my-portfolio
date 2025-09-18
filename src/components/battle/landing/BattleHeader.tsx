@@ -9,9 +9,9 @@ export function BattleHeader() {
       initial={{ opacity: 0, y: -20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="text-center mb-12"
+      className="text-center mb-10 md:mb-12"
     >
-      <div className="inline-flex items-center gap-3 mb-4">
+      <div className="hidden md:inline-flex items-center gap-3 mb-4">
         <motion.div
           animate={{ rotate: [0, 10, -10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
@@ -30,13 +30,39 @@ export function BattleHeader() {
           🏆
         </motion.div>
       </div>
-      <p className="text-xl text-gray-300 max-w-2xl mx-auto leading-relaxed">
-        Challenge your friends in real-time knowledge battles! Choose topics,
-        set rounds, and prove who&apos;s the ultimate champion.
+
+      <div className="md:hidden">
+        <div className="rounded-3xl border border-white/10 bg-white/5 px-6 py-7 shadow-lg shadow-purple-500/20 backdrop-blur-xl">
+          <div className="flex items-center justify-center gap-3 mb-4 text-3xl">
+            <span>⚔️</span>
+            <h1 className="text-[1.9rem] font-extrabold bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
+              Battle Arena
+            </h1>
+            <span>🏆</span>
+          </div>
+          <p className="text-sm text-gray-200 leading-relaxed">
+            Challenge friends in fast-paced knowledge battles. Host a room or jump right in and climb the leaderboard.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs font-semibold text-white">
+            <span className="inline-flex items-center gap-2 rounded-full bg-purple-500/20 px-3 py-2">
+              ⚡ Real-time Sync
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-blue-500/20 px-3 py-2">
+              🤖 AI Questions
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 px-3 py-2">
+              🧠 Smart Scoring
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p className="hidden md:block text-base text-gray-300 md:text-xl max-w-2xl mx-auto leading-relaxed md:leading-relaxed">
+        Challenge friends in quick knowledge battles. Host a room or jump right in.
       </p>
 
       {/* Feature badges */}
-      <div className="flex flex-wrap justify-center gap-3 mt-6">
+      <div className="hidden md:flex flex-wrap justify-center gap-3 mt-6">
         <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm">
           <FaBolt className="w-4 h-4" /> Real-time sync
         </span>

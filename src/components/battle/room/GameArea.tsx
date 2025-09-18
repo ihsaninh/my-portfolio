@@ -31,21 +31,21 @@ export function GameArea({
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.3 }}
-      className="rounded-2xl border border-white/20 bg-white/5 backdrop-blur-xl min-h-[600px] flex flex-col"
+      className="flex flex-col rounded-2xl border border-white/15 bg-white/5 backdrop-blur-xl min-h-[520px] md:min-h-[600px]"
     >
       {/* Game Header */}
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">
+      <div className="border-b border-white/10 px-5 py-5 md:p-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <h2 className="text-lg font-semibold text-white md:text-2xl">
             {gamePhase === "waiting" && "⏳ Waiting for Battle to Start"}
             {gamePhase === "playing" && "🎮 Battle in Progress"}
             {gamePhase === "answering" && "📝 Answer the Question"}
             {gamePhase === "finished" && "🏆 Battle Finished"}
           </h2>
           {timeLeft !== null && gamePhase === "answering" && (
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
               <div
-                className={`px-4 py-2 rounded-xl font-bold text-lg ${
+                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold md:text-lg md:px-4 md:py-2 ${
                   timeLeft <= 10
                     ? "bg-red-500/20 text-red-400 border border-red-500/30"
                     : timeLeft <= 30
@@ -53,13 +53,13 @@ export function GameArea({
                     : "bg-green-500/20 text-green-400 border border-green-500/30"
                 }`}
               >
-                <FaClock className="w-4 h-4 inline mr-2" />
+                <FaClock className="h-4 w-4" />
                 {formatTime(timeLeft)}
               </div>
 
               {/* Answered Count Indicator */}
-              <div className="px-4 py-2 rounded-xl font-bold text-lg bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                <FaUsers className="w-4 h-4 inline mr-2" />
+              <div className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/20 px-3 py-1.5 text-sm font-semibold text-blue-200 md:text-lg md:px-4 md:py-2">
+                <FaUsers className="h-4 w-4" />
                 {answeredCount}/{state?.participants?.length || 0} answered
               </div>
             </div>
@@ -68,7 +68,7 @@ export function GameArea({
       </div>
 
       {/* Game Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 px-5 py-5 md:p-6">
         {gamePhase === "waiting" && (
           <WaitingPhase
             onStartBattle={onStartBattle}

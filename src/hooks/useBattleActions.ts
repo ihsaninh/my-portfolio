@@ -44,12 +44,31 @@ export function useBattleActions(
   const lastSubmitTime = useRef(0);
 
   const copyRoomLink = () => {
-    const link = `${window.location.origin}/battle?roomId=${roomId}`;
-    navigator.clipboard.writeText(link).then(() => {
-      useBattleStore.getState().setCopied(true);
-      addNotification("Room link copied to clipboard!");
-      setShouldResetCopy(true);
-    });
+    if (!roomId) {
+      addNotification("Room is still loading – try again in a moment.");
+      return;
+    }
+
+    const roomCode = state?.room?.room_code;
+    if (!roomCode) {
+      addNotification("Room code belum tersedia. Coba lagi sebentar lagi.");
+      return;
+    }
+
+    const link = `${window.location.origin}/battle/join?roomCode=${encodeURIComponent(
+      roomCode
+    )}`;
+
+    navigator.clipboard
+      .writeText(link)
+      .then(() => {
+        useBattleStore.getState().setCopied(true);
+        addNotification("Room link copied to clipboard!");
+        setShouldResetCopy(true);
+      })
+      .catch(() => {
+        addNotification("Failed to copy link. Please copy it manually.");
+      });
   };
 
   const startBattle = async () => {

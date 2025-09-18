@@ -7,26 +7,37 @@ import { useBattleStore } from "@/src/lib/battle-store";
 
 interface ParticipantsProps {
   roomId: string;
+  variant?: "default" | "compact";
 }
 
-export function Participants({}: ParticipantsProps) {
+export function Participants({ roomId: _roomId, variant = "default" }: ParticipantsProps) {
   const { state, answerStatus, gamePhase } = useBattleStore();
+  const isCompact = variant === "compact";
 
   if (!state?.participants) return null;
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
+      initial={{ opacity: 0, x: isCompact ? 0 : -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.2 }}
-      className="rounded-2xl border border-blue-500/30 bg-blue-900/20 p-6 backdrop-blur-xl"
+      className={`rounded-2xl backdrop-blur-xl ${
+        isCompact
+          ? "border border-blue-500/20 bg-blue-900/40 p-4"
+          : "border border-blue-500/30 bg-blue-900/20 p-6"
+      }`}
     >
-      <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+      <h2
+        className={`font-semibold text-white mb-4 flex items-center gap-2 ${
+          isCompact ? "text-lg" : "text-xl"
+        }`}
+      >
         <FaUsers className="w-5 h-5 text-blue-400" />
         Players ({state.participants?.length || 0}/{state.room?.capacity || 0})
       </h2>
       <div className="space-y-3">
         {state.participants?.map((participant, index) => {
+          const itemPadding = isCompact ? "px-3 py-2.5" : "px-4 py-3";
           // Find answer status for this participant
           const participantAnswerStatus = answerStatus?.participants.find(
             (p) => p.session_id === participant.session_id
@@ -38,10 +49,10 @@ export function Participants({}: ParticipantsProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 * index }}
-              className={`flex items-center justify-between p-3 rounded-xl ${
+              className={`flex items-center justify-between rounded-xl border ${itemPadding} ${
                 participant.is_host
-                  ? "bg-gradient-to-r from-purple-600/20 to-pink-600/20 border border-purple-500/30"
-                  : "bg-white/5 border border-white/10"
+                  ? "border-purple-500/30 bg-gradient-to-r from-purple-600/20 to-pink-600/20"
+                  : "border-white/10 bg-white/5"
               }`}
             >
               <div className="flex items-center gap-3">

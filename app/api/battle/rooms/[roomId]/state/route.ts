@@ -27,7 +27,7 @@ export async function GET(
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
       .select(
-        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity, question_type"
+        "id, topic, category_id, language, num_questions, round_time_sec, status, start_time, capacity, question_type, room_code"
       )
       .eq("id", roomId)
       .single();

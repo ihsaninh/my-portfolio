@@ -110,7 +110,7 @@ export function useBattleLanding() {
   const copyRoomCode = async () => {
     if (createdRoomCode) {
       try {
-        const fullUrl = `${window.location.origin}/battle?roomCode=${createdRoomCode}`;
+        const fullUrl = `${window.location.origin}/battle/join?roomCode=${createdRoomCode}`;
         await navigator.clipboard.writeText(fullUrl);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);

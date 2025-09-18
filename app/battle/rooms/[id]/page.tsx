@@ -15,6 +15,7 @@ import { useBattleStore } from "@/src/lib/battle-store";
 
 export default function BattleRoom() {
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const {
     // State values
     roomId,
@@ -29,7 +30,6 @@ export default function BattleRoom() {
 
     // Functions
     copyRoomLink,
-    refresh,
     startBattle,
     submitAnswer,
 
@@ -38,6 +38,19 @@ export default function BattleRoom() {
   } = useBattleLogic();
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    const updateViewport = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    updateViewport();
+    window.addEventListener("resize", updateViewport);
+
+    return () => window.removeEventListener("resize", updateViewport);
+  }, [mounted]);
 
   // Auto-hide notifications after 5 seconds
   useEffect(() => {
@@ -56,11 +69,12 @@ export default function BattleRoom() {
   const orbPositions = useMemo(() => {
     if (!mounted) return [] as Array<{ left: string; top: string }>;
     // 6 orbs with client-only random positions to avoid SSR mismatch
-    return Array.from({ length: 6 }, () => ({
+    const orbCount = isMobile ? 3 : 6;
+    return Array.from({ length: orbCount }, () => ({
       left: `${Math.round(Math.random() * 10000) / 100}%`,
       top: `${Math.round(Math.random() * 10000) / 100}%`,
     }));
-  }, [mounted]);
+  }, [mounted, isMobile]);
 
   // Show connection error message
   if (connectionState === "disconnected" && connectionError) {
@@ -116,7 +130,7 @@ export default function BattleRoom() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950/80 to-slate-900 relative overflow-hidden">
       {/* Connection Status Indicator */}
       {connectionState === "disconnected" && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-500/90 backdrop-blur-xl border border-red-400/30 rounded-xl px-4 py-2 text-white text-sm shadow-lg">
@@ -172,88 +186,96 @@ export default function BattleRoom() {
 
       {/* Notifications */}
       <AnimatePresence>
-        {notifications.map((notification, index) => (
-          <motion.div
-            key={`${notification}-${index}`}
-            initial={{ opacity: 0, x: 100 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 100 }}
-            className="fixed top-4 right-4 z-50 bg-purple-600/90 backdrop-blur-xl border border-purple-500/30 rounded-xl px-4 py-3 text-white text-sm shadow-lg"
-            style={{ top: `${1 + index * 4}rem` }}
-          >
-            <div className="flex items-center gap-2">
-              <span className="flex-1">{notification}</span>
-              <button
-                onClick={() => {
-                  // Remove this specific notification
-                  const store = useBattleStore.getState();
-                  const updatedNotifications = store.notifications.filter(
-                    (_: string, i: number) => i !== index
-                  );
-                  store.setNotifications(updatedNotifications);
-                }}
-                className="text-purple-200 hover:text-white transition-colors"
-                aria-label="Dismiss notification"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+        {notifications.map((notification, index) => {
+          const offset = (isMobile ? 6 : 1) + index * 4;
+          return (
+            <motion.div
+              key={`${notification}-${index}`}
+              initial={{ opacity: 0, x: isMobile ? 0 : 100, y: isMobile ? 20 : 0 }}
+              animate={{ opacity: 1, x: 0, y: 0 }}
+              exit={{ opacity: 0, x: isMobile ? 0 : 100, y: isMobile ? 20 : 0 }}
+              className={`fixed z-50 bg-purple-600/90 backdrop-blur-xl border border-purple-500/30 rounded-xl px-4 py-3 text-white text-sm shadow-lg ${
+                isMobile
+                  ? "left-1/2 w-[calc(100%-2.5rem)] max-w-sm -translate-x-1/2"
+                  : "right-4"
+              }`}
+              style={{ top: `${offset}rem` }}
+            >
+              <div className="flex items-center gap-2">
+                <span className="flex-1">{notification}</span>
+                <button
+                  onClick={() => {
+                    // Remove this specific notification
+                    const store = useBattleStore.getState();
+                    const updatedNotifications = store.notifications.filter(
+                      (_: string, i: number) => i !== index
+                    );
+                    store.setNotifications(updatedNotifications);
+                  }}
+                  className="text-purple-200 hover:text-white transition-colors"
+                  aria-label="Dismiss notification"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-          </motion.div>
-        ))}
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
+          );
+        })}
       </AnimatePresence>
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen">
         <div className="container mx-auto px-4 py-6 max-w-7xl">
-          {/* Room Header */}
+          <div className="md:rounded-3xl md:border md:border-white/10 md:bg-white/5 md:p-8 md:backdrop-blur-2xl md:shadow-2xl md:shadow-purple-500/10">
+            {/* Room Header */}
           <RoomHeader
             roomId={roomId}
             onCopyRoomLink={copyRoomLink}
-            onRefresh={refresh}
             roomStatus={state?.room?.status || "waiting"}
           />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column - Room Info & Participants - Hidden on mobile */}
-            <div className="hidden lg:block lg:col-span-1 space-y-6">
-              {/* Room Info */}
-              <RoomInfo roomId={roomId} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left Column - Room Info & Participants - Hidden on mobile */}
+              <div className="hidden lg:block lg:col-span-1 space-y-6">
+                {/* Room Info */}
+                <RoomInfo roomId={roomId} />
 
-              {/* Participants */}
-              <Participants roomId={roomId} />
+                {/* Participants */}
+                <Participants roomId={roomId} />
+              </div>
+
+              {/* Right Column - Game Area - Full width on mobile */}
+              <div className="col-span-1 lg:col-span-2">
+                <GameArea
+                  timeLeft={timeLeft}
+                  answeredCount={answeredCount}
+                  onStartBattle={startBattle}
+                  onSubmitAnswer={submitAnswer}
+                  isHost={isHost}
+                  iHaveAnswered={iHaveAnswered}
+                  loading={loading}
+                />
+              </div>
             </div>
 
-            {/* Right Column - Game Area - Full width on mobile */}
-            <div className="col-span-1 lg:col-span-2">
-              <GameArea
-                timeLeft={timeLeft}
-                answeredCount={answeredCount}
-                onStartBattle={startBattle}
-                onSubmitAnswer={submitAnswer}
-                isHost={isHost}
-                iHaveAnswered={iHaveAnswered}
-                loading={loading}
-              />
-            </div>
+            {/* Floating Participants Button - Only on mobile */}
+            <FloatingParticipantsButton
+              roomId={roomId}
+              participantCount={state?.participants?.length || 0}
+            />
           </div>
-
-          {/* Floating Participants Button - Only on mobile */}
-          <FloatingParticipantsButton
-            roomId={roomId}
-            participantCount={state?.participants?.length || 0}
-          />
         </div>
       </div>
     </div>

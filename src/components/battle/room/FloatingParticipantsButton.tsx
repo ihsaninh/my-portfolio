@@ -114,9 +114,9 @@ export function FloatingParticipantsButton({
               {/* Content */}
               <div className="p-4 overflow-y-auto max-h-[calc(80vh-100px)]">
                 {activeTab === "participants" ? (
-                  <Participants roomId={roomId} />
+                  <Participants roomId={roomId} variant="compact" />
                 ) : (
-                  <RoomInfo roomId={roomId} />
+                  <RoomInfo roomId={roomId} variant="compact" />
                 )}
               </div>
             </motion.div>
