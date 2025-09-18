@@ -7,7 +7,7 @@ import { useHostDetection } from "@/src/hooks/useHostDetection";
 import { useRealtime } from "@/src/hooks/useRealtime";
 import { useBattleRoomState } from "@/src/hooks/useRoomState";
 import { useTimer } from "@/src/hooks/useTimer";
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 
 export function useBattleLogic() {
   const params = useParams<{ id: string }>();

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { FaGamepad } from "react-icons/fa";
 
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 
 interface RoomInfoProps {
   roomId: string;

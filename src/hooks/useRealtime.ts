@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useDebounceCallback, useInterval } from "usehooks-ts";
 
-import { useBattleStore } from "@/src/lib/battle-store";
-import { connectionMonitor } from "@/src/lib/connection-monitor";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
+import { connectionMonitor } from "@/src/lib/battle/connection-monitor";
 import {
   createEnhancedRoomChannel,
   getConnectionStats,
-} from "@/src/lib/realtime";
+} from "@/src/lib/battle/realtime";
 import type { StateResp } from "@/src/types/battle";
 
 export function useRealtime(
@@ -37,6 +37,61 @@ export function useRealtime(
   const questionLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const autoCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const roundClosedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const refreshRef = useRef(refresh);
+  useEffect(() => {
+    refreshRef.current = refresh;
+  }, [refresh]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleOffline = () => {
+      if (prevConnectionStateRef.current === "disconnected") return;
+      prevConnectionStateRef.current = "disconnected";
+      setConnectionState("disconnected");
+    };
+
+    const handleOnline = () => {
+      if (
+        prevConnectionStateRef.current === "connected" ||
+        prevConnectionStateRef.current === "reconnecting"
+      ) {
+        // Supabase callbacks will update to connected; avoid duplicate state churn
+        return;
+      }
+
+      prevConnectionStateRef.current = "reconnecting";
+      setConnectionState("reconnecting");
+
+      if (!roomId) return;
+      refreshRef.current?.(true)
+        .then(() => {
+          if (prevConnectionStateRef.current !== "connected") {
+            prevConnectionStateRef.current = "connected";
+            setConnectionState("connected");
+          }
+        })
+        .catch((err) => {
+          console.error(
+            "[ONLINE] Failed to refresh after regaining connection:",
+            err
+          );
+        });
+    };
+
+    if (!navigator.onLine) {
+      handleOffline();
+    }
+
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, [roomId, setConnectionState]);
 
   // Refs for polling
   const pollingBackupCallback = () => {
@@ -188,6 +243,7 @@ export function useRealtime(
         console.error(`💥 Too many connection errors for room:${roomId}`);
         addNotification("Connection unstable. Please refresh the page.");
         setConnectionState("disconnected");
+        prevConnectionStateRef.current = "disconnected";
       }
     };
 
@@ -446,13 +502,18 @@ export function useRealtime(
           errorCount = 0;
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           console.error(`❌ Connection error for room:${roomId}`, err);
-          handleError();
+          const isOnline =
+            typeof navigator === "undefined" ? true : navigator.onLine;
 
-          if (prevConnectionStateRef.current !== "disconnected") {
-            prevConnectionStateRef.current = "disconnected";
-            setConnectionState("disconnected");
+          const nextState = isOnline ? "reconnecting" : "disconnected";
+
+          if (prevConnectionStateRef.current !== nextState) {
+            prevConnectionStateRef.current = nextState;
+            setConnectionState(nextState);
             addNotification("Connection lost. Attempting to reconnect...");
           }
+
+          handleError();
         }
       });
 

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
 
-import { formatDateUTC } from "@/src/lib/date";
+import { formatDateUTC } from "@/src/utils/date";
 
 interface PostLike {
   slug: string;

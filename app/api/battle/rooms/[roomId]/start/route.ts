@@ -4,11 +4,11 @@ import { z } from "zod";
 import {
   generateMcqQuestions,
   generateQuestions,
-} from "@/src/lib/ai-question-gen";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
-import { publishBattleEvent } from "@/src/lib/realtime";
-import { getSessionIdFromCookies } from "@/src/lib/session";
-import { supabaseAdmin } from "@/src/lib/supabase";
+} from "@/src/lib/ai/ai-question-gen";
+import { publishBattleEvent } from "@/src/lib/battle/realtime";
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/lib/services/session";
+import { supabaseAdmin } from "@/src/lib/services/supabase";
 
 const StartSchema = z.object({ useAI: z.boolean().optional() });
 

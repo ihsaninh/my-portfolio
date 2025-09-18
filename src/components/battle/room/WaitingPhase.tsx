@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { FaPlay, FaRocket, FaUsers } from "react-icons/fa";
 
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 import type { WaitingPhaseProps } from "@/src/types/battle";
 
 export function WaitingPhase({

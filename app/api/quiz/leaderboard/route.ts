@@ -6,7 +6,7 @@ import {
   getCategoryLeaderboard,
   getGlobalLeaderboard,
   getQuestionById,
-} from "@/src/lib/quiz-api";
+} from "@/src/lib/services/quiz-api";
 
 export async function GET(request: NextRequest) {
   try {

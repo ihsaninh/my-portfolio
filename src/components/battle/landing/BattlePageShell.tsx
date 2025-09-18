@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 
 interface BattlePageShellProps {
   children: ReactNode;

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
-import { getSessionIdFromCookies } from "@/src/lib/session";
-import { supabaseAdmin } from "@/src/lib/supabase";
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/lib/services/session";
+import { supabaseAdmin } from "@/src/lib/services/supabase";
 import type { ApiParticipant } from "@/src/types/battle";
 
 type QuestionSummary = {

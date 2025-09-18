@@ -1,12 +1,12 @@
 import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { evaluateAnswer } from "@/src/lib/ai-scoring";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
-import { answerSubmitLimiter, checkRateLimit } from "@/src/lib/rate-limit";
-import { publishBattleEvent } from "@/src/lib/realtime";
-import { getSessionIdFromCookies } from "@/src/lib/session";
-import { supabaseAdmin } from "@/src/lib/supabase";
+import { evaluateAnswer } from "@/src/lib/ai/ai-scoring";
+import { publishBattleEvent } from "@/src/lib/battle/realtime";
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import { answerSubmitLimiter, checkRateLimit } from "@/src/lib/services/rate-limit";
+import { getSessionIdFromCookies } from "@/src/lib/services/session";
+import { supabaseAdmin } from "@/src/lib/services/supabase";
 
 const AnswerSchema = z.object({ answer_text: z.string().min(1).max(5000) });
 const McqAnswerSchema = z.object({ choice_id: z.string().min(1) });

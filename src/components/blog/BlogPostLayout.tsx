@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { FiArrowLeft } from "react-icons/fi";
 
-import { formatDateUTC } from "@/src/lib/date";
+import { formatDateUTC } from "@/src/utils/date";
 
 interface Props {
   title: string;

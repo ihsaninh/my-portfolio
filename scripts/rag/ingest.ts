@@ -16,10 +16,10 @@ import {
   skills,
 } from "@/src/data/resume";
 import { socials } from "@/src/data/socials";
+import { chunkText } from "@/src/lib/ai/rag/chunker";
+import { embedBatch } from "@/src/lib/ai/rag/embeddings";
 import { getAllPostSlugs, getPostBySlug } from "@/src/lib/mdx";
-import { chunkText } from "@/src/lib/rag/chunker";
-import { embedBatch } from "@/src/lib/rag/embeddings";
-import { supabaseAdmin } from "@/src/lib/supabase";
+import { supabaseAdmin } from "@/src/lib/services/supabase";
 
 type SourceDoc = {
   doc_id: string;

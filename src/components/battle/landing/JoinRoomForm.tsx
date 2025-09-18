@@ -80,7 +80,7 @@ export function JoinRoomForm({
               Your Name
             </label>
             <input
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all"
+              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-gray-400 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all text-center"
               placeholder="Your display name"
               value={joinPlayerName}
               onChange={(e) => onSetJoinPlayerName(e.target.value)}
@@ -96,8 +96,11 @@ export function JoinRoomForm({
               className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder-gray-300 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/20 transition-all text-center text-lg tracking-[0.3em] uppercase"
               placeholder="ABC123"
               value={joinRoomId}
-              onChange={(e) => onSetJoinRoomId(e.target.value.toUpperCase())}
+              onChange={(e) =>
+                onSetJoinRoomId(e.target.value.toUpperCase().slice(0, 6))
+              }
               required
+              maxLength={6}
             />
           </div>
 

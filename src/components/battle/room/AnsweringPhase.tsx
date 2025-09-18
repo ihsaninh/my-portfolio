@@ -2,7 +2,7 @@
 
 import { FaBolt, FaCheck, FaStar } from "react-icons/fa";
 
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 import type { AnsweringPhaseProps } from "@/src/types/battle";
 
 export function AnsweringPhase({

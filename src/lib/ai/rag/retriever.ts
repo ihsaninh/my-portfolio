@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/src/lib/supabase";
+import { supabaseServer } from "@/src/lib/services/supabase";
 
 import { embedOne } from "./embeddings";
 

@@ -1,6 +1,6 @@
 import { RealtimeChannel } from "@supabase/realtime-js";
 
-import { supabaseBrowser, supabaseServer } from "./supabase";
+import { supabaseBrowser, supabaseServer } from "../services/supabase";
 
 // Connection tracking
 interface ConnectionInfo {

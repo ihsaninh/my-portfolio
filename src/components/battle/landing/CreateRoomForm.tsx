@@ -146,12 +146,18 @@ export function CreateRoomForm({
                     })
                   }
                 >
-                  <option value="open-ended">Open-ended</option>
                   <option value="multiple-choice">Multiple Choice</option>
+                  <option value="open-ended">Open-ended</option>
                 </select>
-                <div className="text-xs text-blue-300 mt-1">
-                  MCQ shows 4 options, 1 correct
-                </div>
+                {createPayload.questionType === "multiple-choice" ? (
+                  <div className="text-xs text-blue-300 mt-1">
+                    MCQ shows 4 options, 1 correct
+                  </div>
+                ) : (
+                  <div className="text-xs text-blue-300 mt-1">
+                    Open-ended lets players type free-form answers
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs md:text-sm font-medium text-blue-200 mb-2">

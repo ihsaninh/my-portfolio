@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { FaClock, FaUsers } from "react-icons/fa";
 
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 import type { GameAreaProps } from "@/src/types/battle";
 
 import { AnsweringPhase } from "./AnsweringPhase";

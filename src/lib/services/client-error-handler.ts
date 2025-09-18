@@ -2,7 +2,7 @@
  * Client-side error handling utilities for standardized API error responses
  */
 
-import { ApiError } from "@/src/lib/api-errors";
+import { ApiError } from "@/src/lib/services/api-errors";
 
 export interface ClientError {
   code: string;

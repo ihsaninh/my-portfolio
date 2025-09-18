@@ -2,8 +2,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useCreateRoom, useJoinRoom } from "@/src/hooks/useBattleQueries";
-import { useBattleStore } from "@/src/lib/battle-store";
-import { handleApiError } from "@/src/lib/client-error-handler";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
+import { handleApiError } from "@/src/lib/services/client-error-handler";
 
 type GameMode = "create" | "join" | null;
 
@@ -21,7 +21,7 @@ export function useBattleLanding() {
     numQuestions: 5,
     roundTimeSec: 60,
     capacity: 4,
-    questionType: "open-ended" as "open-ended" | "multiple-choice",
+    questionType: "multiple-choice" as "open-ended" | "multiple-choice",
   });
   const [joinPlayerName, setJoinPlayerName] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");

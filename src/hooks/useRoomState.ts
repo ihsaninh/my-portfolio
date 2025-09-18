@@ -7,7 +7,7 @@ import {
   useBattleRefresh,
   useRoomState,
 } from "@/src/hooks/useBattleQueries";
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 import type { AnswerStatus, GamePhase, StateResp } from "@/src/types/battle";
 
 // Extend Window interface to include custom properties

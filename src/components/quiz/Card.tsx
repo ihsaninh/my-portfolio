@@ -1,6 +1,6 @@
 import { forwardRef, HTMLAttributes } from "react";
 
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/src/utils";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
   variant?: "default" | "gradient" | "glass" | "elevated";

@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-import { MarkdownRenderer } from "@/src/lib/markdown-renderer";
+import { MarkdownRenderer } from "@/src/lib/mdx/markdown-renderer";
 import { ChatMessage as ChatMessageType } from "@/src/types/hire-me";
 
 interface ChatMessageProps {

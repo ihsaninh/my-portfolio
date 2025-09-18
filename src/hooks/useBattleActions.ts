@@ -6,7 +6,7 @@ import {
   useStartBattle,
   useSubmitAnswer,
 } from "@/src/hooks/useBattleQueries";
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 import type { StateResp } from "@/src/types/battle";
 
 export function useBattleActions(

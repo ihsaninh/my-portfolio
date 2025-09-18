@@ -11,7 +11,7 @@ import {
   RoomInfo,
 } from "@/src/components/battle";
 import { useBattleLogic } from "@/src/hooks/useBattleLogic";
-import { useBattleStore } from "@/src/lib/battle-store";
+import { useBattleStore } from "@/src/lib/battle/battle-store";
 
 export default function BattleRoom() {
   const [mounted, setMounted] = useState(false);

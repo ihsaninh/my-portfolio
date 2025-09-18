@@ -1,7 +1,7 @@
 import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText, UIMessage } from "ai";
 
-import { retrieveSimilar } from "@/src/lib/rag/retriever";
+import { retrieveSimilar } from "@/src/lib/ai/rag/retriever";
 
 export const runtime = "edge";
 export const maxDuration = 30;

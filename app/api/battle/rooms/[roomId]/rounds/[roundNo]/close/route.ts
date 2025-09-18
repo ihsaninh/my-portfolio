@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/api-errors";
-import { publishBattleEvent } from "@/src/lib/realtime";
-import { supabaseAdmin } from "@/src/lib/supabase";
+import { publishBattleEvent } from "@/src/lib/battle/realtime";
+import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import { supabaseAdmin } from "@/src/lib/services/supabase";
 
 export async function POST(
   _req: NextRequest,

@@ -8,7 +8,7 @@ import {
   type StartBattlePayload,
   type SubmitAnswerPayload,
 } from "@/src/api/battle";
-import { handleApiError } from "@/src/lib/client-error-handler";
+import { handleApiError } from "@/src/lib/services/client-error-handler";
 
 // Query Keys
 export const battleQueryKeys = {
