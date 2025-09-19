@@ -178,38 +178,6 @@ export function useRealtime(
     presencePing("online");
   }, [roomId, presencePing]);
 
-  useEffect(() => {
-    if (typeof window === "undefined" || !roomId) {
-      return;
-    }
-
-    const url = `/api/battle/rooms/${roomId}/presence`;
-    const handleBeforeUnload = () => {
-      const payload = JSON.stringify({ status: "offline" });
-
-      if (navigator.sendBeacon) {
-        const blob = new Blob([payload], { type: "application/json" });
-        navigator.sendBeacon(url, blob);
-      } else {
-        fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: payload,
-          credentials: "include",
-          keepalive: true,
-        }).catch(() => {
-          /* swallow */
-        });
-      }
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [roomId]);
-
   // Production fallback: aggressive polling for participant updates in waiting phase
   const productionParticipantPolling = () => {
     if (
@@ -692,8 +660,6 @@ export function useRealtime(
         clearStuckDetectionTimer();
         clearForceProgressTimer();
         clearTimers();
-
-        presencePingRef.current?.("offline");
       };
     }
   }, [roomId]);
