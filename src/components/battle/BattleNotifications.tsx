@@ -1,7 +1,8 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 import { useBattleStore } from "@/src/lib/battle/battle-store";
 
@@ -34,6 +35,8 @@ export function BattleNotifications({
   const setNotifications = useBattleStore((state) => state.setNotifications);
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname();
+  const prevPathRef = useRef<string | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -61,6 +64,16 @@ export function BattleNotifications({
 
     return () => clearTimeout(timer);
   }, [notifications, setNotifications]);
+
+  useEffect(() => {
+    if (!mounted) return;
+
+    if (prevPathRef.current && prevPathRef.current !== pathname) {
+      setNotifications([]);
+    }
+
+    prevPathRef.current = pathname;
+  }, [mounted, pathname, setNotifications]);
 
   const dismissNotification = (index: number) => {
     setNotifications(notifications.filter((_, i) => i !== index));
