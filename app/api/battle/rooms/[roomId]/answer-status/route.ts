@@ -13,6 +13,7 @@ type ParticipantAnswerStatus = {
   display_name: string;
   has_answered: boolean;
   is_host: boolean;
+  connection_status?: string;
 };
 
 export async function GET(
@@ -77,7 +78,7 @@ export async function GET(
     // Get all participants in the room
     const { data: participants } = await supabase
       .from("battle_room_participants")
-      .select("session_id, display_name, is_host")
+      .select("session_id, display_name, is_host, connection_status")
       .eq("room_id", roomId)
       .order("display_name", { ascending: true });
 
@@ -99,16 +100,22 @@ export async function GET(
       display_name: p.display_name,
       has_answered: answeredSessionIds.has(p.session_id),
       is_host: p.is_host,
+      connection_status: p.connection_status,
     }));
 
-    const totalAnswered = participantStatus.filter(
+    const activeParticipants = participantStatus.filter(
+      (p) => p.connection_status !== "offline"
+    );
+
+    const totalAnswered = activeParticipants.filter(
       (p) => p.has_answered
     ).length;
 
-    // Check if all participants have answered and trigger auto-close
+    const totalParticipants = activeParticipants.length;
+
+    // Check if all active participants have answered and trigger auto-close
     const allAnswered =
-      totalAnswered === participantStatus.length &&
-      participantStatus.length > 0;
+      totalParticipants > 0 && totalAnswered === totalParticipants;
 
     if (allAnswered) {
       // Trigger auto-close event to notify clients
@@ -120,7 +127,7 @@ export async function GET(
             payload: {
               roundNo: activeRound.round_no,
               totalAnswered,
-              totalParticipants: participantStatus.length,
+              totalParticipants,
             },
           });
         } catch (err) {
@@ -136,7 +143,7 @@ export async function GET(
       participants: participantStatus,
       currentRound: activeRound.round_no,
       totalAnswered,
-      totalParticipants: participantStatus.length,
+      totalParticipants,
       allAnswered, // Add this flag for client-side handling
     });
   } catch (error) {

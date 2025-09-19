@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useDebounceCallback, useInterval } from "usehooks-ts";
 
 import { useBattleStore } from "@/src/lib/battle/battle-store";
@@ -25,6 +25,36 @@ export function useRealtime(
     clearTimers,
     setTimerIds,
   } = useBattleStore();
+
+  const presencePing = useCallback(
+    async (status: "online" | "offline") => {
+      if (typeof window === "undefined" || !roomId) {
+        return;
+      }
+      try {
+        const response = await fetch(`/api/battle/rooms/${roomId}/presence`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status }),
+          credentials: "include",
+          keepalive: status === "offline",
+        });
+        if (!response.ok) {
+          console.warn(`[PRESENCE] Ping failed with status ${response.status}`);
+        }
+      } catch (err) {
+        console.error("[PRESENCE] Ping error:", err);
+      }
+    },
+    [roomId]
+  );
+
+  const presencePingRef = useRef(presencePing);
+  useEffect(() => {
+    presencePingRef.current = presencePing;
+  }, [presencePing]);
 
   const clearStuckDetectionTimer = () => {
     const { stuckDetectionTimerId } = useBattleStore.getState();
@@ -64,6 +94,7 @@ export function useRealtime(
       if (prevConnectionStateRef.current === "disconnected") return;
       prevConnectionStateRef.current = "disconnected";
       setConnectionState("disconnected");
+      presencePing("offline");
     };
 
     const handleOnline = () => {
@@ -86,6 +117,7 @@ export function useRealtime(
             prevConnectionStateRef.current = "connected";
             setConnectionState("connected");
           }
+          presencePing("online");
         })
         .catch((err) => {
           console.error(
@@ -106,7 +138,7 @@ export function useRealtime(
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };
-  }, [roomId, setConnectionState]);
+  }, [roomId, setConnectionState, presencePing]);
 
   // Refs for polling
   const pollingBackupCallback = () => {
@@ -133,6 +165,50 @@ export function useRealtime(
       : 30000
     : null; // 10 seconds for answering, 30 for playing
   useInterval(pollingBackupCallback, pollingInterval);
+
+  useInterval(
+    () => {
+      presencePing("online");
+    },
+    roomId ? 5000 : null
+  );
+
+  useEffect(() => {
+    if (!roomId) return;
+    presencePing("online");
+  }, [roomId, presencePing]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !roomId) {
+      return;
+    }
+
+    const url = `/api/battle/rooms/${roomId}/presence`;
+    const handleBeforeUnload = () => {
+      const payload = JSON.stringify({ status: "offline" });
+
+      if (navigator.sendBeacon) {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon(url, blob);
+      } else {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+          credentials: "include",
+          keepalive: true,
+        }).catch(() => {
+          /* swallow */
+        });
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [roomId]);
 
   // Production fallback: aggressive polling for participant updates in waiting phase
   const productionParticipantPolling = () => {
@@ -324,6 +400,34 @@ export function useRealtime(
         }
       });
 
+      ch.on("broadcast", { event: "participant_status" }, () => {
+        refresh(true);
+      });
+
+      ch.on("broadcast", { event: "host_changed" }, (payload) => {
+        const nextHostSession = payload?.payload?.sessionId as
+          | string
+          | undefined;
+        const hostDisplayName = payload?.payload?.displayName as
+          | string
+          | undefined;
+
+        const storeState = useBattleStore.getState();
+        const mySessionId = storeState.state?.currentUser?.session_id;
+
+        storeState.setIsHostCache(nextHostSession === mySessionId);
+
+        if (nextHostSession === mySessionId) {
+          addNotification("Kamu sekarang menjadi host.");
+        } else if (hostDisplayName) {
+          addNotification(`${hostDisplayName} sekarang menjadi host.`);
+        } else {
+          addNotification("Host digantikan pemain lain.");
+        }
+
+        refresh(true);
+      });
+
       ch.on("broadcast", { event: "room_started" }, () => {
         setLastEventTime(Date.now());
 
@@ -476,9 +580,14 @@ export function useRealtime(
         debouncedRefresh();
       });
 
-      ch.on("broadcast", { event: "match_finished" }, () => {
+      ch.on("broadcast", { event: "match_finished" }, (payload) => {
         setLastEventTime(Date.now());
         setIsProgressing(false);
+
+        const finishReason = payload?.payload?.reason as string | undefined;
+        if (finishReason === "opponent_disconnected") {
+          addNotification("Battle selesai karena lawan terputus.");
+        }
 
         // Transition to finished
         if (prevGamePhaseRef.current !== "finished") {
@@ -500,6 +609,7 @@ export function useRealtime(
           }
           console.log(`✅ Successfully connected to room:${roomId}`);
           errorCount = 0;
+          presencePingRef.current?.("online");
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           console.error(`❌ Connection error for room:${roomId}`, err);
           const isOnline =
@@ -582,6 +692,8 @@ export function useRealtime(
         clearStuckDetectionTimer();
         clearForceProgressTimer();
         clearTimers();
+
+        presencePingRef.current?.("offline");
       };
     }
   }, [roomId]);

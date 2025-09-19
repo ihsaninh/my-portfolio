@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { publishBattleEvent } from "@/src/lib/battle/realtime";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/lib/services/api-errors";
 import { getSessionIdFromCookies } from "@/src/lib/services/session";
 import { supabaseAdmin } from "@/src/lib/services/supabase";
 
@@ -97,6 +100,8 @@ export async function POST(
     const isHost = room.host_session_id === sessionId;
 
     // Insert participant (idempotent by unique constraint)
+    const nowIso = new Date().toISOString();
+
     const { data: participant, error: joinErr } = await supabase
       .from("battle_room_participants")
       .insert({
@@ -104,6 +109,8 @@ export async function POST(
         session_id: sessionId,
         display_name: resolvedName,
         is_host: isHost, // Set host status based on session check
+        connection_status: "online",
+        last_seen_at: nowIso,
       })
       .select("id")
       .single();
@@ -119,13 +126,21 @@ export async function POST(
           .single();
 
         // Update host status if this is the host rejoining
+        const updatePayload: Record<string, unknown> = {
+          display_name: resolvedName,
+          connection_status: "online",
+          last_seen_at: nowIso,
+        };
+
         if (isHost) {
-          await supabase
-            .from("battle_room_participants")
-            .update({ is_host: true, display_name: resolvedName })
-            .eq("room_id", room.id)
-            .eq("session_id", sessionId);
+          updatePayload.is_host = true;
         }
+
+        await supabase
+          .from("battle_room_participants")
+          .update(updatePayload)
+          .eq("room_id", room.id)
+          .eq("session_id", sessionId);
 
         return NextResponse.json({ participantId: existing?.id });
       }

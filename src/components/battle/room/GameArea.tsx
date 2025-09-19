@@ -17,6 +17,7 @@ export function GameArea({
   isHost,
   iHaveAnswered,
   loading,
+  totalParticipants,
 }: GameAreaProps) {
   const { state, gamePhase } = useBattleStore();
 
@@ -60,7 +61,7 @@ export function GameArea({
               {/* Answered Count Indicator */}
               <div className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/20 px-3 py-1.5 text-sm font-semibold text-blue-200 md:text-lg md:px-4 md:py-2">
                 <FaUsers className="h-4 w-4" />
-                {answeredCount}/{state?.participants?.length || 0} answered
+                {answeredCount}/{totalParticipants || 0} answered
               </div>
             </div>
           )}

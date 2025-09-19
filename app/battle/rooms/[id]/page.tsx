@@ -22,6 +22,7 @@ export default function BattleRoom() {
     timeLeft,
     state,
     answeredCount,
+    totalParticipants,
     iHaveAnswered,
     loading,
     connectionState,
@@ -206,6 +207,7 @@ export default function BattleRoom() {
                   isHost={isHost}
                   iHaveAnswered={iHaveAnswered}
                   loading={loading}
+                  totalParticipants={totalParticipants}
                 />
               </div>
             </div>

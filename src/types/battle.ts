@@ -20,6 +20,8 @@ export interface BattleRoom {
   capacity: number;
   room_code?: string;
   question_type?: string;
+  finished_reason?: string | null;
+  winner_session_id?: string | null;
 }
 
 export interface BattleParticipant {
@@ -29,6 +31,8 @@ export interface BattleParticipant {
   connection_status: string;
   total_score: number;
   participantId?: string;
+  joined_at?: string;
+  last_seen_at?: string | null;
 }
 
 export interface BattleCurrentUser {
@@ -74,6 +78,7 @@ export interface AnswerStatus {
     display_name: string;
     has_answered: boolean;
     is_host: boolean;
+    connection_status?: string;
   }>;
   currentRound: number | null;
   totalAnswered: number;
@@ -198,6 +203,7 @@ export interface GameAreaProps {
   isHost: boolean;
   iHaveAnswered: boolean;
   loading: boolean;
+  totalParticipants: number;
 }
 
 export interface WaitingPhaseProps {
@@ -226,4 +232,6 @@ export interface ApiParticipant {
   is_host: boolean;
   connection_status: string;
   total_score: number;
+  joined_at?: string;
+  last_seen_at?: string | null;
 }

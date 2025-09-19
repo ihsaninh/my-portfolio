@@ -133,6 +133,14 @@ export function useBattleLogic() {
 
   const iHaveAnswered = hasSubmitted || serverMarkedAnswered === true;
 
+  const totalParticipants = useMemo(() => {
+    if (answerStatus?.totalParticipants !== undefined) {
+      return answerStatus.totalParticipants;
+    }
+    const participants = state?.participants || [];
+    return participants.filter((p) => p.connection_status !== "offline").length;
+  }, [answerStatus?.totalParticipants, state?.participants]);
+
   // Redirect when gamePhase becomes finished (most robust trigger)
   useEffect(() => {
     if (hasRedirectedRef.current) return;
@@ -158,6 +166,7 @@ export function useBattleLogic() {
     state,
     notifications,
     answeredCount,
+    totalParticipants,
     answerStatus,
     iHaveAnswered,
     answer,
