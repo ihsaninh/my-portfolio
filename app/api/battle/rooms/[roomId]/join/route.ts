@@ -149,7 +149,7 @@ export async function POST(
     }
 
     // Broadcast player joined (idempotent if duplicate join handled)
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId: room.id,
       event: "player_joined",
       payload: { participantId: participant?.id, displayName: resolvedName },

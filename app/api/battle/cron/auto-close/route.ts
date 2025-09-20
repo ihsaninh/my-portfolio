@@ -79,7 +79,7 @@ export async function POST() {
         displayName: nameMap.get(a.session_id) || "Player",
         score: a.score_final,
       }));
-      publishBattleEvent({
+      await publishBattleEvent({
         roomId: round.room_id,
         event: "round_closed",
         payload: { roundNo: round.round_no, scoreboard: roundScoreboard },
@@ -96,7 +96,7 @@ export async function POST() {
           .from("battle_rooms")
           .update({ status: "finished" })
           .eq("id", round.room_id);
-        publishBattleEvent({
+        await publishBattleEvent({
           roomId: round.room_id,
           event: "match_finished",
           payload: { roomId: round.room_id },
@@ -134,7 +134,7 @@ export async function POST() {
               deadline_at: deadline.toISOString(),
             })
             .eq("id", nextRound.id);
-          publishBattleEvent({
+          await publishBattleEvent({
             roomId: round.room_id,
             event: "round_revealed",
             payload: {

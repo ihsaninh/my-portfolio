@@ -95,7 +95,7 @@ export async function POST(
         .update({ status: "finished" })
         .eq("id", roomId);
 
-      publishBattleEvent({
+      await publishBattleEvent({
         roomId,
         event: "match_finished",
         payload: { roomId },
@@ -129,7 +129,7 @@ export async function POST(
     }
 
     // Broadcast round revealed
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "round_revealed",
       payload: {

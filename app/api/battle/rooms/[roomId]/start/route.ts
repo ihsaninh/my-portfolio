@@ -227,7 +227,7 @@ export async function POST(
     }
 
     // Broadcast room started
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "room_started",
       payload: { startTime: new Date().toISOString() },
@@ -252,7 +252,7 @@ export async function POST(
       console.error("[START_BATTLE] Failed to reveal first round:", revealErr);
     } else {
       // Broadcast first round revealed immediately
-      publishBattleEvent({
+      await publishBattleEvent({
         roomId,
         event: "round_revealed",
         payload: {

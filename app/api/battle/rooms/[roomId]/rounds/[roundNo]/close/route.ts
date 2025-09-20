@@ -144,13 +144,13 @@ export async function POST(
     }
 
     // Broadcast round_closed and maybe match_finished
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "round_closed",
       payload: { roundNo: Number(roundNo), scoreboard },
     });
     if (finished) {
-      publishBattleEvent({
+      await publishBattleEvent({
         roomId,
         event: "match_finished",
         payload: { roomId },

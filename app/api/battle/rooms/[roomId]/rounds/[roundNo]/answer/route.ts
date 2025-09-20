@@ -148,13 +148,13 @@ export async function POST(
       }
 
       // Broadcast and maybe auto-advance
-      after(() =>
-        publishBattleEvent({
+      after(async () => {
+        await publishBattleEvent({
           roomId,
           event: "answer_received",
           payload: { roundNo: Number(roundNo), participantId: part.id },
-        })
-      );
+        });
+      });
 
       const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
       if (autoAdvanceEnabled) {
@@ -250,13 +250,13 @@ export async function POST(
     }
 
     // Broadcast answer_received in background (notify other clients)
-    after(() =>
-      publishBattleEvent({
+    after(async () => {
+      await publishBattleEvent({
         roomId,
         event: "answer_received",
         payload: { roundNo: Number(roundNo), participantId: part.id },
-      })
-    );
+      });
+    });
 
     // Check if all participants have answered for auto-advance
     const autoAdvanceEnabled = process.env.BATTLE_AUTO_ADVANCE !== "false";
@@ -325,7 +325,7 @@ async function checkAndAutoAdvanceRound(
     }));
 
     // Broadcast round closed
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "round_closed",
       payload: {
@@ -349,7 +349,7 @@ async function checkAndAutoAdvanceRound(
         .update({ status: "finished" })
         .eq("id", roomId);
 
-      publishBattleEvent({
+      await publishBattleEvent({
         roomId,
         event: "match_finished",
         payload: { roomId },
@@ -454,7 +454,7 @@ async function checkAndAutoAdvanceRoundFallback(
       }));
 
       // Broadcast round closed
-      publishBattleEvent({
+      await publishBattleEvent({
         roomId,
         event: "round_closed",
         payload: {
@@ -478,7 +478,7 @@ async function checkAndAutoAdvanceRoundFallback(
           .update({ status: "finished" })
           .eq("id", roomId);
 
-        publishBattleEvent({
+        await publishBattleEvent({
           roomId,
           event: "match_finished",
           payload: { roomId },
@@ -598,7 +598,7 @@ async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
     }
 
     // Broadcast round revealed
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "round_revealed",
       payload: {

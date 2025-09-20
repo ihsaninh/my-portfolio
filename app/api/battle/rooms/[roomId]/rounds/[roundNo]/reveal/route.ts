@@ -80,7 +80,7 @@ export async function POST(
     }
 
     // Broadcast
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "round_revealed",
       payload: {

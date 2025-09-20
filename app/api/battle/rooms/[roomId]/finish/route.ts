@@ -81,7 +81,7 @@ export async function POST(
     }
 
     // Broadcast match finished with standings (names + totals only)
-    publishBattleEvent({
+    await publishBattleEvent({
       roomId,
       event: "match_finished",
       payload: { standings },

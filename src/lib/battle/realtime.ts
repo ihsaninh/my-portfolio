@@ -130,6 +130,7 @@ const eventListeners = new Map<
   string,
   Array<(event: string, payload: Record<string, unknown>) => void>
 >();
+const channelQueues = new Map<string, Promise<void>>();
 
 // Type for our custom event listeners
 type BattleEventListener = (
@@ -171,78 +172,106 @@ export async function publishBattleEvent(params: {
   event: string; // e.g., player_joined, room_started, round_revealed, answer_received, round_closed, match_finished
   payload?: Record<string, unknown>;
 }) {
-  const maxRetries = 3;
-  let retryCount = 0;
+  const enqueueKey = params.roomId;
+  const previous = channelQueues.get(enqueueKey) ?? Promise.resolve();
 
-  // Add sequence number for event ordering
   const eventPayload = {
     sequence: Date.now(),
     ...params.payload,
   };
 
-  while (retryCount <= maxRetries) {
-    try {
-      const supabase = supabaseServer();
-      const channel = supabase.channel(`room:${params.roomId}`);
+  const execute = async () => {
+    const maxRetries = 3;
+    let retryCount = 0;
 
-      // Wait for subscription with timeout
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error("Subscription timeout"));
-        }, 5000); // 5 second timeout
+    while (retryCount <= maxRetries) {
+      let channel: RealtimeChannel | null = null;
+      try {
+        const supabase = supabaseServer();
+        channel = supabase.channel(`room:${params.roomId}`);
 
-        channel.subscribe((status) => {
-          if (status === "SUBSCRIBED") {
-            clearTimeout(timeout);
-            resolve();
-          } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-            clearTimeout(timeout);
-            reject(new Error(`Subscription failed: ${status}`));
-          }
+        // Wait for subscription with timeout
+        await new Promise<void>((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error("Subscription timeout"));
+          }, 5000); // 5 second timeout
+
+          channel!.subscribe((status) => {
+            if (status === "SUBSCRIBED") {
+              clearTimeout(timeout);
+              resolve();
+            } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+              clearTimeout(timeout);
+              reject(new Error(`Subscription failed: ${status}`));
+            }
+          });
         });
-      });
 
-      await channel.send({
-        type: "broadcast",
-        event: params.event,
-        payload: eventPayload,
-      });
-
-      await channel.unsubscribe();
-
-      console.log(`✅ Published ${params.event} to room:${params.roomId}`);
-      return; // Success, exit retry loop
-    } catch (err) {
-      retryCount++;
-      console.error(
-        `❌ publishBattleEvent failed (attempt ${retryCount}/${
-          maxRetries + 1
-        }):`,
-        {
-          roomId: params.roomId,
+        await channel.send({
+          type: "broadcast",
           event: params.event,
-          error: err instanceof Error ? err.message : String(err),
-        }
-      );
+          payload: eventPayload,
+        });
 
-      if (retryCount <= maxRetries) {
-        // Wait before retry with exponential backoff
-        await new Promise((resolve) =>
-          setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+        await channel.unsubscribe();
+
+        console.log(`✅ Published ${params.event} to room:${params.roomId}`);
+        return; // Success, exit retry loop
+      } catch (err) {
+        retryCount++;
+        console.error(
+          `❌ publishBattleEvent failed (attempt ${retryCount}/${
+            maxRetries + 1
+          }):`,
+          {
+            roomId: params.roomId,
+            event: params.event,
+            error: err instanceof Error ? err.message : String(err),
+          }
         );
+
+        if (channel) {
+          try {
+            await channel.unsubscribe();
+          } catch (unsubscribeErr) {
+            console.warn(
+              `⚠️ Failed to unsubscribe channel after error for room:${params.roomId}`,
+              unsubscribeErr
+            );
+          }
+        }
+
+        if (retryCount <= maxRetries) {
+          // Wait before retry with exponential backoff
+          await new Promise((resolve) =>
+            setTimeout(resolve, Math.pow(2, retryCount) * 1000)
+          );
+        }
       }
     }
+
+    console.error(
+      `💥 publishBattleEvent failed after ${maxRetries + 1} attempts for ${
+        params.event
+      }`
+    );
+
+    // Log connection stats on failure
+    const connectionStats = getConnectionStats();
+    console.log(`📊 Connection stats at time of failure:`, connectionStats);
+  };
+
+  const task = previous.then(execute, execute);
+  const queuePromise = task.catch(() => undefined);
+  channelQueues.set(enqueueKey, queuePromise);
+
+  try {
+    await task;
+  } finally {
+    if (channelQueues.get(enqueueKey) === queuePromise) {
+      channelQueues.delete(enqueueKey);
+    }
   }
-
-  console.error(
-    `💥 publishBattleEvent failed after ${maxRetries + 1} attempts for ${
-      params.event
-    }`
-  );
-
-  // Log connection stats on failure
-  const connectionStats = getConnectionStats();
-  console.log(`📊 Connection stats at time of failure:`, connectionStats);
 }
 
 // Get user identifier for connection limiting
