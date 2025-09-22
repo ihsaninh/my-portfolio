@@ -77,7 +77,7 @@ export function AnsweringPhase({
         <div className="space-y-3 md:space-y-4">
           {state.activeRound?.question?.choices?.length ? (
             <div className="space-y-3 md:space-y-3">
-              {state.activeRound.question.choices.map((c, idx) => {
+              {state.activeRound.question.choices.map((c) => {
                 const isSelected = selectedChoiceId === c.id;
 
                 const handleSelect = () => {
@@ -85,7 +85,7 @@ export function AnsweringPhase({
                   setSelectedChoiceId(c.id);
 
                   // Haptic feedback for mobile
-                  if ('vibrate' in navigator && window.innerWidth < 768) {
+                  if ("vibrate" in navigator && window.innerWidth < 768) {
                     navigator.vibrate(50);
                   }
                 };
@@ -97,8 +97,12 @@ export function AnsweringPhase({
                       isSelected
                         ? "border-cyan-400 bg-cyan-500/10 shadow-[0_0_0_2px_rgba(34,211,238,0.2)] scale-[1.02] md:scale-100"
                         : "border-white/10 bg-white/5 hover:bg-white/10 active:scale-[0.98] md:active:scale-100"
-                    } ${timeLeft === 0 || timeLeft === null ? "opacity-60 cursor-not-allowed" : ""}`}
-                    style={{ minHeight: '56px' }} // Ensure minimum touch target
+                    } ${
+                      timeLeft === 0 || timeLeft === null
+                        ? "opacity-60 cursor-not-allowed"
+                        : ""
+                    }`}
+                    style={{ minHeight: "56px" }} // Ensure minimum touch target
                   >
                     {/* Hide the native radio visually but keep it accessible */}
                     <input
@@ -118,7 +122,9 @@ export function AnsweringPhase({
                       }`}
                       aria-hidden="true"
                     >
-                      {isSelected && <FaCheck className="w-4 h-4 md:w-3.5 md:h-3.5" />}
+                      {isSelected && (
+                        <FaCheck className="w-4 h-4 md:w-3.5 md:h-3.5" />
+                      )}
                     </div>
                     {/* Option text */}
                     <div className="flex-1 text-white">
@@ -150,7 +156,7 @@ export function AnsweringPhase({
           <motion.button
             onClick={() => {
               // Haptic feedback on submit
-              if ('vibrate' in navigator && window.innerWidth < 768) {
+              if ("vibrate" in navigator && window.innerWidth < 768) {
                 navigator.vibrate([100, 50, 100]);
               }
               onSubmitAnswer();
@@ -165,10 +171,18 @@ export function AnsweringPhase({
             }
             whileTap={{ scale: 0.95 }}
             animate={{
-              scale: (timeLeft || 0) <= 10 && !loading && (selectedChoiceId || answer.trim()) ? [1, 1.02, 1] : 1,
+              scale:
+                (timeLeft || 0) <= 10 &&
+                !loading &&
+                (selectedChoiceId || answer.trim())
+                  ? [1, 1.02, 1]
+                  : 1,
             }}
             transition={{
-              scale: { duration: 0.8, repeat: (timeLeft || 0) <= 10 ? Infinity : 0 }
+              scale: {
+                duration: 0.8,
+                repeat: (timeLeft || 0) <= 10 ? Infinity : 0,
+              },
             }}
             className="w-full px-6 py-4 md:py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-3 md:gap-2 text-lg md:text-base min-h-[56px] md:min-h-[48px] shadow-lg active:shadow-md"
           >
