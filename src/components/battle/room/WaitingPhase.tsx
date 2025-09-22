@@ -17,16 +17,6 @@ export function WaitingPhase({
   const minParticipants = Math.min(2, roomCapacity);
   const canStart = participantCount >= minParticipants;
 
-  // Debug logging for participant count issues
-  console.log("[WAITING_PHASE] Participant count:", {
-    count: participantCount,
-    capacity: roomCapacity,
-    minParticipants,
-    canStart,
-    participants: state?.participants,
-    roomId: state?.room?.id,
-  });
-
   return (
     <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
       <motion.div
@@ -64,12 +54,13 @@ export function WaitingPhase({
         </p>
 
         {isHost && (
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={onStartBattle}
             disabled={loading || !canStart}
             className={`px-8 py-4 font-semibold rounded-xl transition-all flex items-center gap-2 mx-auto ${
               canStart
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+                ? "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg"
                 : "bg-gray-600 text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -83,7 +74,7 @@ export function WaitingPhase({
               : canStart
               ? "Start Battle"
               : "Waiting for Players"}
-          </button>
+          </motion.button>
         )}
       </div>
     </div>

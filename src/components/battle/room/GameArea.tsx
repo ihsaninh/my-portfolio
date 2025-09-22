@@ -45,24 +45,85 @@ export function GameArea({
           </h2>
           {timeLeft !== null && gamePhase === "answering" && (
             <div className="flex flex-wrap items-center gap-3 md:gap-4">
-              <div
-                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold md:text-lg md:px-4 md:py-2 ${
+              {/* Simple Timer */}
+              <motion.div
+                animate={{
+                  scale: timeLeft <= 10 ? [1, 1.05, 1] : 1,
+                  backgroundColor:
+                    timeLeft <= 10
+                      ? ["rgba(239, 68, 68, 0.2)", "rgba(239, 68, 68, 0.3)", "rgba(239, 68, 68, 0.2)"]
+                      : "rgba(255, 255, 255, 0.1)",
+                }}
+                transition={{
+                  scale: { duration: 0.5, repeat: timeLeft <= 10 ? Infinity : 0 },
+                  backgroundColor: { duration: 1, repeat: timeLeft <= 10 ? Infinity : 0 }
+                }}
+                className={`flex items-center gap-2 rounded-xl border px-3 py-1.5 text-sm font-semibold md:text-lg md:px-4 md:py-2 transition-all duration-700 ease-in-out ${
                   timeLeft <= 10
-                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                    ? "bg-gradient-to-r from-red-500/25 to-orange-500/25 text-red-300 border-red-400/40 shadow-lg"
                     : timeLeft <= 30
-                    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                    : "bg-green-500/20 text-green-400 border border-green-500/30"
+                    ? "bg-gradient-to-r from-yellow-500/20 to-amber-500/20 text-yellow-300 border-yellow-400/40"
+                    : "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-300 border-cyan-400/40"
                 }`}
               >
-                <FaClock className="h-4 w-4" />
-                {formatTime(timeLeft)}
-              </div>
+                <motion.div
+                  animate={{
+                    rotate: timeLeft <= 10 ? [0, 5, -5, 0] : 0,
+                    scale: timeLeft <= 5 ? [1, 1.2, 1] : 1
+                  }}
+                  transition={{
+                    rotate: { duration: 0.3, repeat: timeLeft <= 10 ? Infinity : 0 },
+                    scale: { duration: 0.2, repeat: timeLeft <= 5 ? Infinity : 0 }
+                  }}
+                >
+                  <FaClock className="h-4 w-4" />
+                </motion.div>
+                <span className="tabular-nums tracking-wide">
+                  {formatTime(timeLeft)}
+                </span>
+                {timeLeft <= 10 && (
+                  <motion.div
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 0.8, repeat: Infinity }}
+                    className="w-2 h-2 bg-red-400 rounded-full"
+                  />
+                )}
+              </motion.div>
 
               {/* Answered Count Indicator */}
-              <div className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/20 px-3 py-1.5 text-sm font-semibold text-blue-200 md:text-lg md:px-4 md:py-2">
-                <FaUsers className="h-4 w-4" />
-                {answeredCount}/{totalParticipants || 0} answered
-              </div>
+              <motion.div
+                animate={{
+                  scale: answeredCount > 0 ? [1, 1.02, 1] : 1,
+                }}
+                transition={{
+                  duration: 0.3,
+                  delay: 0.1,
+                }}
+                className="flex items-center gap-2 rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 px-3 py-1.5 text-sm font-semibold text-blue-200 md:text-lg md:px-4 md:py-2 transition-all duration-300"
+              >
+                <motion.div
+                  animate={{
+                    rotate: answeredCount > 0 ? [0, 360] : 0,
+                  }}
+                  transition={{
+                    duration: 0.5,
+                    ease: "easeOut",
+                  }}
+                >
+                  <FaUsers className="h-4 w-4" />
+                </motion.div>
+                <span className="tabular-nums">
+                  {answeredCount}/{totalParticipants || 0} answered
+                </span>
+                {answeredCount === totalParticipants &&
+                  totalParticipants > 0 && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="w-2 h-2 bg-green-400 rounded-full"
+                    />
+                  )}
+              </motion.div>
             </div>
           )}
         </div>
@@ -86,10 +147,76 @@ export function GameArea({
               loading={loading}
             />
           ) : (
-            <div className="text-center p-6">
-              <div className="w-8 h-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-white/70">Loading question...</p>
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center p-6 space-y-4"
+            >
+              {/* Enhanced question loading spinner */}
+              <div className="relative mx-auto w-16 h-16">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full"
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-2 border-2 border-blue-500/20 border-b-blue-500 rounded-full"
+                />
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <div className="w-4 h-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" />
+                </motion.div>
+              </div>
+
+              {/* Loading text */}
+              <motion.div
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <p className="text-white/90 font-medium">Preparing question</p>
+                <div className="flex justify-center space-x-1 mt-1">
+                  {[0, 1, 2].map((i) => (
+                    <motion.span
+                      key={i}
+                      animate={{ opacity: [0.3, 1, 0.3] }}
+                      transition={{
+                        duration: 1.2,
+                        repeat: Infinity,
+                        delay: i * 0.15,
+                      }}
+                      className="text-cyan-400 text-lg"
+                    >
+                      .
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Progress dots */}
+              <div className="flex justify-center space-x-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <motion.div
+                    key={i}
+                    animate={{
+                      scale: [1, 1.4, 1],
+                      opacity: [0.4, 1, 0.4]
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      delay: i * 0.1,
+                      ease: "easeInOut"
+                    }}
+                    className="w-2 h-2 bg-cyan-400 rounded-full"
+                  />
+                ))}
+              </div>
+            </motion.div>
           ))}
         {gamePhase === "finished" && <FinishedPhase />}
         {gamePhase === "playing" && !state?.activeRound && <PlayingPhase />}
