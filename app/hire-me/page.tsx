@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ChatInput,
@@ -130,6 +130,7 @@ export default function HireMePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [mode, setMode] = useState<Mode>("HR");
   const [input, setInput] = useState("");
+  const lastRequestTime = useRef<number>(0);
 
   const { messages, sendMessage, status } = useChat({
     id: `hire-${mode}`,
@@ -155,12 +156,27 @@ export default function HireMePage() {
   };
 
   const handlePresetClick = (preset: string) => {
+    // Throttle preset clicks - minimum 2 seconds between clicks
+    const now = Date.now();
+    if (now - lastRequestTime.current < 2000) {
+      return; // Too soon, ignore
+    }
+
+    lastRequestTime.current = now;
     sendMessage({ text: preset });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    // Throttle requests - minimum 1 second between requests
+    const now = Date.now();
+    if (now - lastRequestTime.current < 1000) {
+      return; // Too soon, ignore
+    }
+
+    lastRequestTime.current = now;
     sendMessage({ text: input });
     setInput("");
   };

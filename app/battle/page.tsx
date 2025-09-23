@@ -6,6 +6,7 @@ import { useCallback } from "react";
 import {
   BattleHeader,
   BattlePageShell,
+  FloatingHowToPlayButton,
   GameModeSelection,
 } from "@/src/components/battle";
 
@@ -21,9 +22,12 @@ export default function BattleLanding() {
   );
 
   return (
-    <BattlePageShell>
-      <BattleHeader />
-      <GameModeSelection onSetGameMode={handleSetGameMode} />
-    </BattlePageShell>
+    <>
+      <BattlePageShell>
+        <BattleHeader />
+        <GameModeSelection onSetGameMode={handleSetGameMode} />
+      </BattlePageShell>
+      <FloatingHowToPlayButton />
+    </>
   );
 }

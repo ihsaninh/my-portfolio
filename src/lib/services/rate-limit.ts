@@ -124,11 +124,4 @@ function getClientIdentifier(req: NextRequest): string {
   return `${ip}-${userAgent.slice(0, 50)}`;
 }
 
-// Cleanup on process exit
-if (typeof process !== "undefined") {
-  process.on("exit", () => {
-    generalLimiter.destroy();
-    battleActionLimiter.destroy();
-    answerSubmitLimiter.destroy();
-  });
-}
+// Note: Cleanup is handled automatically by garbage collection in Edge Runtime
