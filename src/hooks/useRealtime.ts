@@ -583,7 +583,7 @@ export function useRealtime(
       ch.on("broadcast", { event: "match_finished" }, (payload) => {
         setLastEventTime(Date.now());
         setIsProgressing(false);
-        useBattleStore.getState().setCurrentScoreboard(null);
+        useBattleStore.getState().resetScoreboard();
 
         const finishReason = payload?.payload?.reason as string | undefined;
         if (finishReason === "opponent_disconnected") {

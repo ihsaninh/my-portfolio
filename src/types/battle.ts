@@ -183,6 +183,7 @@ export interface BattleState {
   answeredCount: number;
   answerStatus: AnswerStatus | null;
   currentScoreboard: RoundScoreboardSnapshot | null;
+  previousScoreboard: RoundScoreboardSnapshot | null;
 
   // Timer IDs
   stuckDetectionTimerId: NodeJS.Timeout | null;
@@ -208,6 +209,7 @@ export interface BattleState {
   setAnsweredCount: (count: number) => void;
   setAnswerStatus: (status: AnswerStatus | null) => void;
   setCurrentScoreboard: (scoreboard: RoundScoreboardSnapshot | null) => void;
+  resetScoreboard: () => void;
   addNotification: (message: string) => void;
   clearTimers: () => void;
   setTimerIds: (timerIds: {

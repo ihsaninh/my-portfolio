@@ -147,7 +147,7 @@ export function useBattleRoomState(): {
         store.setState(null);
         store.setAnswerStatus(null);
         store.setNotifications([]);
-        store.setCurrentScoreboard(null);
+        store.resetScoreboard();
       }
     }
   }, [roomId, queryClient]);
