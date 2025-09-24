@@ -259,6 +259,23 @@ export const battleApi = {
     }
   },
 
+  advanceAfterScoreboard: async (
+    roomId: string
+  ): Promise<{ action: string; roundNo?: number }> => {
+    const response = await fetch(`${API_BASE}/rooms/${roomId}/advance`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error?.message || "Failed to advance round");
+    }
+
+    return response.json();
+  },
+
   // Get user's answers for completed battle
   getUserAnswers: async (roomId: string): Promise<UserAnswersResponse> => {
     const response = await fetch(`${API_BASE}/rooms/${roomId}/my-answers`, {

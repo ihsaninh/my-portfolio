@@ -30,6 +30,10 @@ function determineGamePhaseFromServerState(state: StateResp): GamePhase {
       return "finished";
     case "active":
       // If room is active, check if there's an active round
+      if (state.activeRound?.status === "scoreboard") {
+        return "scoreboard";
+      }
+
       if (state.activeRound?.status === "active") {
         return "answering";
       } else {
@@ -143,6 +147,7 @@ export function useBattleRoomState(): {
         store.setState(null);
         store.setAnswerStatus(null);
         store.setNotifications([]);
+        store.setCurrentScoreboard(null);
       }
     }
   }, [roomId, queryClient]);

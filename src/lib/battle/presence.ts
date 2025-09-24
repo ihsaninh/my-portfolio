@@ -37,12 +37,11 @@ async function closeRoundAndAdvance(params: {
   roomId: string;
   roundId: string;
   roundNo: number;
-  roundTimeSec: number;
 }): Promise<{
   reason: string;
   winnerSessionId: string | null;
 } | null> {
-  const { supabase, roomId, roundId, roundNo, roundTimeSec } = params;
+  const { supabase, roomId, roundId, roundNo } = params;
 
   const { data: roundStatus } = await supabase
     .from("battle_room_rounds")
@@ -54,17 +53,52 @@ async function closeRoundAndAdvance(params: {
     return null;
   }
 
-  await supabase
-    .from("battle_room_rounds")
-    .update({ status: "closed" })
-    .eq("id", roundId);
+  let roundJustClosed = false;
+  let usedFallback = false;
+
+  const { data: rpcResult, error: rpcError } = await supabase.rpc(
+    "close_round_and_update_scores",
+    {
+      p_round_id: roundId,
+      p_room_id: roomId,
+    }
+  );
+
+  if (rpcError) {
+    console.error(
+      "[PRESENCE] close_round_and_update_scores RPC failed",
+      rpcError
+    );
+  }
+
+  if (rpcResult?.round_closed) {
+    roundJustClosed = true;
+  } else {
+    const { data: closedRows, error: closeErr } = await supabase
+      .from("battle_room_rounds")
+      .update({ status: "scoreboard" })
+      .eq("id", roundId)
+      .eq("status", "active")
+      .select("id");
+
+    if (closeErr) {
+      throw closeErr;
+    }
+
+    roundJustClosed = Array.isArray(closedRows) && closedRows.length > 0;
+    usedFallback = roundJustClosed;
+  }
+
+  if (!roundJustClosed) {
+    return null;
+  }
 
   const { data: answers } = await supabase
     .from("battle_room_answers")
     .select("session_id, score_final")
     .eq("round_id", roundId);
 
-  if (answers && answers.length > 0) {
+  if (usedFallback && answers && answers.length > 0) {
     for (const answer of answers) {
       const { data: existing } = await supabase
         .from("battle_room_participants")
@@ -86,107 +120,46 @@ async function closeRoundAndAdvance(params: {
 
   const { data: participantsForMap } = await supabase
     .from("battle_room_participants")
-    .select("session_id, display_name, id")
+    .select("session_id, display_name, id, total_score")
     .eq("room_id", roomId);
 
-  const nameMap = new Map(
-    (participantsForMap || []).map((p) => [
-      p.session_id,
-      {
-        displayName: p.display_name,
-        participantId: p.id,
-      },
+  const roundScores = new Map(
+    (answers || []).map((answer) => [
+      answer.session_id,
+      answer.score_final || 0,
     ])
   );
 
-  const scoreboard = (answers || []).map((answer) => {
-    const mapped = nameMap.get(answer.session_id);
-    return {
-      sessionId: answer.session_id,
-      displayName: mapped?.displayName || "Player",
-      participantId: mapped?.participantId,
-      score: answer.score_final || 0,
-    };
-  });
-
-  await publishBattleEvent({
-    roomId,
-    event: "round_closed",
-    payload: { roundNo, scoreboard },
-  });
+  const scoreboard = (participantsForMap || [])
+    .map((participant) => {
+      const roundScore = roundScores.get(participant.session_id) || 0;
+      return {
+        sessionId: participant.session_id,
+        displayName: participant.display_name || "Player",
+        participantId: participant.id,
+        roundScore,
+        totalScore: participant.total_score || roundScore,
+      };
+    })
+    .sort((a, b) => b.totalScore - a.totalScore);
 
   const { count: remainingRounds } = await supabase
     .from("battle_room_rounds")
     .select("id", { count: "exact", head: true })
     .eq("room_id", roomId)
-    .neq("status", "closed");
+    .in("status", ["pending", "active"]);
 
-  if (!remainingRounds || remainingRounds === 0) {
-    const { data: standingsData } = await supabase
-      .from("battle_room_participants")
-      .select("session_id, display_name, total_score, is_host")
-      .eq("room_id", roomId);
-
-    await supabase
-      .from("battle_rooms")
-      .update({ status: "finished", finished_reason: "rounds_completed" })
-      .eq("id", roomId);
-
-    const winner = (standingsData || [])
-      .slice()
-      .sort((a, b) => (b.total_score || 0) - (a.total_score || 0))[0];
-
-    await publishBattleEvent({
-      roomId,
-      event: "match_finished",
-      payload: {
-        roomId,
-        reason: "rounds_completed",
-        winnerSessionId: winner?.session_id || null,
-        standings: standingsData,
-      },
-    });
-
-    return {
-      reason: "rounds_completed",
-      winnerSessionId: winner?.session_id || null,
-    };
-  }
-
-  const { data: nextRound } = await supabase
-    .from("battle_room_rounds")
-    .select("id, round_no")
-    .eq("room_id", roomId)
-    .eq("status", "pending")
-    .gt("round_no", roundNo)
-    .order("round_no", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (nextRound) {
-    const now = new Date();
-    const deadline = new Date(now.getTime() + roundTimeSec * 1000);
-
-    await supabase
-      .from("battle_room_rounds")
-      .update({
-        status: "active",
-        revealed_at: now.toISOString(),
-        deadline_at: deadline.toISOString(),
-      })
-      .eq("id", nextRound.id);
-
-    await publishBattleEvent({
-      roomId,
-      event: "round_revealed",
-      payload: {
-        roundNo: nextRound.round_no,
-        revealedAt: now.toISOString(),
-        deadlineAt: deadline.toISOString(),
-        reason: "auto_progress",
-      },
-    });
-  }
+  await publishBattleEvent({
+    roomId,
+    event: "round_closed",
+    payload: {
+      roundNo,
+      scoreboard,
+      stage: "scoreboard",
+      generatedAt: new Date().toISOString(),
+      hasMoreRounds: !!remainingRounds && remainingRounds > 0,
+    },
+  });
 
   return null;
 }
@@ -333,7 +306,6 @@ export async function handlePresenceUpdate(params: {
         roomId: params.roomId,
         roundId: activeRound.id,
         roundNo: activeRound.round_no,
-        roundTimeSec: room.round_time_sec || 60,
       });
 
       if (closeResult) {

@@ -23,7 +23,7 @@ BEGIN
     IF v_answers_count >= v_participants_count THEN
         -- Close the round atomically
         UPDATE battle_room_rounds
-        SET status = 'closed'
+        SET status = 'scoreboard'
         WHERE id = p_round_id AND status = 'active';
 
         -- Check if update was successful

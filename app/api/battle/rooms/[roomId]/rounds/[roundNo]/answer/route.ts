@@ -299,65 +299,54 @@ async function checkAndAutoAdvanceRound(
     }
 
     if (!result || !result.round_closed) {
-      return; // Round was already closed or not ready
+      return; // Round was already handled
     }
 
-    // Get answers for scoreboard (after atomic update)
     const { data: answers } = await supabase
       .from("battle_room_answers")
       .select("session_id, score_final")
       .eq("round_id", roundId);
 
-    // Get participants for name mapping
     const { data: participants } = await supabase
       .from("battle_room_participants")
-      .select("session_id, display_name")
+      .select("id, session_id, display_name, total_score")
       .eq("room_id", roomId);
 
-    const nameMap = new Map(
-      (participants || []).map((p) => [p.session_id, p.display_name])
+    const roundScores = new Map(
+      (answers || []).map((a) => [a.session_id, a.score_final || 0])
     );
 
-    const roundScoreboard = (answers || []).map((a) => ({
-      sessionId: a.session_id,
-      displayName: nameMap.get(a.session_id) || "Player",
-      score: a.score_final,
-    }));
+    const roundScoreboard = (participants || [])
+      .map((participant) => {
+        const roundScore = roundScores.get(participant.session_id) || 0;
+        return {
+          sessionId: participant.session_id,
+          displayName: participant.display_name || "Player",
+          participantId: participant.id,
+          roundScore,
+          totalScore: participant.total_score || roundScore,
+        };
+      })
+      .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
 
-    // Broadcast round closed
+    const { count: remainingRounds } = await supabase
+      .from("battle_room_rounds")
+      .select("*", { count: "exact", head: true })
+      .eq("room_id", roomId)
+      .in("status", ["pending", "active"]);
+
     await publishBattleEvent({
       roomId,
       event: "round_closed",
       payload: {
         roundNo,
         scoreboard: roundScoreboard,
+        stage: "scoreboard",
+        generatedAt: new Date().toISOString(),
         reason: "all_answered",
+        hasMoreRounds: !!remainingRounds && remainingRounds > 0,
       },
     });
-
-    // Check if this was the last round
-    const { count: remainingRounds } = await supabase
-      .from("battle_room_rounds")
-      .select("*", { count: "exact", head: true })
-      .eq("room_id", roomId)
-      .eq("status", "pending");
-
-    if (!remainingRounds || remainingRounds === 0) {
-      // Finish the battle
-      await supabase
-        .from("battle_rooms")
-        .update({ status: "finished" })
-        .eq("id", roomId);
-
-      await publishBattleEvent({
-        roomId,
-        event: "match_finished",
-        payload: { roomId },
-      });
-    } else {
-      // Auto-reveal next round
-      await autoRevealNextRound(roomId, roundNo + 1);
-    }
   } catch (error) {
     console.error("[DEBUG] Error in checkAndAutoAdvanceRound:", error);
   }
@@ -406,7 +395,7 @@ async function checkAndAutoAdvanceRoundFallback(
       // Close the current round atomically
       const { data: closedRound, error: closeError } = await supabase
         .from("battle_room_rounds")
-        .update({ status: "closed" })
+        .update({ status: "scoreboard" })
         .eq("id", roundId)
         .eq("status", "active") // Only close if still active
         .select("status")
@@ -440,53 +429,44 @@ async function checkAndAutoAdvanceRoundFallback(
       // Prepare scoreboard for broadcast
       const { data: participants } = await supabase
         .from("battle_room_participants")
-        .select("session_id, display_name")
+        .select("id, session_id, display_name, total_score")
         .eq("room_id", roomId);
 
-      const nameMap = new Map(
-        (participants || []).map((p) => [p.session_id, p.display_name])
+      const roundScores = new Map(
+        (answers || []).map((a) => [a.session_id, a.score_final || 0])
       );
 
-      const roundScoreboard = (answers || []).map((a) => ({
-        sessionId: a.session_id,
-        displayName: nameMap.get(a.session_id) || "Player",
-        score: a.score_final,
-      }));
+      const roundScoreboard = (participants || [])
+        .map((participant) => {
+          const roundScore = roundScores.get(participant.session_id) || 0;
+          return {
+            sessionId: participant.session_id,
+            displayName: participant.display_name || "Player",
+            participantId: participant.id,
+            roundScore,
+            totalScore: participant.total_score || roundScore,
+          };
+        })
+        .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
 
-      // Broadcast round closed
+      const { count: remainingRounds } = await supabase
+        .from("battle_room_rounds")
+        .select("*", { count: "exact", head: true })
+        .eq("room_id", roomId)
+        .in("status", ["pending", "active"]);
+
       await publishBattleEvent({
         roomId,
         event: "round_closed",
         payload: {
           roundNo,
           scoreboard: roundScoreboard,
-          reason: "all_answered", // New field to indicate auto-advance
+          reason: "all_answered",
+          stage: "scoreboard",
+          generatedAt: new Date().toISOString(),
+          hasMoreRounds: !!remainingRounds && remainingRounds > 0,
         },
       });
-
-      // Check if this was the last round
-      const { count: remainingRounds } = await supabase
-        .from("battle_room_rounds")
-        .select("*", { count: "exact", head: true })
-        .eq("room_id", roomId)
-        .eq("status", "pending");
-
-      if (!remainingRounds || remainingRounds === 0) {
-        // Finish the battle
-        await supabase
-          .from("battle_rooms")
-          .update({ status: "finished" })
-          .eq("id", roomId);
-
-        await publishBattleEvent({
-          roomId,
-          event: "match_finished",
-          payload: { roomId },
-        });
-      } else {
-        // Auto-reveal next round immediately (no setTimeout in serverless)
-        await autoRevealNextRound(roomId, roundNo + 1);
-      }
     }
   } catch {}
 }
@@ -556,57 +536,3 @@ async function updateParticipantScoreAtomic(
   );
 }
 
-/**
- * Auto-reveal the next round
- */
-async function autoRevealNextRound(roomId: string, nextRoundNo: number) {
-  const supabase = supabaseAdmin();
-
-  try {
-    // Get room settings for timer
-    const { data: room } = await supabase
-      .from("battle_rooms")
-      .select("round_time_sec, status")
-      .eq("id", roomId)
-      .single();
-
-    if (!room || room.status !== "active") {
-      return;
-    }
-
-    const now = new Date();
-    const deadline = new Date(
-      now.getTime() + (room.round_time_sec || 60) * 1000
-    );
-
-    // Reveal next round atomically
-    const { data: revealedRound, error: revealErr } = await supabase
-      .from("battle_room_rounds")
-      .update({
-        status: "active",
-        revealed_at: now.toISOString(),
-        deadline_at: deadline.toISOString(),
-      })
-      .eq("room_id", roomId)
-      .eq("round_no", nextRoundNo)
-      .eq("status", "pending") // Only reveal if still pending
-      .select("round_no, status")
-      .single();
-
-    if (revealErr || !revealedRound) {
-      return;
-    }
-
-    // Broadcast round revealed
-    await publishBattleEvent({
-      roomId,
-      event: "round_revealed",
-      payload: {
-        roundNo: nextRoundNo,
-        revealedAt: now.toISOString(),
-        deadlineAt: deadline.toISOString(),
-        reason: "auto_advance", // Indicate this was auto-revealed
-      },
-    });
-  } catch {}
-}

@@ -23,7 +23,7 @@ BEGIN
 
     IF v_answers_count >= v_participants_count THEN
         UPDATE public.battle_room_rounds
-        SET status = 'closed'
+        SET status = 'scoreboard'
         WHERE id = p_round_id AND status = 'active';
 
         IF FOUND THEN

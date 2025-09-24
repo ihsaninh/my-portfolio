@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 
 import {
+  useAdvanceFromScoreboard,
   useCloseRound,
-  useRevealNextRound,
   useStartBattle,
   useSubmitAnswer,
 } from "@/src/hooks/useBattleQueries";
@@ -37,7 +37,7 @@ export function useBattleActions(
   const startBattleMutation = useStartBattle();
   const submitAnswerMutation = useSubmitAnswer();
   const closeRoundMutation = useCloseRound();
-  const revealNextRoundMutation = useRevealNextRound();
+  const advanceFromScoreboardMutation = useAdvanceFromScoreboard();
 
   // Request deduplication for answer submissions
   const submitInProgress = useRef(false);
@@ -55,9 +55,9 @@ export function useBattleActions(
       return;
     }
 
-    const link = `${window.location.origin}/battle/join?roomCode=${encodeURIComponent(
-      roomCode
-    )}`;
+    const link = `${
+      window.location.origin
+    }/battle/join?roomCode=${encodeURIComponent(roomCode)}`;
 
     navigator.clipboard
       .writeText(link)
@@ -189,21 +189,27 @@ export function useBattleActions(
   };
 
   const autoCloseRound = async () => {
-    const isHost = useBattleStore.getState().isHostCache;
-    if (!isHost || !state?.activeRound) {
+    const snapshot = useBattleStore.getState();
+    const latestState = snapshot.state || state;
+
+    if (!snapshot.isHostCache || !latestState?.activeRound) {
+      return;
+    }
+
+    if (latestState.activeRound.status !== "active") {
       return;
     }
 
     // Prevent multiple simultaneous close attempts
-    if (isProgressing) {
+    if (snapshot.isProgressing || isProgressing) {
       return;
     }
 
     setIsProgressing(true);
 
     try {
-      const currentRound = state.activeRound.roundNo;
-      const totalRounds = state?.room?.num_questions || 0;
+      const currentRound = latestState.activeRound.roundNo;
+      const totalRounds = latestState?.room?.num_questions || 0;
 
       // Close current round
       await closeRoundMutation.mutateAsync({
@@ -211,33 +217,37 @@ export function useBattleActions(
         roundNo: currentRound,
       });
 
-      // Check if this was the last round
+      await refresh();
+
       if (currentRound >= totalRounds) {
-        // The close API should have set the room status to "finished" and broadcast match_finished
-        // We'll wait for the match_finished event rather than forcing transition
+        setIsProgressing(false);
         return;
       }
 
-      // Small delay before revealing next round to prevent race conditions
-      setTimeout(async () => {
-        try {
-          const nextRound = currentRound + 1;
-
-          await revealNextRoundMutation.mutateAsync({
-            roomId: roomId!,
-            roundNo: nextRound,
-          });
-
-          // Update tracking for the new round
-          // This will be handled by the realtime hook
-        } catch {
-          // Force refresh to get updated state
-          await refresh();
-        } finally {
-          setIsProgressing(false);
-        }
-      }, 1500); // Increased delay from 1000ms to 1500ms
+      setIsProgressing(false);
     } catch {
+      setIsProgressing(false);
+    }
+  };
+
+  const advanceFromScoreboard = async () => {
+    const snapshot = useBattleStore.getState();
+    if (!snapshot.isHostCache || !roomId) {
+      return;
+    }
+
+    if (snapshot.isProgressing) {
+      return;
+    }
+
+    setIsProgressing(true);
+
+    try {
+      await advanceFromScoreboardMutation.mutateAsync({ roomId });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      addNotification(`Advance error: ${message}`);
+    } finally {
       setIsProgressing(false);
     }
   };
@@ -286,6 +296,7 @@ export function useBattleActions(
     startBattle,
     submitAnswer,
     autoCloseRound,
+    advanceFromScoreboard,
     formatTime,
     difficultyLabel,
     getDifficultyColor,
@@ -295,6 +306,6 @@ export function useBattleActions(
     startBattleLoading: startBattleMutation.isPending,
     submitAnswerLoading: submitAnswerMutation.isPending,
     closeRoundLoading: closeRoundMutation.isPending,
-    revealNextRoundLoading: revealNextRoundMutation.isPending,
+    advanceFromScoreboardLoading: advanceFromScoreboardMutation.isPending,
   };
 }

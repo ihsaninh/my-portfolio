@@ -24,6 +24,7 @@ export const useBattleStore = create<BattleState>()(
       notifications: [],
       answeredCount: 0,
       answerStatus: null,
+      currentScoreboard: null,
       stuckDetectionTimerId: null,
       pollingIntervalId: null,
       forceProgressTimerId: null,
@@ -46,6 +47,7 @@ export const useBattleStore = create<BattleState>()(
       setNotifications: (notifications) => set({ notifications }),
       setAnsweredCount: (answeredCount) => set({ answeredCount }),
       setAnswerStatus: (answerStatus) => set({ answerStatus }),
+      setCurrentScoreboard: (currentScoreboard) => set({ currentScoreboard }),
       addNotification: (message) =>
         set((state) => {
           // Prevent duplicate notifications (check last 3 notifications)

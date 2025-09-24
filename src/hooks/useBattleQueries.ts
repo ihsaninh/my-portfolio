@@ -396,6 +396,39 @@ export const useRevealNextRound = () => {
   });
 };
 
+// Advance from scoreboard phase (host only)
+export const useAdvanceFromScoreboard = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ roomId }: { roomId: string }) => {
+      try {
+        return await battleApi.advanceAfterScoreboard(roomId);
+      } catch (error) {
+        handleApiError(
+          error,
+          (message: string, type?: "error" | "warning" | "info") => {
+            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+          }
+        );
+
+        throw error;
+      }
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: battleQueryKeys.roomState(variables.roomId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: battleQueryKeys.answerStatus(variables.roomId),
+      });
+    },
+    onError: (error) => {
+      console.error("Advance from scoreboard failed:", error);
+    },
+  });
+};
+
 // Custom hook for refreshing battle data
 export const useBattleRefresh = (roomId: string | undefined) => {
   const queryClient = useQueryClient();

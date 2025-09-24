@@ -53,7 +53,7 @@ export async function POST(
     // Get the current room status
     const { data: room } = await supabase
       .from("battle_rooms")
-      .select("status, num_questions")
+      .select("status, num_questions, round_time_sec")
       .eq("id", roomId)
       .single();
 
@@ -66,30 +66,36 @@ export async function POST(
       });
     }
 
-    // Check if there's a closed round that needs to be advanced
-    const { data: lastClosedRound } = await supabase
+    // Find the most recent round in scoreboard state
+    const { data: scoreboardRound } = await supabase
       .from("battle_room_rounds")
-      .select("round_no")
+      .select("id, round_no")
       .eq("room_id", roomId)
-      .eq("status", "closed")
+      .eq("status", "scoreboard")
       .order("round_no", { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    if (!lastClosedRound) {
+    if (!scoreboardRound) {
       return createErrorResponse({
-        code: "NO_CLOSED_ROUND",
-        message: "No closed round found to advance from.",
+        code: "NO_SCOREBOARD_ROUND",
+        message: "There is no round waiting on the scoreboard stage.",
         retryable: false,
         statusCode: 400,
       });
     }
 
-    const nextRoundNo = lastClosedRound.round_no + 1;
+    const nextRoundNo = scoreboardRound.round_no + 1;
 
     // Check if this is the last round
+    // Mark scoreboard round as fully closed
+    await supabase
+      .from("battle_room_rounds")
+      .update({ status: "closed" })
+      .eq("id", scoreboardRound.id)
+      .eq("status", "scoreboard");
+
     if (nextRoundNo > room.num_questions) {
-      // Finish the battle
       await supabase
         .from("battle_rooms")
         .update({ status: "finished" })
@@ -109,7 +115,9 @@ export async function POST(
 
     // Reveal next round
     const now = new Date();
-    const deadline = new Date(now.getTime() + 60 * 1000); // Default 60 seconds
+    const deadline = new Date(
+      now.getTime() + (room.round_time_sec || 60) * 1000
+    );
 
     const { data: revealedRound, error: revealErr } = await supabase
       .from("battle_room_rounds")

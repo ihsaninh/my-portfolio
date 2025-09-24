@@ -6,4 +6,5 @@ export * from "./Participants";
 export * from "./PlayingPhase";
 export * from "./RoomHeader";
 export * from "./RoomInfo";
+export * from "./ScoreboardPhase";
 export * from "./WaitingPhase";

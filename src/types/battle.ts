@@ -1,4 +1,9 @@
-export type GamePhase = "waiting" | "playing" | "answering" | "finished";
+export type GamePhase =
+  | "waiting"
+  | "playing"
+  | "answering"
+  | "scoreboard"
+  | "finished";
 
 export type RoomStatus =
   | "waiting"
@@ -123,6 +128,22 @@ export interface ScoreboardEntry {
   totalScore: number;
 }
 
+export interface RoundScoreboardEntry {
+  sessionId: string;
+  displayName: string;
+  participantId?: string;
+  roundScore: number;
+  totalScore: number;
+}
+
+export interface RoundScoreboardSnapshot {
+  roundNo: number;
+  reason?: string;
+  entries: RoundScoreboardEntry[];
+  generatedAt?: string;
+  hasMoreRounds?: boolean;
+}
+
 export interface RoomStats {
   room?: {
     id: string;
@@ -161,6 +182,7 @@ export interface BattleState {
   notifications: string[];
   answeredCount: number;
   answerStatus: AnswerStatus | null;
+  currentScoreboard: RoundScoreboardSnapshot | null;
 
   // Timer IDs
   stuckDetectionTimerId: NodeJS.Timeout | null;
@@ -185,6 +207,7 @@ export interface BattleState {
   setNotifications: (notifications: string[]) => void;
   setAnsweredCount: (count: number) => void;
   setAnswerStatus: (status: AnswerStatus | null) => void;
+  setCurrentScoreboard: (scoreboard: RoundScoreboardSnapshot | null) => void;
   addNotification: (message: string) => void;
   clearTimers: () => void;
   setTimerIds: (timerIds: {
@@ -204,6 +227,18 @@ export interface GameAreaProps {
   iHaveAnswered: boolean;
   loading: boolean;
   totalParticipants: number;
+  scoreboard: RoundScoreboardSnapshot | null;
+  onAdvanceFromScoreboard: () => void;
+  advanceFromScoreboardLoading: boolean;
+}
+
+export interface ScoreboardPhaseProps {
+  scoreboard: RoundScoreboardSnapshot;
+  isHost: boolean;
+  loading: boolean;
+  onAdvance: () => void;
+  currentSessionId?: string | null;
+  totalRounds: number;
 }
 
 export interface WaitingPhaseProps {

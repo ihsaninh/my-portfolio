@@ -7,6 +7,7 @@ import type { GameAreaProps } from "@/src/types/battle";
 import { AnsweringPhase } from "./AnsweringPhase";
 import { FinishedPhase } from "./FinishedPhase";
 import { PlayingPhase } from "./PlayingPhase";
+import { ScoreboardPhase } from "./ScoreboardPhase";
 import { WaitingPhase } from "./WaitingPhase";
 
 export function GameArea({
@@ -18,8 +19,15 @@ export function GameArea({
   iHaveAnswered,
   loading,
   totalParticipants,
+  scoreboard,
+  onAdvanceFromScoreboard,
+  advanceFromScoreboardLoading,
 }: GameAreaProps) {
   const { state, gamePhase } = useBattleStore();
+  const currentSessionId = state?.currentUser?.session_id || null;
+  const totalRounds = state?.room?.num_questions || 0;
+  const showScoreboard = Boolean(scoreboard) &&
+    (gamePhase === "scoreboard" || gamePhase === "playing" || gamePhase === "answering");
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -41,6 +49,7 @@ export function GameArea({
             {gamePhase === "waiting" && "⏳ Waiting for Battle to Start"}
             {gamePhase === "playing" && "🎮 Battle in Progress"}
             {gamePhase === "answering" && "📝 Answer the Question"}
+            {gamePhase === "scoreboard" && "🏆 Scoreboard"}
             {gamePhase === "finished" && "🏆 Battle Finished"}
           </h2>
           {timeLeft !== null && gamePhase === "answering" && (
@@ -138,7 +147,18 @@ export function GameArea({
             loading={loading}
           />
         )}
-        {gamePhase === "answering" &&
+        {showScoreboard && scoreboard && (
+          <ScoreboardPhase
+            scoreboard={scoreboard}
+            isHost={isHost}
+            loading={advanceFromScoreboardLoading}
+            onAdvance={onAdvanceFromScoreboard}
+            currentSessionId={currentSessionId}
+            totalRounds={totalRounds}
+          />
+        )}
+        {!showScoreboard &&
+          gamePhase === "answering" &&
           state?.activeRound?.status === "active" &&
           (state?.activeRound?.question ? (
             <AnsweringPhase
@@ -219,7 +239,9 @@ export function GameArea({
             </motion.div>
           ))}
         {gamePhase === "finished" && <FinishedPhase />}
-        {gamePhase === "playing" && !state?.activeRound && <PlayingPhase />}
+        {!showScoreboard && gamePhase === "playing" && !state?.activeRound && (
+          <PlayingPhase />
+        )}
       </div>
     </motion.div>
   );

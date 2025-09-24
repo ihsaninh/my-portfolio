@@ -104,7 +104,7 @@ export async function GET(
         "round_no, revealed_at, deadline_at, status, question_id, question_json"
       )
       .eq("room_id", roomId)
-      .eq("status", "active")
+      .in("status", ["active", "scoreboard"])
       .order("round_no", { ascending: false })
       .limit(1)
       .maybeSingle();

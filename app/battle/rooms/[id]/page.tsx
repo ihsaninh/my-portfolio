@@ -34,9 +34,12 @@ export default function BattleRoom() {
     copyRoomLink,
     startBattle,
     submitAnswer,
+    advanceFromScoreboard,
 
     // Derived values
     isHost,
+    scoreboard,
+    advanceFromScoreboardLoading,
   } = useBattleLogic();
 
   // Access to selected answer for quick submit validation
@@ -294,6 +297,9 @@ export default function BattleRoom() {
                   iHaveAnswered={iHaveAnswered}
                   loading={loading}
                   totalParticipants={totalParticipants}
+                  scoreboard={scoreboard}
+                  onAdvanceFromScoreboard={advanceFromScoreboard}
+                  advanceFromScoreboardLoading={advanceFromScoreboardLoading}
                 />
               </div>
             </div>

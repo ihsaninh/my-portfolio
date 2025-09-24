@@ -38,7 +38,7 @@ export async function POST(
 
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
-      .select("host_session_id")
+      .select("host_session_id, status")
       .eq("id", roomId)
       .single();
 
@@ -69,15 +69,41 @@ export async function POST(
     }
 
     let justClosed = false;
-    if (round.status !== "closed") {
-      const { error: updErr } = await supabase
-        .from("battle_room_rounds")
-        .update({ status: "closed" })
-        .eq("id", round.id);
-      if (updErr) {
-        return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+    let usedFallback = false;
+    if (round.status !== "scoreboard" && round.status !== "closed") {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc(
+        "close_round_and_update_scores",
+        {
+          p_round_id: round.id,
+          p_room_id: roomId,
+        }
+      );
+
+      if (rpcError) {
+        console.error("[CLOSE_ROUND] RPC failed, falling back", rpcError);
       }
-      justClosed = true;
+
+      if (rpcResult?.round_closed) {
+        justClosed = true;
+      } else {
+        const { data: closedRows, error: updErr } = await supabase
+          .from("battle_room_rounds")
+          .update({ status: "scoreboard" })
+          .eq("id", round.id)
+          .eq("status", "active")
+          .select("id");
+
+        if (updErr) {
+          return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+        }
+
+        justClosed = Array.isArray(closedRows) && closedRows.length > 0;
+        usedFallback = justClosed;
+      }
+
+      if (justClosed) {
+        round.status = "scoreboard";
+      }
     }
 
     // Scoreboard for this round
@@ -90,7 +116,7 @@ export async function POST(
     }
 
     // Increment participant totals only once when transitioning to closed
-    if (justClosed && answers && answers.length > 0) {
+    if (usedFallback && answers && answers.length > 0) {
       for (const a of answers) {
         const { data: curr } = await supabase
           .from("battle_room_participants")
@@ -109,58 +135,50 @@ export async function POST(
 
     const { data: participants } = await supabase
       .from("battle_room_participants")
-      .select("session_id, display_name, id")
+      .select("session_id, display_name, id, total_score")
       .eq("room_id", roomId);
 
-    const mapBySession = new Map(
-      (participants || []).map((p) => [
-        p.session_id,
-        { name: p.display_name, pid: p.id },
-      ])
+    const roundScores = new Map(
+      (answers || []).map((a) => [a.session_id, a.score_final || 0])
     );
-    const scoreboard = (answers || []).map((a) => {
-      const m = mapBySession.get(a.session_id);
-      return {
-        participantId: m?.pid,
-        displayName: m?.name || "Player",
-        score: a.score_final,
-      };
-    });
 
-    // Auto-finish if all rounds are closed
-    const { count: openCount } = await supabase
+    const scoreboard = (participants || [])
+      .map((participant) => {
+        const roundScore = roundScores.get(participant.session_id) || 0;
+        return {
+          participantId: participant.id,
+          sessionId: participant.session_id,
+          displayName: participant.display_name || "Player",
+          roundScore,
+          totalScore: participant.total_score || roundScore,
+        };
+      })
+      .sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
+
+    const { count: remainingRounds } = await supabase
       .from("battle_room_rounds")
       .select("id", { count: "exact", head: true })
       .eq("room_id", roomId)
-      .neq("status", "closed");
+      .in("status", ["pending", "active"]);
 
-    let finished = false;
-    if (!openCount || openCount === 0) {
-      const { error: finishErr } = await supabase
-        .from("battle_rooms")
-        .update({ status: "finished" })
-        .eq("id", roomId);
-      if (!finishErr) finished = true;
-    }
-
-    // Broadcast round_closed and maybe match_finished
-    await publishBattleEvent({
-      roomId,
-      event: "round_closed",
-      payload: { roundNo: Number(roundNo), scoreboard },
-    });
-    if (finished) {
+    if (justClosed) {
       await publishBattleEvent({
         roomId,
-        event: "match_finished",
-        payload: { roomId },
+        event: "round_closed",
+        payload: {
+          roundNo: Number(roundNo),
+          scoreboard,
+          stage: "scoreboard",
+          generatedAt: new Date().toISOString(),
+          hasMoreRounds: !!remainingRounds && remainingRounds > 0,
+        },
       });
     }
 
     return NextResponse.json({
       ok: true,
       roundScoreboard: scoreboard,
-      finished,
+      finished: false,
     });
   } catch (e: unknown) {
     return createErrorResponse(e);

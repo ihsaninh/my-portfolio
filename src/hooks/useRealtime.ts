@@ -462,6 +462,7 @@ export function useRealtime(
         useBattleStore.getState().setAnswer("");
         useBattleStore.getState().setSelectedChoiceId(null);
         useBattleStore.getState().setAnsweredCount(0);
+        useBattleStore.getState().setCurrentScoreboard(null);
         setIsProgressing(false);
 
         // Clear existing timers
@@ -509,7 +510,10 @@ export function useRealtime(
             clearTimeout(autoCloseTimeoutRef.current);
           }
           autoCloseTimeoutRef.current = setTimeout(() => {
-            autoCloseRound();
+            const currentState = useBattleStore.getState().state;
+            if (currentState?.activeRound?.status === "active") {
+              autoCloseRound();
+            }
           }, 2000);
         }
 
@@ -518,31 +522,59 @@ export function useRealtime(
 
       ch.on("broadcast", { event: "round_closed" }, (p) => {
         setLastEventTime(Date.now());
-        const roundNo = p?.payload?.roundNo || "?";
+        const payload = p?.payload ?? {};
+
+        if (payload?.stage === "scoreboard") {
+          clearStuckDetectionTimer();
+          if (roundClosedTimeoutRef.current) {
+            clearTimeout(roundClosedTimeoutRef.current);
+            roundClosedTimeoutRef.current = null;
+          }
+
+          const store = useBattleStore.getState();
+          store.setCurrentScoreboard({
+            roundNo: Number(payload.roundNo) || 0,
+            entries: Array.isArray(payload.scoreboard)
+              ? payload.scoreboard
+              : [],
+            reason: payload.reason,
+            generatedAt: payload.generatedAt,
+            hasMoreRounds: payload.hasMoreRounds,
+          });
+          store.setGamePhase("scoreboard");
+          prevGamePhaseRef.current = "scoreboard";
+          store.setIsProgressing(false);
+          store.setHasSubmitted(false);
+          store.setAnsweredCount(0);
+          store.setTimeLeft(null);
+
+          debouncedRefresh();
+          refresh(true);
+          return;
+        }
+
+        const roundNo = payload?.roundNo || "?";
         const totalRounds =
           useBattleStore.getState().state?.room?.num_questions ??
           state?.room?.num_questions ??
           0;
 
-        // Check if this was the last round
         if (Number(roundNo) >= totalRounds) {
           return;
         }
 
-        // Clear existing timers to prevent conflicts
         clearStuckDetectionTimer();
         if (roundClosedTimeoutRef.current) {
           clearTimeout(roundClosedTimeoutRef.current);
         }
 
-        // Simplified round transition timer - single timer, no complex logic
         roundClosedTimeoutRef.current = setTimeout(() => {
           const currentState = useBattleStore.getState();
           if (currentState.gamePhase === "playing") {
             console.log("[ROUND_CLOSED] Round transition timer triggered");
             refresh(true);
           }
-        }, 8000); // Reduced from 12s to 8s
+        }, 8000);
         setTimerIds({ stuckDetectionTimerId: roundClosedTimeoutRef.current });
 
         debouncedRefresh();
@@ -551,6 +583,7 @@ export function useRealtime(
       ch.on("broadcast", { event: "match_finished" }, (payload) => {
         setLastEventTime(Date.now());
         setIsProgressing(false);
+        useBattleStore.getState().setCurrentScoreboard(null);
 
         const finishReason = payload?.payload?.reason as string | undefined;
         if (finishReason === "opponent_disconnected") {
