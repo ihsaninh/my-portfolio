@@ -3,8 +3,14 @@ import { z } from "zod";
 
 import { evaluateAnswer } from "@/src/lib/ai/ai-scoring";
 import { publishBattleEvent } from "@/src/lib/battle/realtime";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
-import { answerSubmitLimiter, checkRateLimit } from "@/src/lib/services/rate-limit";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/lib/services/api-errors";
+import {
+  answerSubmitLimiter,
+  checkRateLimit,
+} from "@/src/lib/services/rate-limit";
 import { getSessionIdFromCookies } from "@/src/lib/services/session";
 import { supabaseAdmin } from "@/src/lib/services/supabase";
 
@@ -535,4 +541,3 @@ async function updateParticipantScoreAtomic(
     `[DEBUG] Failed to update score for session ${sessionId} after ${maxRetries} attempts`
   );
 }
-

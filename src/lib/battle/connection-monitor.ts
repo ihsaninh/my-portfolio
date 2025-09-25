@@ -14,22 +14,28 @@ class ConnectionMonitor {
 
     this.monitoringInterval = setInterval(() => {
       const stats = getConnectionStats();
-      
+
       // Log regular statistics
-      console.log(`📊 Connection Monitor - Total: ${stats.totalConnections}, User: ${stats.userConnections}`);
-      
+      console.log(
+        `📊 Connection Monitor - Total: ${stats.totalConnections}, User: ${stats.userConnections}`
+      );
+
       // Alert on high connection count
       if (stats.totalConnections > this.highConnectionThreshold) {
-        console.warn(`⚠️ High connection count detected: ${stats.totalConnections}`);
+        console.warn(
+          `⚠️ High connection count detected: ${stats.totalConnections}`
+        );
         this.logDetailedStats(stats);
       }
-      
+
       // Alert on excessive connections per user
       if (stats.userConnections > stats.maxUserConnections * 0.8) {
-        console.warn(`⚠️ High user connection count: ${stats.userConnections}/${stats.maxUserConnections}`);
+        console.warn(
+          `⚠️ High user connection count: ${stats.userConnections}/${stats.maxUserConnections}`
+        );
       }
     }, this.logInterval);
-    
+
     console.log("🔌 Connection monitoring started");
   }
 
@@ -75,7 +81,7 @@ if (typeof window !== "undefined") {
   window.addEventListener("load", () => {
     connectionMonitor.startMonitoring();
   });
-  
+
   // Stop monitoring when the page unloads
   window.addEventListener("beforeunload", () => {
     connectionMonitor.stopMonitoring();

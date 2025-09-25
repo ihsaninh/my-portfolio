@@ -9,8 +9,18 @@ const RubricSchema = z.object({
   notes: z.string().optional(),
 });
 
+const MAX_OPEN_PROMPT_WORDS = 25;
+
 export const GeneratedQuestionSchema = z.object({
-  prompt: z.string().min(10),
+  prompt: z
+    .string()
+    .min(10)
+    .refine(
+      (value) => value.trim().split(/\s+/).length <= MAX_OPEN_PROMPT_WORDS,
+      {
+        message: `Prompt must be concise (≤ ${MAX_OPEN_PROMPT_WORDS} words)`,
+      }
+    ),
   difficulty: z.number().int().min(1).max(3).default(2),
   rubric_json: RubricSchema.optional(),
   language: z.string().min(2).max(5).default("en"),
@@ -41,8 +51,9 @@ Seed: ${seed ?? "none"}
 
 Rules:
 - Output exactly ${num} items.
-- Each item: concise "prompt" (1–2 sentences), integer "difficulty" 1..3, optional "rubric_json" (object with keys: criteria: string[], notes: string), copy "language", and string "category".
+- Each item: succinct "prompt" (prefer a single sentence, always under ${MAX_OPEN_PROMPT_WORDS} words), integer "difficulty" 1..3, optional "rubric_json" (object with keys: criteria: string[], notes: string), copy "language", and string "category".
 - Keep prompts diverse and unambiguous; avoid requiring code execution.
+- Use clear language with minimal clauses; avoid long introductions or multiple commas.
 - Do not include any safety-violating content.
 `;
 
@@ -91,68 +102,56 @@ export async function generateMcqQuestions(params: {
   const { topic, categoryName, categoryId, language, num, seed } = params;
   const categoryLabel = topic || categoryName || categoryId || "general";
 
-  // Enhanced creative contexts for MCQ questions
   const creativeContexts = [
-    "real-world application scenario",
-    "historical case study context",
-    "problem-solving situation",
-    "comparative analysis format",
-    "cause-and-effect relationship",
-    "critical thinking challenge",
-    "practical implementation example",
-    "conceptual understanding test",
-    "analytical reasoning question",
-    "application-based scenario",
+    "brief real-world example",
+    "common daily situation",
+    "simple problem-solving case",
+    "quick comparison scenario",
+    "short cause-and-effect case",
   ];
 
   const questionFormats = [
-    "What would happen if...",
-    "In a situation where..., which approach...",
-    "When comparing X and Y, what is the key difference in...",
-    "A professional needs to..., what should they consider first?",
-    "Given the following scenario..., what is the best explanation for...",
-    "If you were to implement..., which factor would be most critical?",
-    "In the context of..., why does... occur?",
-    "What is the primary reason that... leads to...?",
-    "Which statement best describes the relationship between... and...?",
-    "In practical applications, how does... typically affect...?",
+    "Which option best explains...",
+    "Why would... be the right step?",
+    "What is the main reason...",
+    "How should someone respond when...",
+    "What happens if...",
   ];
 
-  const prompt = `You are an expert quiz creator generating diverse, creative multiple-choice questions that avoid repetition and boredom.
+  const prompt = `You are an expert quiz creator generating brief, clear multiple-choice questions that stay focused and readable.
 
 Topic: ${categoryLabel}
 Language: ${language}
 Count: ${num}
 Seed: ${seed ?? "none"}
 
-CREATIVITY REQUIREMENTS:
-- Use varied contexts: ${creativeContexts.slice(0, 5).join(", ")}
-- Apply different question formats: ${questionFormats.slice(0, 5).join("; ")}
-- Include real-world scenarios, case studies, comparisons, problem-solving situations
-- Vary difficulty levels and approaches to the same concept
-- Create questions that test understanding from different angles
+CLARITY REQUIREMENTS:
+- Keep contexts short (1-2 sentences, under 45 words).
+- Use varied but simple contexts: ${creativeContexts.join(", ")}.
+- Apply different straightforward question formats: ${questionFormats.join("; ")}.
+- Avoid long storytelling; go straight to the key point being tested.
+- Vary difficulty levels while keeping language direct and easy to follow.
 
 CONTENT RULES:
-- Each question must have a unique context or scenario, even if testing the same core concept
-- Use diverse question stems: scenario-based, analytical, comparative, application-focused
-- Make each question intellectually engaging and thought-provoking
-- Avoid generic "What is..." questions - instead use "How does...", "Why would...", "Which approach...", "In what scenario..."
-- Create plausible distractors that test common misconceptions
-- Ensure questions require actual understanding, not just memorization
+- Each question must have a unique context or scenario, even if testing the same core concept.
+- Use diverse question stems while keeping them direct and free of unnecessary clauses.
+- Make each question engaging but not wordy; remove extra adjectives and side stories.
+- Prefer stems like "How does...", "Why would...", "Which option..." over vague yes/no phrasing.
+- Create plausible distractors that test common misconceptions.
+- Ensure questions require actual understanding, not just memorization.
 
 OUTPUT FORMAT:
 - Exactly ${num} items as JSON
-- Each item: prompt (2-3 sentences with context), difficulty (1-3), language, category, choices (exactly 4 options with id: "a"/"b"/"c"/"d" and concise text), correctChoiceId
-- Make prompts contextual and scenario-based
-- Ensure all choices are plausible and test different aspects of knowledge
-- Use natural, professional language appropriate for the topic
+- Each item: prompt (1-2 crisp sentences with context, <45 words), difficulty (1-3), language, category, choices (exactly 4 options with id: "a"/"b"/"c"/"d" and concise text), correctChoiceId.
+- Make prompts contextual and scenario-based without rambling.
+- Ensure all choices are plausible and test different aspects of knowledge.
+- Use natural, professional language appropriate for the topic.
 
-EXAMPLES OF CREATIVE APPROACHES:
-- Instead of "What is photosynthesis?" → "Sarah, a marine biologist, was exploring a coral reef when she noticed that the coral polyps seemed more active during daylight hours. She observed tiny algae living symbiotically within the coral tissues, producing oxygen bubbles that rose to the surface. What biological process were these algae performing that benefits both the algae and the coral?"
-- Instead of "What is democracy?" → "The small island nation of Pacifica recently gained independence and its 50,000 citizens are debating how to structure their new government. The elder council suggests that every major decision should be made by having all citizens vote directly. However, some worry this might be impractical for complex issues. What type of political system would best balance citizen participation with effective governance?"
-- Instead of "What is gravity?" → "Commander Lopez was conducting experiments aboard the International Space Station when she accidentally dropped her pen and a metal wrench at the same time. Her colleague on Earth asked her what she observed. What would accurately describe what happened to both objects in the microgravity environment?"
+EXAMPLES OF APPROACHES TO AVOID:
+- Do not write paragraphs or multi-sentence backstories.
+- Skip overly detailed character names or settings unless essential to the question.
 
-Generate questions that make learners think critically and apply knowledge in realistic contexts.`;
+Generate questions that make learners think critically while keeping the wording straightforward.`;
 
   const result = await generateObject({
     model: google("gemini-2.5-flash-lite"),

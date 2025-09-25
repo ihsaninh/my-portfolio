@@ -6,7 +6,10 @@ import {
   generateQuestions,
 } from "@/src/lib/ai/ai-question-gen";
 import { publishBattleEvent } from "@/src/lib/battle/realtime";
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/lib/services/api-errors";
 import { getSessionIdFromCookies } from "@/src/lib/services/session";
 import { supabaseAdmin } from "@/src/lib/services/supabase";
 
