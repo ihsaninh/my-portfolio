@@ -6,7 +6,6 @@
 import fs from "fs";
 import path from "path";
 
-import { NavLinks } from "@/src/data/navLinks";
 // Import data sources
 import { projects } from "@/src/data/projects";
 import {
@@ -16,10 +15,11 @@ import {
   skills,
 } from "@/src/data/resume";
 import { socials } from "@/src/data/socials";
-import { chunkText } from "@/src/lib/ai/rag/chunker";
-import { embedBatch } from "@/src/lib/ai/rag/embeddings";
-import { getAllPostSlugs, getPostBySlug } from "@/src/lib/mdx";
-import { supabaseAdmin } from "@/src/lib/services/supabase";
+import { NavLinks } from "@/src/features/portfolio/data/navLinks";
+import { chunkText } from "@/src/shared/lib/ai/rag/chunker";
+import { embedBatch } from "@/src/shared/lib/ai/rag/embeddings";
+import { getAllPostSlugs, getPostBySlug } from "@/src/shared/lib/mdx";
+import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 type SourceDoc = {
   doc_id: string;

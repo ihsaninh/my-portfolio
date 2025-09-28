@@ -11,7 +11,7 @@ import {
   SiTypescript,
 } from "react-icons/si";
 
-import { Certification, ResumeData, ResumeMenu, Skill } from "../types/resume";
+import { Certification, ResumeData, ResumeMenu, Skill } from "@/src/features/portfolio/types/resume";
 
 export const resumeMenus: ResumeMenu[] = [
   { id: 0, name: "Experiences" },

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import type { ApiParticipant } from "@/src/features/battle/types/battle";
 import {
   createErrorResponse,
   ERROR_TYPES,
-} from "@/src/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/lib/services/session";
-import { supabaseAdmin } from "@/src/lib/services/supabase";
-import type { ApiParticipant } from "@/src/types/battle";
+} from "@/src/shared/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 type QuestionSummary = {
   prompt: string;

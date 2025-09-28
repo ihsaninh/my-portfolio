@@ -4,7 +4,7 @@ import {
   buildPostOpenGraph,
   buildTwitterCard,
   ensureAbsoluteUrl,
-} from "../../../src/lib/seo/meta";
+} from "../../../src/shared/lib/seo/meta";
 
 describe("seo/meta ensureAbsoluteUrl", () => {
   it("passes through absolute URLs", () => {

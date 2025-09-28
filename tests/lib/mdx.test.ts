@@ -6,7 +6,7 @@ import {
   getAllPostSlugs,
   getAllPostsMeta,
   getPostBySlug,
-} from "../../src/lib/mdx";
+} from "../../src/shared/lib/mdx";
 
 const BLOGS_DIR = path.join(process.cwd(), "src", "blogs");
 const SLUG_A = "__test_mdx_post_a";

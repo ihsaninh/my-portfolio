@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { getAllPostsMeta } from "@/src/lib/mdx";
+import { getAllPostsMeta } from "@/src/shared/lib/mdx";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://ihsaninh.com";

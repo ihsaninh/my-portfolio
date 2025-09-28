@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { publishBattleEvent } from "@/src/lib/battle/realtime";
+import { publishBattleEvent } from "@/src/features/battle/lib/realtime";
 import {
   createErrorResponse,
   ERROR_TYPES,
-} from "@/src/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/lib/services/session";
-import { supabaseAdmin } from "@/src/lib/services/supabase";
+} from "@/src/shared/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 type ParticipantAnswerStatus = {
   session_id: string;

@@ -4,8 +4,8 @@ import {
   createSession,
   getSessionByFingerprint,
   updateSessionDisplayName,
-} from "@/src/lib/services/quiz-api";
-import { SESSION_COOKIE } from "@/src/lib/services/session";
+} from "@/src/shared/lib/services/quiz-api";
+import { SESSION_COOKIE } from "@/src/shared/lib/services/session";
 
 export async function POST(request: NextRequest) {
   try {

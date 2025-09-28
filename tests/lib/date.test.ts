@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { formatDateUTC } from "../../src/lib/date";
+import { formatDateUTC } from "../../src/shared/lib/utils/date";
 
 describe("formatDateUTC", () => {
   it("formats valid date strings in UTC", () => {

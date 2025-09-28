@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { evaluateAnswer, isAIAvailable } from "@/src/lib/ai/ai-scoring";
-import { createAttempt, getAttemptsBySession } from "@/src/lib/services/quiz-api";
+import { evaluateAnswer, isAIAvailable } from "@/src/shared/lib/ai/ai-scoring";
+import { createAttempt, getAttemptsBySession } from "@/src/shared/lib/services/quiz-api";
 
 // Simple fallback scoring when AI is not available
 function generateSimpleScore(answer: string): {

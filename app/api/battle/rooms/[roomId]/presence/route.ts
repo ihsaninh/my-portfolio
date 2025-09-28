@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { handlePresenceUpdate } from "@/src/lib/battle/presence";
+import { handlePresenceUpdate } from "@/src/features/battle/lib/presence";
 import {
   createErrorResponse,
   ERROR_TYPES,
-} from "@/src/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/lib/services/session";
-import { supabaseAdmin } from "@/src/lib/services/supabase";
+} from "@/src/shared/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const PresenceSchema = z.object({
   status: z.enum(["online", "offline"]),

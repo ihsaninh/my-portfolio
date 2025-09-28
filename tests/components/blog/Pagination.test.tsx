@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "bun:test";
 
-import Pagination from "../../../src/components/blog/Pagination";
+import Pagination from "../../../src/features/portfolio/components/blog/Pagination";
 
 afterEach(() => cleanup());
 

@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import React from "react";
 
-import Lightbox from "../../../src/components/work/Lightbox";
-import { Project } from "../../../src/types/project";
+import Lightbox from "../../../src/features/portfolio/components/work/Lightbox";
+import { Project } from "../../../src/features/portfolio/types/project";
 
 mock.module("next/image", () => ({
   __esModule: true,

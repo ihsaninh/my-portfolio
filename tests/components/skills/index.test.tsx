@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 
-import Skills from "../../../src/components/skills";
+import Skills from "../../../src/features/portfolio/components/skills";
 import { skills } from "../../../src/data/resume";
 
 const mockFramerMotion = () => {

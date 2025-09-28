@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
-import ThemeToggle from "../../../src/components/shared/ThemeToggle";
+import ThemeToggle from "../../../src/shared/components/ThemeToggle";
 
 // Mock next-themes to control theme state and capture setTheme calls
 let mockTheme: "light" | "dark" | "system" = "light";

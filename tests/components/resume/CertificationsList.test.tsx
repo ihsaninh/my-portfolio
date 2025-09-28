@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import type { ComponentProps } from "react";
 
-import CertificationsList from "../../../src/components/resume/CertificationsList";
-import type { Certification } from "../../../src/types/resume";
+import CertificationsList from "../../../src/features/portfolio/components/resume/CertificationsList";
+import type { Certification } from "../../../src/features/portfolio/types/resume";
 
 // Mock framer-motion to strip animation props
 mock.module("framer-motion", () => {
@@ -26,10 +26,18 @@ mock.module("framer-motion", () => {
   return {
     __esModule: true,
     motion: {
-      ul: ({ children, ...p }: ComponentProps<"ul">) => <ul {...omitAnim(p)}>{children}</ul>,
-      li: ({ children, ...p }: ComponentProps<"li">) => <li {...omitAnim(p)}>{children}</li>,
-      div: ({ children, ...p }: ComponentProps<"div">) => <div {...omitAnim(p)}>{children}</div>,
-      span: ({ children, ...p }: ComponentProps<"span">) => <span {...omitAnim(p)}>{children}</span>,
+      ul: ({ children, ...p }: ComponentProps<"ul">) => (
+        <ul {...omitAnim(p)}>{children}</ul>
+      ),
+      li: ({ children, ...p }: ComponentProps<"li">) => (
+        <li {...omitAnim(p)}>{children}</li>
+      ),
+      div: ({ children, ...p }: ComponentProps<"div">) => (
+        <div {...omitAnim(p)}>{children}</div>
+      ),
+      span: ({ children, ...p }: ComponentProps<"span">) => (
+        <span {...omitAnim(p)}>{children}</span>
+      ),
     },
     AnimatePresence: ({ children }: { children: React.ReactNode }) => (
       <>{children}</>
@@ -96,4 +104,3 @@ describe("CertificationsList", () => {
     expect(screen.queryByRole("link", { name: /View credential/i })).toBeNull();
   });
 });
-

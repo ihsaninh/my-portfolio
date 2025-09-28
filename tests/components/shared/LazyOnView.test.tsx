@@ -2,7 +2,7 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import React from "react";
 
-import LazyOnView from "../../../src/components/shared/LazyOnView";
+import LazyOnView from "../../../src/shared/components/LazyOnView";
 
 // Extend IntersectionObserver with fields we use in the fake implementation
 type TestIO = IntersectionObserver & {

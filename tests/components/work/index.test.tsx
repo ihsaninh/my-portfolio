@@ -16,7 +16,7 @@ import {
 } from "bun:test";
 import * as React from "react";
 
-import Work from "../../../src/components/work/index";
+import Work from "../../../src/features/portfolio/components/work/index";
 
 type SwiperLike = {
   realIndex: number;
@@ -173,21 +173,21 @@ mock.module("../../../src/data/projects", () => ({
   projects: [
     {
       num: "01",
-      title: "Test Project 1",
-      description: "This is a test project description for project 1.",
-      stack: ["React", "TypeScript", "TailwindCSS"],
-      image: "/test-image-1.jpg",
-      liveUrl: "https://test-project-1.com",
-      githubUrl: "https://github.com/test/project-1",
+      title: "XL SATU",
+      description: "This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.",
+      stack: ["React.js", "Next.js", "Flowbite", "TailwindCSS"],
+      image: "/images/projects/XLSatu.webp",
+      liveUrl: "https://mysatu.xl.co.id/",
+      githubUrl: "",
     },
     {
       num: "02",
-      title: "Test Project 2",
-      description: "This is a test project description for project 2.",
-      stack: ["Next.js", "Node.js", "MongoDB"],
-      image: "/test-image-2.jpg",
-      liveUrl: "https://test-project-2.com",
-      githubUrl: "https://github.com/test/project-2",
+      title: "Axiata Game Token",
+      description: "Buy your favorite game tokens in single or bulk purchases through Web Game Token — making gaming top-ups quick and easy",
+      stack: ["React.js", "Next.js", "Bootstrap"],
+      image: "/images/projects/GameToken.webp",
+      liveUrl: "https://setargame.id/",
+      githubUrl: "",
     },
   ],
 }));
@@ -251,13 +251,14 @@ describe("Work Component", () => {
   it("displays project information", () => {
     render(<Work />);
 
-    expect(screen.getByText("Test Project 1")).toBeTruthy();
+    expect(screen.getByText("XL SATU")).toBeTruthy();
     expect(
-      screen.getByText("This is a test project description for project 1.")
+      screen.getByText("This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.")
     ).toBeTruthy();
 
-    expect(screen.getByText("React")).toBeTruthy();
-    expect(screen.getByText("TypeScript")).toBeTruthy();
+    expect(screen.getByText("React.js")).toBeTruthy();
+    expect(screen.getByText("Next.js")).toBeTruthy();
+    expect(screen.getByText("Flowbite")).toBeTruthy();
     expect(screen.getByText("TailwindCSS")).toBeTruthy();
   });
 
@@ -292,7 +293,7 @@ describe("Work Component", () => {
       expect(mockSwiperRef.current.slideNext).toHaveBeenCalled();
     });
 
-    expect(screen.getByText("Test Project 2")).toBeTruthy();
+    expect(screen.getByText("Axiata Game Token")).toBeTruthy();
   });
 
   it("handles next button click when at last project", async () => {
@@ -325,7 +326,7 @@ describe("Work Component", () => {
       expect(mockSwiperRef.current.slidePrev).toHaveBeenCalled();
     });
 
-    expect(screen.getByText("Test Project 1")).toBeTruthy();
+    expect(screen.getByText("XL SATU")).toBeTruthy();
   });
 
   it("handles previous button click when at first project", async () => {
@@ -397,7 +398,7 @@ describe("Work Component", () => {
     fireEvent.click(liveButton);
 
     expect(mockOpen).toHaveBeenCalledWith(
-      "https://test-project-1.com",
+      "https://mysatu.xl.co.id/",
       "_blank"
     );
   });
@@ -405,7 +406,7 @@ describe("Work Component", () => {
   it("opens lightbox on image click", async () => {
     render(<Work />);
 
-    const img = screen.getByAltText("Test Project 1");
+    const img = screen.getByAltText("XL SATU");
     expect(img).toBeTruthy();
     fireEvent.click(img);
 
@@ -419,7 +420,7 @@ describe("Work Component", () => {
     render(<Work />);
 
     // Open lightbox at index 0
-    const img = screen.getByAltText("Test Project 1");
+    const img = screen.getByAltText("XL SATU");
     fireEvent.click(img);
 
     await screen.findByRole("dialog", { name: /Project image lightbox/i });
@@ -430,7 +431,7 @@ describe("Work Component", () => {
     expect(mockSwiperRef.current.slideTo).toHaveBeenCalledWith(1);
     // Left panel title (h2) should update to project 2
     expect(
-      screen.getByRole("heading", { level: 2, name: "Test Project 2" })
+      screen.getByRole("heading", { level: 2, name: "Axiata Game Token" })
     ).toBeTruthy();
 
     // Go to previous image (wrap to index 0)
@@ -438,7 +439,7 @@ describe("Work Component", () => {
     fireEvent.click(prevBtn);
     expect(mockSwiperRef.current.slideTo).toHaveBeenCalledWith(0);
     expect(
-      screen.getByRole("heading", { level: 2, name: "Test Project 1" })
+      screen.getByRole("heading", { level: 2, name: "XL SATU" })
     ).toBeTruthy();
   });
 });

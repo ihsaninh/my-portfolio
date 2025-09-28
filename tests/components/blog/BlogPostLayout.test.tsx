@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "bun:test";
 
-import BlogPostLayout from "../../../src/components/blog/BlogPostLayout";
+import BlogPostLayout from "@/src/features/portfolio/components/blog/BlogPostLayout";
 
 // Ensure next/image boolean props are safe (global setup already mocks)
 

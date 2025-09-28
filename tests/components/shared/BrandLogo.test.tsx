@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "bun:test";
 
-import BrandLogo from "../../../src/components/shared/BrandLogo";
+import BrandLogo from "../../../src/shared/components/BrandLogo";
 
 describe("BrandLogo", () => {
   it("renders with default props (sm, INH)", () => {

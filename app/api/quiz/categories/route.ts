@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getCategories } from "@/src/lib/services/quiz-api";
+import { getCategories } from "@/src/shared/lib/services/quiz-api";
 
 export async function GET() {
   try {

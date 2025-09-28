@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 
-import BlogListAnimated from "../../../src/components/blog/BlogListAnimated";
+import BlogListAnimated from "@/src/features/portfolio/components/blog/BlogListAnimated";
 
 // Mock framer-motion to strip animation props
 mock.module("framer-motion", () => {

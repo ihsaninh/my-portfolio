@@ -2,12 +2,12 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 
-import Home from "../../../src/components/home/index";
+import Home from "../../../src/features/portfolio/components/home/index";
 
 // Mock the useHeaderService hook
 const mockSetActiveLink = mock(() => {});
 
-mock.module("../../../src/hooks/useHeader", () => ({
+mock.module("../../../src/features/portfolio/hooks/useHeader", () => ({
   useHeaderService: () => ({
     setActiveLink: mockSetActiveLink,
   }),
@@ -101,10 +101,10 @@ describe("Home Component", () => {
       expect(introText.classList.contains("dark:text-white/75")).toBe(true);
       expect(introText.classList.contains("leading-8")).toBe(true);
       expect(introText.textContent).toContain(
-        "PT XLSMART Telecom Sejahtera Tbk"
+        "I build fast, accessible apps with Next.js, React, Angular, and React Native"
       );
-      expect(introText.textContent).toContain("Axiata Digital Labs");
-      expect(introText.textContent).toContain("Meteor Inovasi Digital");
+      expect(introText.textContent).toContain("enterprise clients");
+      expect(introText.textContent).toContain("AI-powered applications with Supabase");
     });
 
     it("renders Connect with me button", () => {
@@ -279,11 +279,9 @@ describe("Home Component", () => {
       render(<Home />);
 
       const introText = screen.getByText(/I build fast, accessible apps/);
-      expect(introText.textContent).toContain(
-        "PT XLSMART Telecom Sejahtera Tbk"
-      );
-      expect(introText.textContent).toContain("Axiata Digital Labs");
-      expect(introText.textContent).toContain("Meteor Inovasi Digital");
+      expect(introText.textContent).toContain("enterprise clients");
+      expect(introText.textContent).toContain("AI-powered applications");
+      expect(introText.textContent).toContain("Supabase");
     });
 
     it("has correct file path for CV download", () => {

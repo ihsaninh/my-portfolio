@@ -8,7 +8,7 @@ import {
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import React from "react";
 
-import CopyCodeClient from "../../../src/components/blog/CopyCodeClient";
+import CopyCodeClient from "@/src/features/portfolio/components/blog/CopyCodeClient";
 
 afterEach(() => cleanup());
 

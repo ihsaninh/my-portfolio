@@ -1,7 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 
-import PostsGrid from "../../../src/components/blog/PostsGrid";
+import PostsGrid from "../../../src/features/portfolio/components/blog/PostsGrid";
 
 // Mock framer-motion to strip animation props
 mock.module("framer-motion", () => {

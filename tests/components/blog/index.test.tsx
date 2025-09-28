@@ -2,10 +2,10 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import type { ReactNode } from "react";
 
-import BlogSection from "../../../src/components/blog";
+import BlogSection from "../../../src/features/portfolio/components/blog";
 
 // Mock data provider for posts meta
-mock.module("../../../src/lib/mdx", () => ({
+mock.module("../../../src/shared/lib/mdx", () => ({
   __esModule: true,
   getAllPostsMeta: () => [
     {

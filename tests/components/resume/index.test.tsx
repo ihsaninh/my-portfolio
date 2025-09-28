@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import type React from "react";
 
-import Resume from "../../../src/components/resume";
+import Resume from "../../../src/features/portfolio/components/resume";
 
 // Mock framer-motion to remove animation-only props and wrappers
 mock.module("framer-motion", () => {

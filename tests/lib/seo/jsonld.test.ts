@@ -5,7 +5,7 @@ import {
   breadcrumbJsonLd,
   personJsonLd,
   websiteJsonLd,
-} from "../../../src/lib/seo/jsonld";
+} from "../../../src/shared/lib/seo/jsonld";
 
 describe("seo/jsonld", () => {
   it("builds person JSON-LD with optional fields", () => {

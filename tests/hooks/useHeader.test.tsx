@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "bun:test";
 import React from "react";
 
-import { useHeaderService } from "../../src/hooks/useHeader";
+import { useHeaderService } from "../../src/features/portfolio/hooks/useHeader";
 
 function HookHarness() {
   const { navLinks, setActiveLink, setActiveLinkByScroll } = useHeaderService();

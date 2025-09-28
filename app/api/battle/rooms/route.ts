@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createErrorResponse, ERROR_TYPES } from "@/src/lib/services/api-errors";
-import { checkRateLimit, generalLimiter } from "@/src/lib/services/rate-limit";
-import { getSessionIdFromCookies } from "@/src/lib/services/session";
-import { supabaseAdmin } from "@/src/lib/services/supabase";
-import { createRoomSchema, validateRequest } from "@/src/utils/validation";
+import { createErrorResponse, ERROR_TYPES } from "@/src/shared/lib/services/api-errors";
+import { checkRateLimit, generalLimiter } from "@/src/shared/lib/services/rate-limit";
+import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
+import { createRoomSchema, validateRequest } from "@/src/shared/lib/utils/validation";
 
 // Simple in-memory connection tracking for server-side
 const serverConnections = new Map<

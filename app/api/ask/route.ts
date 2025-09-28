@@ -2,9 +2,9 @@ import { google } from "@ai-sdk/google";
 import { convertToModelMessages, streamText, UIMessage } from "ai";
 import { NextRequest } from "next/server";
 
-import { retrieveSimilar } from "@/src/lib/ai/rag/retriever";
-import { chatCache } from "@/src/lib/services/chat-cache";
-import { checkRateLimit, generalLimiter } from "@/src/lib/services/rate-limit";
+import { retrieveSimilar } from "@/src/shared/lib/ai/rag/retriever";
+import { chatCache } from "@/src/shared/lib/services/chat-cache";
+import { checkRateLimit, generalLimiter } from "@/src/shared/lib/services/rate-limit";
 
 export const runtime = "edge";
 export const maxDuration = 30;

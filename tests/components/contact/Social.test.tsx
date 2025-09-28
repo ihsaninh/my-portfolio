@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 import type React from "react";
 
-import Social from "../../../src/components/contact/Social";
+import Social from "../../../src/features/portfolio/components/contact/Social";
 import { socials } from "../../../src/data/socials";
 
 // Mock Next.js Link component to prevent conflicts

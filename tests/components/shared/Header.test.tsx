@@ -15,7 +15,7 @@ import {
   spyOn,
 } from "bun:test";
 
-import Header from "../../../src/components/shared/Header";
+import Header from "../../../src/shared/components/Header";
 
 // Mock the useHeaderService hook
 const mockSetActiveLink = mock(() => {});
@@ -24,11 +24,13 @@ const mockSetActiveLinkByScroll = mock(() => {});
 const mockNavLinks = [
   { name: "Home", href: "#home", isActive: true },
   { name: "Resume", href: "#resume", isActive: false },
+  { name: "Skills", href: "#skills", isActive: false },
   { name: "Work", href: "#work", isActive: false },
+  { name: "Blog", href: "#blog", isActive: false },
   { name: "Contact", href: "#contact", isActive: false },
 ];
 
-mock.module("../../../src/hooks/useHeader", () => ({
+mock.module("../../../src/features/portfolio/hooks/useHeader", () => ({
   useHeaderService: () => ({
     navLinks: mockNavLinks,
     setActiveLink: mockSetActiveLink,
@@ -178,9 +180,9 @@ describe("Header Component", () => {
       const navList = screen.getByRole("list");
       expect(navList).toBeTruthy();
 
-      // Includes 4 nav links + Download CV + ThemeToggle
+      // Includes 6 nav links (Home, Resume, Skills, Work, Blog, Contact) + ThemeToggle
       const navItems = screen.getAllByRole("listitem");
-      expect(navItems.length).toBe(6);
+      expect(navItems.length).toBe(7);
     });
   });
 
@@ -198,7 +200,9 @@ describe("Header Component", () => {
 
       const homeLink = screen.getByText("Home");
       const resumeLink = screen.getByText("Resume");
+      const skillsLink = screen.getByText("Skills");
       const workLink = screen.getByText("Work");
+      const blogLink = screen.getByText("Blog");
       const contactLink = screen.getByText("Contact");
 
       fireEvent.click(homeLink);
@@ -207,8 +211,14 @@ describe("Header Component", () => {
       fireEvent.click(resumeLink);
       expect(mockSetActiveLink).toHaveBeenCalledWith("#resume");
 
+      fireEvent.click(skillsLink);
+      expect(mockSetActiveLink).toHaveBeenCalledWith("#skills");
+
       fireEvent.click(workLink);
       expect(mockSetActiveLink).toHaveBeenCalledWith("#work");
+
+      fireEvent.click(blogLink);
+      expect(mockSetActiveLink).toHaveBeenCalledWith("#blog");
 
       fireEvent.click(contactLink);
       expect(mockSetActiveLink).toHaveBeenCalledWith("#contact");
@@ -369,7 +379,7 @@ describe("Header Component", () => {
       expect(header).toBeTruthy();
       expect(nav).toBeTruthy();
       expect(navList).toBeTruthy();
-      expect(navItems.length).toBe(6); // 4 links + Download CV + ThemeToggle
+      expect(navItems.length).toBe(7); // 6 nav links + ThemeToggle
     });
   });
 

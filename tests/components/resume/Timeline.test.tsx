@@ -1,8 +1,8 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "bun:test";
 
-import Timeline from "../../../src/components/resume/Timeline";
-import type { ResumeData } from "../../../src/types/resume";
+import Timeline from "../../../src/features/portfolio/components/resume/Timeline";
+import type { ResumeData } from "../../../src/features/portfolio/types/resume";
 
 afterEach(() => cleanup());
 

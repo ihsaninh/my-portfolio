@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it, mock } from "bun:test";
 
-import ScrollToTop from "../../../src/components/shared/ScrollToTop";
+import ScrollToTop from "../../../src/shared/components/ScrollToTop";
 
 describe("ScrollToTop", () => {
   it("scrolls to top on mount", () => {

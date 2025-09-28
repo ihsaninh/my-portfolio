@@ -1,4 +1,4 @@
-import { LeaderboardEntry, QuizCategory, QuizQuestion } from "@/src/types/quiz";
+import { LeaderboardEntry, QuizCategory, QuizQuestion } from "@/src/features/quiz/types/quiz";
 
 export const QUIZ_CATEGORIES: QuizCategory[] = [
   {

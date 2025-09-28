@@ -4,7 +4,7 @@ import {
   BLOG_DESC_BASE,
   BLOG_TITLE_BASE,
   getBlogPageMetadata,
-} from "../../../src/lib/seo/blog";
+} from "../../../src/shared/lib/seo/blog";
 
 describe("seo/blog getBlogPageMetadata", () => {
   it("returns base metadata for first page", () => {

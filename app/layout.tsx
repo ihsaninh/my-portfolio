@@ -6,10 +6,9 @@ import { Metadata } from "next";
 import { JetBrains_Mono, Outfit } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 
-import CopyCodeClient from "@/src/components/blog/CopyCodeClient";
-import QueryProvider from "@/src/components/providers/QueryProvider";
-import LayoutWrapper from "@/src/components/shared/LayoutWrapper";
-import { personJsonLd, websiteJsonLd } from "@/src/lib/seo";
+import CopyCodeClient from "@/src/features/portfolio/components/blog/CopyCodeClient";
+import QueryProvider from "@/src/shared/components/providers/QueryProvider";
+import { personJsonLd, websiteJsonLd } from "@/src/shared/lib/seo";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -104,7 +103,7 @@ export default function RootLayout({
           >
             <CopyCodeClient />
             <div aria-hidden className="app-bg" />
-            <LayoutWrapper>{children}</LayoutWrapper>
+            {children}
             <Analytics />
             <SpeedInsights />
           </ThemeProvider>

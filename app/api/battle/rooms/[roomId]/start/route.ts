@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { publishBattleEvent } from "@/src/features/battle/lib/realtime";
 import {
   generateMcqQuestions,
   generateQuestions,
-} from "@/src/lib/ai/ai-question-gen";
-import { publishBattleEvent } from "@/src/lib/battle/realtime";
+} from "@/src/shared/lib/ai/ai-question-gen";
 import {
   createErrorResponse,
   ERROR_TYPES,
-} from "@/src/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/lib/services/session";
-import { supabaseAdmin } from "@/src/lib/services/supabase";
+} from "@/src/shared/lib/services/api-errors";
+import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const StartSchema = z.object({ useAI: z.boolean().optional() });
 
