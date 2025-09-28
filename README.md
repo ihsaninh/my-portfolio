@@ -84,7 +84,7 @@ bun test         # Run tests
 
 ## 🎨 Customization
 
-- **Content:** Update files in `src/data/`
+- **Content:** Update files in `src/features/portfolio/data/`
 - **Styling:** Modify `tailwind.config.js`
 - **Components:** Edit files in `src/components/`
 - **Blog Posts:** Add MDX files to blog directory

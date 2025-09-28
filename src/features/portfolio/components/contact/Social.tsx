@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { socials } from "@/src/data/socials";
+import { socials } from "@/src/features/portfolio/data/socials";
 
 type Props = {
   containerClass?: string;

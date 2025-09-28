@@ -8,7 +8,7 @@ import {
   educationData,
   experienceData,
   resumeMenus,
-} from "@/src/data/resume";
+} from "@/src/features/portfolio/data/resume";
 
 import CertificationsList from "./CertificationsList";
 import ResumeContent from "./ResumeContent";

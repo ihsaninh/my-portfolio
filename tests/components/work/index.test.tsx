@@ -168,7 +168,7 @@ mock.module("react-icons/fi", () => ({
   FiArrowUp: () => <div data-testid="fi-arrow-up" />,
 }));
 
-mock.module("../../../src/data/projects", () => ({
+mock.module("../../../src/features/portfolio/data/projects", () => ({
   __esModule: true,
   projects: [
     {

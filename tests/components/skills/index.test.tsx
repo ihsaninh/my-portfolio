@@ -2,7 +2,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, mock } from "bun:test";
 
 import Skills from "../../../src/features/portfolio/components/skills";
-import { skills } from "../../../src/data/resume";
+import { skills } from "../../../src/features/portfolio/data/resume";
 
 const mockFramerMotion = () => {
   const stripAnimProps = <T extends Record<string, unknown>>(props: T): T => {

@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, mock } from "bun:test";
 import type React from "react";
 
 import Social from "../../../src/features/portfolio/components/contact/Social";
-import { socials } from "../../../src/data/socials";
+import { socials } from "../../../src/features/portfolio/data/socials";
 
 // Mock Next.js Link component to prevent conflicts
 mock.module("next/link", () => ({

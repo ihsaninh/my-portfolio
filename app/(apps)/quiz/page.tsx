@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { QUIZ_SETTINGS } from "@/src/data/quiz";
+import { QUIZ_SETTINGS } from "@/src/features/portfolio/data/quiz";
 import { Button, Card } from "@/src/features/quiz/components";
 import {
   DEFAULT_LANGUAGE,

@@ -7,14 +7,14 @@ import fs from "fs";
 import path from "path";
 
 // Import data sources
-import { projects } from "@/src/data/projects";
+import { projects } from "@/src/features/portfolio/data/projects";
 import {
   certifications,
   educationData,
   experienceData,
   skills,
-} from "@/src/data/resume";
-import { socials } from "@/src/data/socials";
+} from "@/src/features/portfolio/data/resume";
+import { socials } from "@/src/features/portfolio/data/socials";
 import { NavLinks } from "@/src/features/portfolio/data/navLinks";
 import { chunkText } from "@/src/shared/lib/ai/rag/chunker";
 import { embedBatch } from "@/src/shared/lib/ai/rag/embeddings";
@@ -72,7 +72,14 @@ function slugify(input: string): string {
 }
 
 async function collectFromProfile(): Promise<SourceDoc[]> {
-  const file = path.join(process.cwd(), "src", "data", "profile.md");
+  const file = path.join(
+    process.cwd(),
+    "src",
+    "features",
+    "portfolio",
+    "data",
+    "profile.md"
+  );
   if (!fs.existsSync(file)) return [];
   const content = fs.readFileSync(file, "utf8");
   return [

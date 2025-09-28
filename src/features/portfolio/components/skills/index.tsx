@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 
-import { skills } from "@/src/data/resume";
+import { skills } from "@/src/features/portfolio/data/resume";
 
 export default function Skills() {
   const container = {
