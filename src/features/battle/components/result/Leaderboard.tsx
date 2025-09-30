@@ -1,3 +1,5 @@
+"use client";
+
 import { motion } from "framer-motion";
 import { FaCrown, FaTrophy } from "react-icons/fa";
 
