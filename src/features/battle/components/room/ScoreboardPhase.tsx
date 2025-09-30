@@ -1,3 +1,5 @@
+"use client";
+
 import { animate, LayoutGroup, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FaArrowRight, FaCrown } from "react-icons/fa";

@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 
-import SWRegister from "./sw-register";
+import { SWRegister } from "@/src/features/battle/components";
 
 export const metadata: Metadata = {
   title: "Battle Arena | Ihsan Nurul Habib - Portfolio",

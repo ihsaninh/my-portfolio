@@ -1,10 +1,9 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { useEffect } from "react";
-
 import {
   ActionButtons,
+  BattleResultLoadingState,
+  ConfettiBackground,
   Leaderboard,
   ResultHeader,
   UserAnswers,
@@ -32,66 +31,14 @@ export default function BattleResultPage() {
     shareResults,
   } = useBattleResult();
 
-  // Confetti effect
-  useEffect(() => {
-    if (!loading && !showConfetti) {
-      const timer = setTimeout(() => {
-        // setShowConfetti(true); // This is handled in the hook now
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [loading, showConfetti]);
-
   if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-500 rounded-full mx-auto mb-4"
-          />
-          <p className="text-white text-lg">Loading results...</p>
-        </div>
-      </div>
-    );
+    return <BattleResultLoadingState />;
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800 relative overflow-hidden">
       {/* Confetti Background Animation */}
-      {showConfetti && (
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              className={`absolute w-3 h-3 ${
-                i % 4 === 0
-                  ? "bg-yellow-400"
-                  : i % 4 === 1
-                  ? "bg-purple-400"
-                  : i % 4 === 2
-                  ? "bg-cyan-400"
-                  : "bg-pink-400"
-              }`}
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: "-10px",
-              }}
-              animate={{
-                y: ["0vh", "110vh"],
-                rotate: [0, 360, 720],
-                x: [0, Math.random() * 100 - 50],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                delay: Math.random() * 3,
-                ease: "easeOut",
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <ConfettiBackground showConfetti={showConfetti} />
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
