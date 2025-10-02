@@ -36,9 +36,10 @@ flowchart LR
     FE -->|fetch| API[Battle API Routes]
     API -->|service role| DB[(Supabase Postgres)]
     API -->|broadcast| RT[(Supabase Realtime)]
-    FE <-->|subscribe room:{id}| RT
+    FE <-->|subscribe room channel| RT
     API -->|Gemini SDK| AI[Google Generative AI]
-    DB -->|RPC\nclose_round_and_update_scores| DB
+    API -->|RPC call| RPC[(close_round_and_update_scores)]
+    RPC -->|update scores| DB
 ```
 
 ## Database Schema
