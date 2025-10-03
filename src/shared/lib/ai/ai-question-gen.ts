@@ -41,6 +41,9 @@ export async function generateQuestions(params: {
 }): Promise<GeneratedQuestion[]> {
   const { topic, categoryName, categoryId, language, num, seed } = params;
   const categoryLabel = topic || categoryName || categoryId || "general";
+  const today = new Date();
+  const currentDateIso = today.toISOString().split("T")[0];
+  const recencyWindowStartYear = Math.max(today.getFullYear() - 2, 2000);
 
   const prompt = `You are generating short, open-ended quiz questions.
 
@@ -48,6 +51,8 @@ Category: ${categoryLabel}
 Language: ${language}
 Count: ${num}
 Seed: ${seed ?? "none"}
+Current date (assume knowledge through this day): ${currentDateIso}
+Recency focus: highlight the latest developments or perspectives from ${recencyWindowStartYear}-${today.getFullYear()} when possible.
 
 Rules:
 - Output exactly ${num} items.
@@ -55,6 +60,8 @@ Rules:
 - Keep prompts diverse and unambiguous; avoid requiring code execution.
 - Use clear language with minimal clauses; avoid long introductions or multiple commas.
 - Do not include any safety-violating content.
+- Prefer contemporary context, figures, terminology, or issues; avoid information outdated before ${recencyWindowStartYear} unless timeless fundamentals are required.
+- If the truly newest facts are uncertain, craft an evergreen question but avoid outdated claims.
 `;
 
   const result = await generateObject({
@@ -101,6 +108,9 @@ export async function generateMcqQuestions(params: {
 }): Promise<GeneratedMcqQuestion[]> {
   const { topic, categoryName, categoryId, language, num, seed } = params;
   const categoryLabel = topic || categoryName || categoryId || "general";
+  const today = new Date();
+  const currentDateIso = today.toISOString().split("T")[0];
+  const recencyWindowStartYear = Math.max(today.getFullYear() - 2, 2000);
 
   const creativeContexts = [
     "brief real-world example",
@@ -124,11 +134,15 @@ Topic: ${categoryLabel}
 Language: ${language}
 Count: ${num}
 Seed: ${seed ?? "none"}
+Current date (assume knowledge through this day): ${currentDateIso}
+Recency focus: prioritize developments, use-cases, and terminology from ${recencyWindowStartYear}-${today.getFullYear()} where relevant.
 
 CLARITY REQUIREMENTS:
 - Keep contexts short (1-2 sentences, under 45 words).
 - Use varied but simple contexts: ${creativeContexts.join(", ")}.
-- Apply different straightforward question formats: ${questionFormats.join("; ")}.
+- Apply different straightforward question formats: ${questionFormats.join(
+    "; "
+  )}.
 - Avoid long storytelling; go straight to the key point being tested.
 - Vary difficulty levels while keeping language direct and easy to follow.
 
@@ -139,6 +153,8 @@ CONTENT RULES:
 - Prefer stems like "How does...", "Why would...", "Which option..." over vague yes/no phrasing.
 - Create plausible distractors that test common misconceptions.
 - Ensure questions require actual understanding, not just memorization.
+- Favor current data, trends, or practices; avoid referencing superseded standards or statistics from before ${recencyWindowStartYear} unless unavoidable.
+- If no reliable recent update exists, stay factual without inventing dates and lean on enduring knowledge.
 
 OUTPUT FORMAT:
 - Exactly ${num} items as JSON
@@ -154,7 +170,7 @@ EXAMPLES OF APPROACHES TO AVOID:
 Generate questions that make learners think critically while keeping the wording straightforward.`;
 
   const result = await generateObject({
-    model: google("gemini-2.5-flash-lite"),
+    model: google("gemini-2.5-flash-lite-preview-09-2025"),
     schema: GeneratedMcqQuestionsSchema,
     prompt,
     temperature: 0.7, // Increased temperature for more creativity
