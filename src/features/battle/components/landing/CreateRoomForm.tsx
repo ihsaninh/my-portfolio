@@ -21,7 +21,7 @@ interface CreateRoomFormProps {
     roundTimeSec: number;
     capacity: number;
     questionType: "open-ended" | "multiple-choice";
-    difficulty?: "easy" | "medium" | "hard";
+    difficulty: "easy" | "medium" | "hard" | undefined;
   };
   loading: boolean;
   onCreateRoom: (e: React.FormEvent) => void;
@@ -34,7 +34,7 @@ interface CreateRoomFormProps {
       roundTimeSec: number;
       capacity: number;
       questionType: "open-ended" | "multiple-choice";
-      difficulty?: "easy" | "medium" | "hard";
+      difficulty: "easy" | "medium" | "hard" | undefined;
     }>
   ) => void;
   onSetGameMode: (mode: "create" | "join" | null) => void;
