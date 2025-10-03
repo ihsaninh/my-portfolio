@@ -48,8 +48,10 @@ export default function Work() {
     swiperRef.current?.slideNext();
   };
 
-  const openLink = (url: string) => {
-    window.open(url, "_blank");
+  const openLink = (url?: string) => {
+    const sanitizedUrl = url?.trim();
+    if (!sanitizedUrl) return;
+    window.open(sanitizedUrl, "_blank", "noopener,noreferrer");
   };
 
   const openLightbox = (index: number) => {
@@ -76,6 +78,15 @@ export default function Work() {
       return newIndex;
     });
   };
+
+  const hasLiveUrl = Boolean(currentProject.liveUrl.trim());
+  const hasGithubUrl = Boolean(currentProject.githubUrl.trim());
+
+  const buttonBaseClasses =
+    "w-14 h-14 lg:w-16 lg:h-16 rounded-full border border-slate-300 bg-slate-50 text-slate-700 shadow-xl backdrop-blur flex justify-center items-center group transition-transform duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white";
+  const enabledButtonExtras =
+    "cursor-pointer hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl";
+  const disabledButtonExtras = "cursor-not-allowed opacity-60";
 
   return (
     <section className="container mt-12 lg:mt-24" id="work">
@@ -118,17 +129,31 @@ export default function Work() {
               <div className="flex items-center gap-4">
                 <button
                   aria-label="View live project"
-                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-full border border-slate-300 bg-slate-50 text-slate-700 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  className={`${buttonBaseClasses} ${
+                    hasLiveUrl ? enabledButtonExtras : disabledButtonExtras
+                  }`}
                   onClick={() => openLink(currentProject.liveUrl)}
+                  disabled={!hasLiveUrl}
                 >
-                  <FiArrowUp className="text-2xl lg:text-3xl group-hover:text-accent" />
+                  <FiArrowUp
+                    className={`text-2xl lg:text-3xl ${
+                      hasLiveUrl ? "group-hover:text-accent" : ""
+                    }`}
+                  />
                 </button>
                 <button
                   aria-label="View GitHub repository"
-                  className="w-14 h-14 lg:w-16 lg:h-16 rounded-full border border-slate-300 bg-slate-50 text-slate-700 shadow-xl backdrop-blur flex justify-center items-center group cursor-pointer transition-transform duration-200 hover:-translate-y-0.5 hover:scale-105 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  className={`${buttonBaseClasses} ${
+                    hasGithubUrl ? enabledButtonExtras : disabledButtonExtras
+                  }`}
                   onClick={() => openLink(currentProject.githubUrl)}
+                  disabled={!hasGithubUrl}
                 >
-                  <FaGithub className="text-2xl lg:text-3xl group-hover:text-accent" />
+                  <FaGithub
+                    className={`text-2xl lg:text-3xl ${
+                      hasGithubUrl ? "group-hover:text-accent" : ""
+                    }`}
+                  />
                 </button>
               </div>
             </motion.div>

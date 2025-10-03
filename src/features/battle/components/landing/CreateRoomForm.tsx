@@ -221,7 +221,7 @@ export function CreateRoomForm({
                           ? "hard"
                           : "medium"
                       } questions`
-                    : "Keep difficulty randomized like today"}
+                    : "Keep difficulty randomized each round"}
                 </div>
               </div>
 
