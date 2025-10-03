@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createErrorResponse, ERROR_TYPES } from "@/src/shared/lib/services/api-errors";
-import { checkRateLimit, generalLimiter } from "@/src/shared/lib/services/rate-limit";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/shared/lib/services/api-errors";
+import {
+  checkRateLimit,
+  generalLimiter,
+} from "@/src/shared/lib/services/rate-limit";
 import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
-import { createRoomSchema, validateRequest } from "@/src/shared/lib/utils/validation";
+import {
+  createRoomSchema,
+  validateRequest,
+} from "@/src/shared/lib/utils/validation";
 
 // Simple in-memory connection tracking for server-side
 const serverConnections = new Map<
@@ -133,6 +142,7 @@ export async function POST(req: NextRequest) {
       round_time_sec: body.roundTimeSec,
       capacity: body.capacity ?? null,
       question_type: body.questionType ?? "open-ended",
+      difficulty: body.difficulty ?? null,
       status: "waiting",
     });
 

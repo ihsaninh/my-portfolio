@@ -22,6 +22,7 @@ export function useBattleLanding() {
     roundTimeSec: 60,
     capacity: 4,
     questionType: "multiple-choice" as "open-ended" | "multiple-choice",
+    difficulty: undefined as "easy" | "medium" | "hard" | undefined,
   });
   const [joinPlayerName, setJoinPlayerName] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");
@@ -41,8 +42,14 @@ export function useBattleLanding() {
     }
 
     try {
+      const { difficulty, ...restPayload } = createPayload;
+      const payload = {
+        ...restPayload,
+        ...(difficulty ? { difficulty } : {}),
+      };
+
       const result = await createRoomMutation.mutateAsync({
-        ...createPayload,
+        ...payload,
         skipSessionCreation: false,
       });
 

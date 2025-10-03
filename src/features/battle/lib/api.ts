@@ -15,6 +15,8 @@ export interface CreateRoomPayload {
   numQuestions: number;
   roundTimeSec: number;
   capacity: number;
+  questionType: "open-ended" | "multiple-choice";
+  difficulty?: "easy" | "medium" | "hard";
 }
 
 export interface CreateRoomResponse {
@@ -45,6 +47,7 @@ export interface RoomAvailabilityResponse {
     topic?: string | null;
     language?: string | null;
     numQuestions?: number | null;
+    difficulty?: string | null;
   };
 }
 

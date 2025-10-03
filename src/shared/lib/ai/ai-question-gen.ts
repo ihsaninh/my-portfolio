@@ -38,12 +38,25 @@ export async function generateQuestions(params: {
   language: string;
   num: number;
   seed?: string | number;
+  difficulty?: 1 | 2 | 3;
 }): Promise<GeneratedQuestion[]> {
-  const { topic, categoryName, categoryId, language, num, seed } = params;
+  const { topic, categoryName, categoryId, language, num, seed, difficulty } =
+    params;
   const categoryLabel = topic || categoryName || categoryId || "general";
   const today = new Date();
   const currentDateIso = today.toISOString().split("T")[0];
   const recencyWindowStartYear = Math.max(today.getFullYear() - 2, 2000);
+
+  const difficultyLabel = (() => {
+    if (difficulty === 1) return "Easy";
+    if (difficulty === 2) return "Medium";
+    if (difficulty === 3) return "Hard";
+    return "Mixed (1-3)";
+  })();
+
+  const difficultyRules = difficulty
+    ? `- Set the "difficulty" number to ${difficulty} for every question (aligned with ${difficultyLabel.toLowerCase()}).\n- Ensure question complexity stays within ${difficultyLabel.toLowerCase()} expectations.\n`
+    : "- Vary \"difficulty\" values across 1 (easy), 2 (medium), and 3 (hard) to keep rounds dynamic.\n";
 
   const prompt = `You are generating short, open-ended quiz questions.
 
@@ -53,9 +66,10 @@ Count: ${num}
 Seed: ${seed ?? "none"}
 Current date (assume knowledge through this day): ${currentDateIso}
 Recency focus: highlight the latest developments or perspectives from ${recencyWindowStartYear}-${today.getFullYear()} when possible.
+Preferred difficulty: ${difficultyLabel}.
 
 Rules:
-- Output exactly ${num} items.
+${difficultyRules}- Output exactly ${num} items.
 - Each item: succinct "prompt" (prefer a single sentence, always under ${MAX_OPEN_PROMPT_WORDS} words), integer "difficulty" 1..3, optional "rubric_json" (object with keys: criteria: string[], notes: string), copy "language", and string "category".
 - Keep prompts diverse and unambiguous; avoid requiring code execution.
 - Use clear language with minimal clauses; avoid long introductions or multiple commas.
@@ -71,9 +85,10 @@ Rules:
     temperature: 0.4,
   });
 
-  // Stamp language/category
+  // Stamp language/category and enforce preferred difficulty when provided
   const items = (result.object || []).map((q) => ({
     ...q,
+    difficulty: difficulty ?? q.difficulty,
     language,
     category: categoryLabel,
   }));
@@ -105,12 +120,21 @@ export async function generateMcqQuestions(params: {
   language: string;
   num: number;
   seed?: string | number;
+  difficulty?: 1 | 2 | 3;
 }): Promise<GeneratedMcqQuestion[]> {
-  const { topic, categoryName, categoryId, language, num, seed } = params;
+  const { topic, categoryName, categoryId, language, num, seed, difficulty } =
+    params;
   const categoryLabel = topic || categoryName || categoryId || "general";
   const today = new Date();
   const currentDateIso = today.toISOString().split("T")[0];
   const recencyWindowStartYear = Math.max(today.getFullYear() - 2, 2000);
+
+  const difficultyLabel = (() => {
+    if (difficulty === 1) return "Easy";
+    if (difficulty === 2) return "Medium";
+    if (difficulty === 3) return "Hard";
+    return "Mixed (1-3)";
+  })();
 
   const creativeContexts = [
     "brief real-world example",
@@ -136,6 +160,7 @@ Count: ${num}
 Seed: ${seed ?? "none"}
 Current date (assume knowledge through this day): ${currentDateIso}
 Recency focus: prioritize developments, use-cases, and terminology from ${recencyWindowStartYear}-${today.getFullYear()} where relevant.
+Preferred difficulty: ${difficultyLabel}.
 
 CLARITY REQUIREMENTS:
 - Keep contexts short (1-2 sentences, under 45 words).
@@ -144,7 +169,7 @@ CLARITY REQUIREMENTS:
     "; "
   )}.
 - Avoid long storytelling; go straight to the key point being tested.
-- Vary difficulty levels while keeping language direct and easy to follow.
+- Keep language direct and ensure the challenge matches the requested difficulty.
 
 CONTENT RULES:
 - Each question must have a unique context or scenario, even if testing the same core concept.
@@ -159,6 +184,11 @@ CONTENT RULES:
 OUTPUT FORMAT:
 - Exactly ${num} items as JSON
 - Each item: prompt (1-2 crisp sentences with context, <45 words), difficulty (1-3), language, category, choices (exactly 4 options with id: "a"/"b"/"c"/"d" and concise text), correctChoiceId.
+- ${
+    difficulty
+      ? `Set the "difficulty" value to ${difficulty} for every question so the game keeps a consistent challenge.`
+      : "Balance the \"difficulty\" values across the set (mix of 1, 2, 3)."
+  }
 - Make prompts contextual and scenario-based without rambling.
 - Ensure all choices are plausible and test different aspects of knowledge.
 - Use natural, professional language appropriate for the topic.
@@ -178,6 +208,7 @@ Generate questions that make learners think critically while keeping the wording
 
   const items = (result.object || []).map((q) => ({
     ...q,
+    difficulty: difficulty ?? q.difficulty,
     language,
     category: categoryLabel,
   }));
@@ -194,6 +225,7 @@ Generate questions that make learners think critically while keeping the wording
     const hasCorrect = dedupChoices.some((c) => c.id === q.correctChoiceId);
     return {
       ...q,
+      difficulty: difficulty ?? q.difficulty,
       choices: dedupChoices.slice(0, 4),
       correctChoiceId:
         hasCorrect && dedupChoices.length >= 3

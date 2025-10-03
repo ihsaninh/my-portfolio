@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { createErrorResponse, ERROR_TYPES } from "@/src/shared/lib/services/api-errors";
+import {
+  createErrorResponse,
+  ERROR_TYPES,
+} from "@/src/shared/lib/services/api-errors";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 type RoomStatus = "waiting" | "active" | "finished" | string;
@@ -19,7 +22,7 @@ export async function GET(
 
     const supabase = supabaseAdmin();
     const baseSelect =
-      "id, status, capacity, room_code, topic, language, num_questions";
+      "id, status, capacity, room_code, topic, language, num_questions, difficulty";
 
     // Try to resolve by room ID first
     let roomQuery = supabase
@@ -79,9 +82,10 @@ export async function GET(
             "This battle has already finished. Ask the host to open a new room.";
           break;
         default:
-          message = room.capacity && currentParticipants !== null
-            ? "This room has reached its maximum capacity."
-            : "This room is not accepting new participants right now.";
+          message =
+            room.capacity && currentParticipants !== null
+              ? "This room has reached its maximum capacity."
+              : "This room is not accepting new participants right now.";
       }
     } else if (room.capacity && currentParticipants !== null) {
       const slotsLeft = room.capacity - currentParticipants;
@@ -103,6 +107,7 @@ export async function GET(
         topic: room.topic,
         language: room.language,
         numQuestions: room.num_questions,
+        difficulty: room.difficulty,
       },
     });
   } catch (e: unknown) {

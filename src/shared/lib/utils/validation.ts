@@ -58,6 +58,8 @@ export const capacitySchema = z
 
 export const questionTypeSchema = z.enum(["open-ended", "multiple-choice"]);
 
+export const battleDifficultySchema = z.enum(["easy", "medium", "hard"]);
+
 // Composite schemas
 export const createRoomSchema = z.object({
   hostDisplayName: displayNameSchema,
@@ -68,6 +70,7 @@ export const createRoomSchema = z.object({
   roundTimeSec: roundTimeSecSchema.default(30),
   capacity: capacitySchema,
   questionType: questionTypeSchema.default("open-ended"),
+  difficulty: battleDifficultySchema.optional(),
 });
 
 export const joinRoomSchema = z.object({

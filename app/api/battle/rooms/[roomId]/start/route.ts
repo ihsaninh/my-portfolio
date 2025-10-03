@@ -15,6 +15,13 @@ import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const StartSchema = z.object({ useAI: z.boolean().optional() });
 
+const difficultyToLevel = (value?: string | null) => {
+  if (value === "easy") return 1 as const;
+  if (value === "medium") return 2 as const;
+  if (value === "hard") return 3 as const;
+  return undefined;
+};
+
 export async function POST(
   req: NextRequest,
   context: { params: Promise<{ roomId: string }> }
@@ -34,7 +41,7 @@ export async function POST(
     const { data: room, error: roomErr } = await supabase
       .from("battle_rooms")
       .select(
-        "id, host_session_id, status, num_questions, category_id, language, round_time_sec, topic, question_type, capacity"
+        "id, host_session_id, status, num_questions, category_id, language, round_time_sec, topic, question_type, capacity, difficulty"
       )
       .eq("id", roomId)
       .single();
@@ -113,6 +120,7 @@ export async function POST(
     let usedAI = false;
     let aiError: string | undefined;
     const preferAI = body.useAI ?? process.env.BATTLE_USE_AI === "1";
+    const difficultyPreference = difficultyToLevel(room.difficulty);
     if (preferAI) {
       try {
         let categoryName: string | null = null;
@@ -132,6 +140,7 @@ export async function POST(
             language: room.language,
             num: room.num_questions,
             seed: `${roomId}-${Date.now()}`,
+            difficulty: difficultyPreference,
           });
           console.log(aiQs, "generate");
           if (aiQs.length > 0) {
@@ -154,6 +163,7 @@ export async function POST(
             language: room.language,
             num: room.num_questions,
             seed: `${roomId}-${Date.now()}`,
+            difficulty: difficultyPreference,
           });
           if (aiQs.length > 0) {
             inserts = aiQs.map((q, idx) => ({
@@ -185,15 +195,39 @@ export async function POST(
         });
       }
 
-      const { data: questions, error: qErr } = await supabase
+      let questionsQuery = supabase
         .from("quiz_questions")
         .select("id, prompt, difficulty, rubric_json, language, category_id")
         .eq("is_active", true)
         .eq("language", room.language)
         .order("created_at")
         .limit(room.num_questions);
+
+      if (difficultyPreference !== undefined) {
+        questionsQuery = questionsQuery.eq("difficulty", difficultyPreference);
+      }
+
+      const initialQuestions = await questionsQuery;
+      let questions = initialQuestions.data;
+      const qErr = initialQuestions.error;
       if (qErr) {
         return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
+      }
+      if (
+        (!questions || questions.length === 0) &&
+        difficultyPreference !== undefined
+      ) {
+        // Retry without difficulty filter so the battle can still start.
+        const retry = await supabase
+          .from("quiz_questions")
+          .select("id, prompt, difficulty, rubric_json, language, category_id")
+          .eq("is_active", true)
+          .eq("language", room.language)
+          .order("created_at")
+          .limit(room.num_questions);
+        if (!retry.error) {
+          questions = retry.data;
+        }
       }
       if (!questions || questions.length === 0) {
         return createErrorResponse({

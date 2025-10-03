@@ -2,7 +2,15 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { FaBolt, FaClock, FaCog, FaCrown, FaSlidersH, FaUsers } from "react-icons/fa";
+import {
+  FaBolt,
+  FaClock,
+  FaCog,
+  FaCrown,
+  FaSlidersH,
+  FaTachometerAlt,
+  FaUsers,
+} from "react-icons/fa";
 
 interface CreateRoomFormProps {
   createPayload: {
@@ -13,6 +21,7 @@ interface CreateRoomFormProps {
     roundTimeSec: number;
     capacity: number;
     questionType: "open-ended" | "multiple-choice";
+    difficulty?: "easy" | "medium" | "hard";
   };
   loading: boolean;
   onCreateRoom: (e: React.FormEvent) => void;
@@ -25,6 +34,7 @@ interface CreateRoomFormProps {
       roundTimeSec: number;
       capacity: number;
       questionType: "open-ended" | "multiple-choice";
+      difficulty?: "easy" | "medium" | "hard";
     }>
   ) => void;
   onSetGameMode: (mode: "create" | "join" | null) => void;
@@ -114,7 +124,9 @@ export function CreateRoomForm({
             className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-white"
           >
             <FaSlidersH className="h-4 w-4" />
-            {showAdvancedMobile ? "Hide advanced settings" : "Show advanced settings"}
+            {showAdvancedMobile
+              ? "Hide advanced settings"
+              : "Show advanced settings"}
           </button>
         </div>
 
@@ -176,6 +188,41 @@ export function CreateRoomForm({
                   <option value="en">🇺🇸 English</option>
                   <option value="id">🇮🇩 Bahasa Indonesia</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="text-xs md:text-sm font-medium text-blue-200 mb-2 flex items-center gap-2">
+                  <FaTachometerAlt className="w-4 h-4" />
+                  Difficulty (optional)
+                </label>
+                <select
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
+                  value={createPayload.difficulty ?? ""}
+                  onChange={(e) =>
+                    onSetCreatePayload({
+                      ...createPayload,
+                      difficulty: e.target.value
+                        ? (e.target.value as "easy" | "medium" | "hard")
+                        : undefined,
+                    })
+                  }
+                >
+                  <option value="">Random each round</option>
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+                <div className="text-xs text-blue-300 mt-1">
+                  {createPayload.difficulty
+                    ? `All rounds will use ${
+                        createPayload.difficulty === "easy"
+                          ? "easy"
+                          : createPayload.difficulty === "hard"
+                          ? "hard"
+                          : "medium"
+                      } questions`
+                    : "Keep difficulty randomized like today"}
+                </div>
               </div>
 
               <div>
