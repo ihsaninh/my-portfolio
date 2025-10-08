@@ -1,4 +1,5 @@
 import { publishBattleEvent } from "@/src/features/battle/lib/realtime";
+import { buildScoreboardDetails } from "@/src/features/battle/lib/scoreboard-utils";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 interface StatusChange {
@@ -144,6 +145,13 @@ async function closeRoundAndAdvance(params: {
     })
     .sort((a, b) => b.totalScore - a.totalScore);
 
+  const { question: questionSummary, answers: answersSummary } =
+    await buildScoreboardDetails({
+      supabase,
+      roomId,
+      roundId,
+    });
+
   const { count: remainingRounds } = await supabase
     .from("battle_room_rounds")
     .select("id", { count: "exact", head: true })
@@ -159,6 +167,8 @@ async function closeRoundAndAdvance(params: {
       stage: "scoreboard",
       generatedAt: new Date().toISOString(),
       hasMoreRounds: !!remainingRounds && remainingRounds > 0,
+      question: questionSummary,
+      answers: answersSummary,
     },
   });
 

@@ -145,6 +145,23 @@ export interface RoundScoreboardSnapshot {
   entries: RoundScoreboardEntry[];
   generatedAt?: string;
   hasMoreRounds?: boolean;
+  question?: RoundQuestionSummary | null;
+  answers?: RoundAnswerSummary[];
+}
+
+export interface RoundQuestionSummary {
+  prompt: string;
+  type: "multiple-choice" | "open-ended" | "unknown";
+  correctAnswer?: string | null;
+  choices?: Array<{ id: string; text: string; isCorrect?: boolean }>;
+  rubricNotes?: string | null;
+}
+
+export interface RoundAnswerSummary {
+  sessionId: string;
+  answerText?: string | null;
+  choiceId?: string | null;
+  isCorrect?: boolean | null;
 }
 
 export interface RoomStats {

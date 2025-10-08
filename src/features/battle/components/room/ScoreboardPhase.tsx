@@ -2,7 +2,12 @@
 
 import { animate, LayoutGroup, motion } from "framer-motion";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FaArrowRight, FaCrown } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaCheckCircle,
+  FaCrown,
+  FaInfoCircle,
+} from "react-icons/fa";
 
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
 import type {
@@ -178,6 +183,26 @@ export function ScoreboardPhase({
     ? "Great job! These are the final results."
     : "Here's how everyone did this round.";
 
+  const questionSummary = scoreboard.question ?? null;
+  const answersSummary = useMemo(
+    () => scoreboard.answers ?? [],
+    [scoreboard.answers]
+  );
+  const myAnswerSummary = useMemo(() => {
+    if (!currentSessionId) return null;
+    return (
+      answersSummary.find((entry) => entry.sessionId === currentSessionId) ??
+      null
+    );
+  }, [answersSummary, currentSessionId]);
+
+  const myChoice = useMemo(() => {
+    if (!questionSummary?.choices || !myAnswerSummary?.choiceId) return null;
+    return questionSummary.choices.find(
+      (choice) => choice.id === myAnswerSummary.choiceId
+    );
+  }, [questionSummary?.choices, myAnswerSummary?.choiceId]);
+
   useEffect(() => {
     const hasChanged = !areEntriesEqual(
       animatedEntries,
@@ -297,6 +322,71 @@ export function ScoreboardPhase({
             );
           })}
         </motion.div>
+
+        {questionSummary?.prompt && (
+          <motion.div
+            layout
+            className="w-full max-w-3xl rounded-2xl border border-purple-400/20 bg-purple-900/30 p-5 text-left shadow-lg shadow-purple-900/20 backdrop-blur"
+          >
+            <div className="mb-3 flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-purple-200">
+              <FaInfoCircle className="h-4 w-4" />
+              <span>Round Question Recap</span>
+            </div>
+            <p className="text-lg font-semibold text-white">
+              {questionSummary.prompt}
+            </p>
+
+            {questionSummary.type === "multiple-choice" &&
+              questionSummary.choices &&
+              questionSummary.choices.length > 0 && (
+                <div className="mt-4 space-y-2 text-sm">
+                  {questionSummary.choices.map((choice) => {
+                    const isCorrectChoice = choice.isCorrect;
+                    const isMySelection = choice.id === myChoice?.id;
+                    const baseClass =
+                      "flex items-center gap-3 rounded-xl border px-4 py-2 transition-colors";
+                    const stateClass = isCorrectChoice
+                      ? "border-emerald-400/40 bg-emerald-500/10 text-emerald-100"
+                      : isMySelection
+                      ? "border-red-400/40 bg-red-500/10 text-red-100"
+                      : "border-white/10 bg-white/5 text-white/80";
+
+                    return (
+                      <div key={choice.id} className={`${baseClass} ${stateClass}`}>
+                        <div
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${
+                            isMySelection
+                              ? "border-white bg-white"
+                              : "border-white/40"
+                          }`}
+                        >
+                          {isMySelection && (
+                            <span className="h-2.5 w-2.5 rounded-full bg-current" />
+                          )}
+                        </div>
+                        <span className="flex-1 text-sm font-medium text-white">
+                          {choice.text}
+                        </span>
+                        {isCorrectChoice && (
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-100">
+                            <FaCheckCircle className="h-3 w-3" />
+                            Correct
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+            {questionSummary.type !== "multiple-choice" &&
+              questionSummary.rubricNotes && (
+                <p className="mt-4 text-sm text-white/70">
+                  Tip: {questionSummary.rubricNotes}
+                </p>
+              )}
+          </motion.div>
+        )}
       </LayoutGroup>
 
       <motion.div

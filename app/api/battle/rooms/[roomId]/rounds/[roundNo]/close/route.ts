@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { publishBattleEvent } from "@/src/features/battle/lib/realtime";
+import { buildScoreboardDetails } from "@/src/features/battle/lib/scoreboard-utils";
 import {
   createErrorResponse,
   ERROR_TYPES,
@@ -162,6 +163,11 @@ export async function POST(
       .in("status", ["pending", "active"]);
 
     if (justClosed) {
+      const { question, answers: detailedAnswers } = await buildScoreboardDetails({
+        supabase,
+        roomId,
+        roundId: round.id,
+      });
       await publishBattleEvent({
         roomId,
         event: "round_closed",
@@ -171,6 +177,8 @@ export async function POST(
           stage: "scoreboard",
           generatedAt: new Date().toISOString(),
           hasMoreRounds: !!remainingRounds && remainingRounds > 0,
+          question,
+          answers: detailedAnswers,
         },
       });
     }

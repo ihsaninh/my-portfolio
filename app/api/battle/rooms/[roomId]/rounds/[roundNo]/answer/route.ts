@@ -2,6 +2,7 @@ import { after, NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { publishBattleEvent } from "@/src/features/battle/lib/realtime";
+import { buildScoreboardDetails } from "@/src/features/battle/lib/scoreboard-utils";
 import { evaluateAnswer } from "@/src/shared/lib/ai/ai-scoring";
 import {
   createErrorResponse,
@@ -341,18 +342,26 @@ async function checkAndAutoAdvanceRound(
       .eq("room_id", roomId)
       .in("status", ["pending", "active"]);
 
-    await publishBattleEvent({
-      roomId,
-      event: "round_closed",
-      payload: {
-        roundNo,
-        scoreboard: roundScoreboard,
-        stage: "scoreboard",
-        generatedAt: new Date().toISOString(),
-        reason: "all_answered",
-        hasMoreRounds: !!remainingRounds && remainingRounds > 0,
-      },
-    });
+      const { question, answers: detailedAnswers } = await buildScoreboardDetails({
+        supabase,
+        roomId,
+        roundId,
+      });
+
+      await publishBattleEvent({
+        roomId,
+        event: "round_closed",
+        payload: {
+          roundNo,
+          scoreboard: roundScoreboard,
+          stage: "scoreboard",
+          generatedAt: new Date().toISOString(),
+          reason: "all_answered",
+          hasMoreRounds: !!remainingRounds && remainingRounds > 0,
+          question,
+          answers: detailedAnswers,
+        },
+      });
   } catch (error) {
     console.error("[DEBUG] Error in checkAndAutoAdvanceRound:", error);
   }
@@ -461,6 +470,12 @@ async function checkAndAutoAdvanceRoundFallback(
         .eq("room_id", roomId)
         .in("status", ["pending", "active"]);
 
+      const { question, answers: detailedAnswers } = await buildScoreboardDetails({
+        supabase,
+        roomId,
+        roundId,
+      });
+
       await publishBattleEvent({
         roomId,
         event: "round_closed",
@@ -471,6 +486,8 @@ async function checkAndAutoAdvanceRoundFallback(
           stage: "scoreboard",
           generatedAt: new Date().toISOString(),
           hasMoreRounds: !!remainingRounds && remainingRounds > 0,
+          question,
+          answers: detailedAnswers,
         },
       });
     }

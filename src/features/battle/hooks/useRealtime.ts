@@ -647,6 +647,8 @@ export function useRealtime(
             reason: payload.reason,
             generatedAt: payload.generatedAt,
             hasMoreRounds: payload.hasMoreRounds,
+            question: payload.question ?? null,
+            answers: Array.isArray(payload.answers) ? payload.answers : [],
           });
           store.setGamePhase("scoreboard");
           prevGamePhaseRef.current = "scoreboard";
