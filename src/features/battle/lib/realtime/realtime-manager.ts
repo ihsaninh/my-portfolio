@@ -53,8 +53,11 @@ export class RealtimeManager {
   /**
    * Creates a basic room channel
    */
-  createRoomChannel(roomId: string): RealtimeChannel | null {
-    return connectionManager.createRoomChannel(roomId);
+  createRoomChannel(
+    roomId: string,
+    presenceKey?: string
+  ): RealtimeChannel | null {
+    return connectionManager.createRoomChannel(roomId, presenceKey);
   }
 
   /**
@@ -62,11 +65,13 @@ export class RealtimeManager {
    */
   createEnhancedRoomChannel(
     roomId: string,
-    onReconnect?: () => void
+    onReconnect?: () => void,
+    presenceKey?: string
   ): RealtimeChannel | null {
     const channel = connectionManager.createEnhancedRoomChannel(
       roomId,
-      onReconnect
+      onReconnect,
+      presenceKey
     );
 
     if (channel && this.config.enableEventBuffer) {

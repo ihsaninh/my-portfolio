@@ -5,32 +5,25 @@ import Link from "next/link";
 import { FaCopy } from "react-icons/fa";
 
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
+import { getRoomStatusColor } from "@/src/features/battle/lib/formatters";
 
 interface RoomHeaderProps {
   roomId: string;
+  roomCode?: string | null;
   onCopyRoomLink: () => void;
   roomStatus?: string;
 }
 
 export function RoomHeader({
   roomId,
+  roomCode,
   onCopyRoomLink,
   roomStatus = "waiting",
 }: RoomHeaderProps) {
   const { copied, connectionState } = useBattleStore();
-
-  const getRoomStatusColor = (status: string) => {
-    switch (status) {
-      case "waiting":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      case "active":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "finished":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-    }
-  };
+  const rawCode = roomCode ?? roomId ?? "";
+  const displayCode = rawCode ? rawCode.toUpperCase() : "UNKNOWN";
+  const codeLabel = roomCode ? "Room Code" : "ID";
 
   return (
     <motion.div
@@ -54,7 +47,7 @@ export function RoomHeader({
               </h1>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-300 sm:text-sm">
                 <span className="rounded-full bg-white/5 px-3 py-1 font-mono text-xs text-gray-200">
-                  ID: {roomId}
+                  {codeLabel}: {displayCode}
                 </span>
                 <span
                   className={`px-3 py-1 rounded-full border text-[0.7rem] sm:text-xs tracking-wide uppercase ${getRoomStatusColor(

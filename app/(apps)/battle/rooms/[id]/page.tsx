@@ -96,6 +96,7 @@ export default function BattleRoom() {
             {/* Room Header */}
             <RoomHeader
               roomId={roomId}
+              roomCode={state?.room?.room_code}
               onCopyRoomLink={copyRoomLink}
               roomStatus={state?.room?.status || "waiting"}
             />

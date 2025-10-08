@@ -7,6 +7,12 @@ import {
   useSubmitAnswer,
 } from "@/src/features/battle/hooks/useBattleQueries";
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
+import {
+  formatBattleTime,
+  getDifficultyColor,
+  getDifficultyLabel,
+  getRoomStatusColor,
+} from "@/src/features/battle/lib/formatters";
 import type { StateResp } from "@/src/features/battle/types/battle";
 
 export function useBattleActions(
@@ -252,38 +258,6 @@ export function useBattleActions(
     }
   };
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const difficultyLabel = (difficulty: number, language: string) => {
-    if (language === "id") {
-      return difficulty === 1 ? "Mudah" : difficulty === 3 ? "Sulit" : "Sedang";
-    }
-    return difficulty === 1 ? "Easy" : difficulty === 3 ? "Hard" : "Medium";
-  };
-
-  const getDifficultyColor = (difficulty: number) => {
-    if (difficulty === 1) return "text-green-400";
-    if (difficulty === 3) return "text-red-400";
-    return "text-yellow-400";
-  };
-
-  const getRoomStatusColor = (status: string) => {
-    switch (status) {
-      case "waiting":
-        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-      case "active":
-        return "bg-green-500/20 text-green-400 border-green-500/30";
-      case "finished":
-        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
-    }
-  };
-
   return {
     // State
     shouldResetCopy,
@@ -297,8 +271,8 @@ export function useBattleActions(
     submitAnswer,
     autoCloseRound,
     advanceFromScoreboard,
-    formatTime,
-    difficultyLabel,
+    formatTime: formatBattleTime,
+    difficultyLabel: getDifficultyLabel,
     getDifficultyColor,
     getRoomStatusColor,
 

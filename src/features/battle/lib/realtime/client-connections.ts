@@ -13,7 +13,10 @@ function getUserId(): string {
   return localStorage.getItem("user_id") || "anonymous";
 }
 
-export function createRoomChannel(roomId: string): RealtimeChannel | null {
+export function createRoomChannel(
+  roomId: string,
+  presenceKey?: string
+): RealtimeChannel | null {
   try {
     const sb = supabaseBrowser;
     if (!sb) {
@@ -45,10 +48,14 @@ export function createRoomChannel(roomId: string): RealtimeChannel | null {
     }
 
     const channel = sb.channel(`room:${roomId}`, {
-      config: {
-        broadcast: { self: false },
-        presence: { key: "" },
-      },
+      config: presenceKey
+        ? {
+            broadcast: { self: false },
+            presence: { key: presenceKey },
+          }
+        : {
+            broadcast: { self: false },
+          },
     });
 
     const channelId = `room:${roomId}`;
@@ -88,9 +95,10 @@ export function createRoomChannel(roomId: string): RealtimeChannel | null {
 
 export function createEnhancedRoomChannel(
   roomId: string,
-  onReconnect?: () => void
+  onReconnect?: () => void,
+  presenceKey?: string
 ): RealtimeChannel | null {
-  const channel = createRoomChannel(roomId);
+  const channel = createRoomChannel(roomId, presenceKey);
   if (!channel) return null;
 
   const bufferedEventHandler = (

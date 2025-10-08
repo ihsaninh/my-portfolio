@@ -116,14 +116,19 @@ export function useBattleLogic() {
 
   // Compute whether server already recorded my answer (to avoid UI flicker)
   const mySessionId = useMemo(() => {
-    return (
-      state?.currentUser?.session_id ||
-      document.cookie
-        .split("; ")
-        .find((row) => row.startsWith("quiz_session_id="))
-        ?.split("=")[1] ||
-      null
-    );
+    if (state?.currentUser?.session_id) {
+      return state.currentUser.session_id;
+    }
+
+    if (typeof document === "undefined") {
+      return null;
+    }
+
+    const cookieMatch = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("quiz_session_id="));
+
+    return cookieMatch ? cookieMatch.split("=")[1] : null;
   }, [state?.currentUser?.session_id]);
 
   const serverMarkedAnswered = useMemo(() => {

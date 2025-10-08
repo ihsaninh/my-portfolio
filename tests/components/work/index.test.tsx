@@ -34,7 +34,12 @@ mock.module("next/image", () => {
       fill, // boolean from Next Image API; strip from DOM
       priority,
       ...rest
-    }: { src: string; alt: string; fill?: boolean; priority?: boolean } & any) => {
+    }: {
+      src: string;
+      alt: string;
+      fill?: boolean;
+      priority?: boolean;
+    } & any) => {
       void fill;
       const { style, ...others } = rest || {};
       return (
@@ -61,16 +66,16 @@ mock.module("swiper/react", () => {
       onSwiper?: (swiper: SwiperLike) => void;
     }) => {
       // Simulate calling onSwiper callback if provided
-    if (onSwiper) {
-      // Create a mock swiper instance that preserves our mock functions
-      const mockSwiper: SwiperLike = {
-        realIndex: 0,
-        slidePrev: mockSwiperRef.current?.slidePrev || (() => {}),
-        slideNext: mockSwiperRef.current?.slideNext || (() => {}),
-        slideTo: mockSwiperRef.current?.slideTo || ((_i: number) => {}),
-      };
-      onSwiper(mockSwiper);
-    }
+      if (onSwiper) {
+        // Create a mock swiper instance that preserves our mock functions
+        const mockSwiper: SwiperLike = {
+          realIndex: 0,
+          slidePrev: mockSwiperRef.current?.slidePrev || (() => {}),
+          slideNext: mockSwiperRef.current?.slideNext || (() => {}),
+          slideTo: mockSwiperRef.current?.slideTo || ((_i: number) => {}),
+        };
+        onSwiper(mockSwiper);
+      }
       return <div data-testid="swiper">{children}</div>;
     },
     SwiperSlide: ({ children }: { children: React.ReactNode }) => (
@@ -174,7 +179,8 @@ mock.module("../../../src/features/portfolio/data/projects", () => ({
     {
       num: "01",
       title: "XL SATU",
-      description: "This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.",
+      description:
+        "This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.",
       stack: ["React.js", "Next.js", "Flowbite", "TailwindCSS"],
       image: "/images/projects/XLSatu.webp",
       liveUrl: "https://mysatu.xl.co.id/",
@@ -183,7 +189,8 @@ mock.module("../../../src/features/portfolio/data/projects", () => ({
     {
       num: "02",
       title: "Axiata Game Token",
-      description: "Buy your favorite game tokens in single or bulk purchases through Web Game Token — making gaming top-ups quick and easy",
+      description:
+        "Buy your favorite game tokens in single or bulk purchases through Web Game Token — making gaming top-ups quick and easy",
       stack: ["React.js", "Next.js", "Bootstrap"],
       image: "/images/projects/GameToken.webp",
       liveUrl: "https://setargame.id/",
@@ -253,7 +260,9 @@ describe("Work Component", () => {
 
     expect(screen.getByText("XL SATU")).toBeTruthy();
     expect(
-      screen.getByText("This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring.")
+      screen.getByText(
+        "This app was built to help XL SATU users manage their subscriptions and services, providing a centralized platform for account access, billing, and package monitoring."
+      )
     ).toBeTruthy();
 
     expect(screen.getByText("React.js")).toBeTruthy();
@@ -361,6 +370,7 @@ describe("Work Component", () => {
       realIndex: 0,
       slidePrev: mock(() => {}),
       slideNext: mock(() => {}),
+      slideTo: mock(() => {}),
     };
 
     // Directly test the handleSwiperInit function
@@ -379,6 +389,7 @@ describe("Work Component", () => {
       realIndex: 0,
       slidePrev: mock(() => {}),
       slideNext: mock(() => {}),
+      slideTo: mock(() => {}),
     };
 
     // Call the handleSwiperInit function directly
@@ -399,7 +410,8 @@ describe("Work Component", () => {
 
     expect(mockOpen).toHaveBeenCalledWith(
       "https://mysatu.xl.co.id/",
-      "_blank"
+      "_blank",
+      "noopener,noreferrer"
     );
   });
 

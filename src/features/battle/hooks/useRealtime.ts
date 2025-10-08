@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef } from "react";
+import type { RealtimeChannel } from "@supabase/realtime-js";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useDebounceCallback, useInterval } from "usehooks-ts";
 
+import { battleRequest } from "@/src/features/battle/lib/api-request";
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
 import { connectionMonitor } from "@/src/features/battle/lib/connection-monitor";
 import {
@@ -26,29 +28,97 @@ export function useRealtime(
     setTimerIds,
   } = useBattleStore();
 
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const isChannelSubscribedRef = useRef(false);
+
+  const currentUser = state?.currentUser;
+
+  const sessionId = useMemo(() => {
+    if (currentUser?.session_id) {
+      return currentUser.session_id;
+    }
+    if (typeof document === "undefined") {
+      return null;
+    }
+    const cookieMatch = document.cookie
+      .split("; ")
+      .find((cookie) => cookie.startsWith("quiz_session_id="));
+    return cookieMatch ? cookieMatch.split("=")[1] : null;
+  }, [currentUser]);
+
+  const presenceEnabled = Boolean(roomId && sessionId);
+
+  const presenceMetadata = useMemo(() => {
+    if (!presenceEnabled || !sessionId) {
+      return null;
+    }
+
+    const participant = state?.participants?.find(
+      (p) => p.session_id === sessionId
+    );
+
+    return {
+      status: "online" as const,
+      displayName: currentUser?.display_name ?? participant?.display_name,
+      isHost: currentUser?.is_host ?? participant?.is_host ?? false,
+      participantId: participant?.participantId ?? undefined,
+      roomId,
+    };
+  }, [
+    presenceEnabled,
+    roomId,
+    sessionId,
+    currentUser?.display_name,
+    currentUser?.is_host,
+    state?.participants,
+  ]);
+
+  const latestPresenceMetadataRef = useRef(presenceMetadata);
+  useEffect(() => {
+    latestPresenceMetadataRef.current = presenceMetadata;
+  }, [presenceMetadata]);
+
+  useEffect(() => {
+    if (
+      !presenceEnabled ||
+      !presenceMetadata ||
+      !channelRef.current ||
+      !isChannelSubscribedRef.current
+    ) {
+      return;
+    }
+
+    channelRef.current
+      .track(presenceMetadata)
+      .catch((err) => console.error("[PRESENCE] Metadata update failed", err));
+  }, [presenceEnabled, presenceMetadata]);
+
+  const presenceKey = presenceEnabled ? sessionId ?? undefined : undefined;
+
   const presencePing = useCallback(
     async (status: "online" | "offline") => {
-      if (typeof window === "undefined" || !roomId) {
+      if (presenceEnabled || typeof window === "undefined" || !roomId) {
         return;
       }
       try {
-        const response = await fetch(`/api/battle/rooms/${roomId}/presence`, {
+        await battleRequest(`/rooms/${roomId}/presence`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ status }),
-          credentials: "include",
+          body: { status },
           keepalive: status === "offline",
         });
-        if (!response.ok) {
-          console.warn(`[PRESENCE] Ping failed with status ${response.status}`);
-        }
       } catch (err) {
-        console.error("[PRESENCE] Ping error:", err);
+        const error = err as Error & { status?: number };
+        if (typeof error?.status === "number") {
+          console.warn(
+            `[PRESENCE] Ping failed with status ${error.status}`,
+            error
+          );
+        } else {
+          console.error("[PRESENCE] Ping error:", err);
+        }
       }
     },
-    [roomId]
+    [presenceEnabled, roomId]
   );
 
   const presencePingRef = useRef(presencePing);
@@ -56,21 +126,21 @@ export function useRealtime(
     presencePingRef.current = presencePing;
   }, [presencePing]);
 
-  const clearStuckDetectionTimer = () => {
+  const clearStuckDetectionTimer = useCallback(() => {
     const { stuckDetectionTimerId } = useBattleStore.getState();
     if (stuckDetectionTimerId) {
       clearTimeout(stuckDetectionTimerId);
       setTimerIds({ stuckDetectionTimerId: null });
     }
-  };
+  }, [setTimerIds]);
 
-  const clearForceProgressTimer = () => {
+  const clearForceProgressTimer = useCallback(() => {
     const { forceProgressTimerId } = useBattleStore.getState();
     if (forceProgressTimerId) {
       clearTimeout(forceProgressTimerId);
       setTimerIds({ forceProgressTimerId: null });
     }
-  };
+  }, [setTimerIds]);
 
   // Refs for connection state tracking
   const prevConnectionStateRef = useRef<string | null>(null);
@@ -94,7 +164,9 @@ export function useRealtime(
       if (prevConnectionStateRef.current === "disconnected") return;
       prevConnectionStateRef.current = "disconnected";
       setConnectionState("disconnected");
-      presencePing("offline");
+      if (!presenceEnabled) {
+        presencePing("offline");
+      }
     };
 
     const handleOnline = () => {
@@ -117,7 +189,9 @@ export function useRealtime(
             prevConnectionStateRef.current = "connected";
             setConnectionState("connected");
           }
-          presencePing("online");
+          if (!presenceEnabled) {
+            presencePing("online");
+          }
         })
         .catch((err) => {
           console.error(
@@ -138,7 +212,7 @@ export function useRealtime(
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("online", handleOnline);
     };
-  }, [roomId, setConnectionState, presencePing]);
+  }, [presenceEnabled, presencePing, roomId, setConnectionState]);
 
   // Refs for polling
   const pollingBackupCallback = () => {
@@ -149,9 +223,6 @@ export function useRealtime(
     const threshold = 45000;
 
     if (timeSinceLastEvent > threshold) {
-      console.log(
-        `[POLL] Backup polling triggered after ${timeSinceLastEvent}ms inactivity`
-      );
       refresh(true); // Force refresh for backup polling
     }
   };
@@ -170,13 +241,13 @@ export function useRealtime(
     () => {
       presencePing("online");
     },
-    roomId ? 5000 : null
+    !presenceEnabled && roomId ? 5000 : null
   );
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || presenceEnabled) return;
     presencePing("online");
-  }, [roomId, presencePing]);
+  }, [presenceEnabled, presencePing, roomId]);
 
   // Production fallback: aggressive polling for participant updates in waiting phase
   const productionParticipantPolling = () => {
@@ -190,7 +261,6 @@ export function useRealtime(
 
       // Poll every 3 seconds in production waiting phase to catch missed participant joins
       if (timeSinceLastEvent > 3000) {
-        console.log("[PRODUCTION_POLL] Participant polling in waiting phase");
         refresh(true).catch((err) => {
           console.error("[PRODUCTION_POLL] Participant polling failed:", err);
         });
@@ -215,10 +285,6 @@ export function useRealtime(
   useEffect(() => {
     if (!roomId) return;
 
-    // Log connection stats
-    const connectionStats = getConnectionStats();
-    console.log(`📊 Connection stats for room:${roomId}`, connectionStats);
-
     // Start connection monitoring
     connectionMonitor.startMonitoring();
 
@@ -226,61 +292,20 @@ export function useRealtime(
     refresh();
 
     // Enhanced realtime setup with reconnection
-    const ch = createEnhancedRoomChannel(String(roomId), () => {
-      if (prevConnectionStateRef.current !== "connected") {
-        prevConnectionStateRef.current = "connected";
-        setConnectionState("connected");
-      }
-      refresh();
-    });
+    const ch = createEnhancedRoomChannel(
+      String(roomId),
+      () => {
+        if (prevConnectionStateRef.current !== "connected") {
+          prevConnectionStateRef.current = "connected";
+          setConnectionState("connected");
+        }
+        refresh();
+      },
+      presenceKey
+    );
 
     // Production connection health monitoring
     let connectionHealthCheckInterval: NodeJS.Timeout | null = null;
-    if (process.env.NODE_ENV === "production") {
-      let lastHealthyEvent = Date.now();
-      let missedEventsCount = 0;
-
-      // Monitor for missed events in production
-      connectionHealthCheckInterval = setInterval(() => {
-        const timeSinceLastEvent = Date.now() - lastHealthyEvent;
-        const timeSinceLastRefresh =
-          Date.now() - useBattleStore.getState().lastEventTime;
-
-        // If we haven't seen events for 15 seconds in production, force refresh
-        if (timeSinceLastEvent > 15000 && timeSinceLastRefresh > 15000) {
-          missedEventsCount++;
-          console.warn(
-            `[CONNECTION_HEALTH] Missed events for ${timeSinceLastEvent}ms, count: ${missedEventsCount}`
-          );
-
-          if (missedEventsCount >= 2) {
-            console.log(
-              "[CONNECTION_HEALTH] Forcing refresh due to missed events"
-            );
-            refresh(true).catch((err) => {
-              console.error(
-                "[CONNECTION_HEALTH] Health check refresh failed:",
-                err
-              );
-            });
-            missedEventsCount = 0; // Reset counter after forced refresh
-          }
-        } else {
-          missedEventsCount = 0; // Reset if we're getting events
-        }
-      }, 10000); // Check every 10 seconds
-
-      // Update last healthy event timestamp when we receive events
-      const updateHealthTimestamp = () => {
-        lastHealthyEvent = Date.now();
-        missedEventsCount = 0;
-      };
-
-      // Attach health monitoring to all event handlers
-      if (ch) {
-        ch.on("broadcast", { event: "*" }, updateHealthTimestamp);
-      }
-    }
 
     // Handle connection errors
     if (!ch) {
@@ -289,6 +314,67 @@ export function useRealtime(
       addNotification(errorMsg);
       setConnectionState("disconnected");
       return;
+    }
+
+    channelRef.current = ch;
+    isChannelSubscribedRef.current = false;
+
+    if (presenceEnabled) {
+      ch.on("presence", { event: "sync" }, () => {
+        setLastEventTime(Date.now());
+      });
+
+      ch.on("presence", { event: "join" }, ({ newPresences }) => {
+        if (newPresences && newPresences.length > 0) {
+          setLastEventTime(Date.now());
+        }
+      });
+
+      ch.on("presence", { event: "leave" }, ({ leftPresences }) => {
+        if (leftPresences && leftPresences.length > 0) {
+          setLastEventTime(Date.now());
+        }
+      });
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      let lastHealthyEvent = Date.now();
+      let missedEventsCount = 0;
+
+      const updateHealthTimestamp = () => {
+        lastHealthyEvent = Date.now();
+        missedEventsCount = 0;
+      };
+
+      connectionHealthCheckInterval = setInterval(() => {
+        const timeSinceLastEvent = Date.now() - lastHealthyEvent;
+        const timeSinceLastRefresh =
+          Date.now() - useBattleStore.getState().lastEventTime;
+
+        if (timeSinceLastEvent > 15000 && timeSinceLastRefresh > 15000) {
+          missedEventsCount++;
+          console.warn(
+            `[CONNECTION_HEALTH] Missed events for ${timeSinceLastEvent}ms, count: ${missedEventsCount}`
+          );
+
+          if (missedEventsCount >= 2) {
+            console.warn(
+              "[CONNECTION_HEALTH] Forcing refresh due to missed events"
+            );
+            refresh(true).catch((err) => {
+              console.error(
+                "[CONNECTION_HEALTH] Health check refresh failed:",
+                err
+              );
+            });
+            missedEventsCount = 0;
+          }
+        } else {
+          missedEventsCount = 0;
+        }
+      }, 10000);
+
+      ch.on("broadcast", { event: "*" }, updateHealthTimestamp);
     }
 
     // Set up error handling for the channel
@@ -312,12 +398,7 @@ export function useRealtime(
         setConnectionState("connected");
       }
 
-      ch.on("broadcast", { event: "player_joined" }, (payload) => {
-        console.log("[PLAYER_JOINED] Processing player joined event:", {
-          participantId: payload?.payload?.participantId,
-          displayName: payload?.payload?.displayName,
-        });
-
+      ch.on("broadcast", { event: "player_joined" }, () => {
         // Simplified: Skip sequence checking to reduce complexity
         setLastEventTime(Date.now());
 
@@ -327,35 +408,29 @@ export function useRealtime(
         }
 
         // Immediate refresh for participant updates - critical for UI state
-        refresh(true)
-          .then(() => {
-            console.log(
-              "[PLAYER_JOINED] Refresh completed, participant count should update"
-            );
-          })
-          .catch((err) => {
-            console.error("[PLAYER_JOINED] Refresh failed:", err);
+        refresh(true).catch((err) => {
+          console.error("[PLAYER_JOINED] Refresh failed:", err);
 
-            // Production fallback: retry refresh after delay
-            if (process.env.NODE_ENV === "production") {
-              console.log(
-                "[PLAYER_JOINED] Production fallback: retrying refresh in 2s"
-              );
-              setTimeout(() => {
-                refresh(true).catch((retryErr) => {
-                  console.error(
-                    "[PLAYER_JOINED] Production fallback refresh also failed:",
-                    retryErr
-                  );
-                });
-              }, 2000);
-            }
-          });
+          // Production fallback: retry refresh after delay
+          if (process.env.NODE_ENV === "production") {
+            console.warn(
+              "[PLAYER_JOINED] Production fallback: retrying refresh in 2s"
+            );
+            setTimeout(() => {
+              refresh(true).catch((retryErr) => {
+                console.error(
+                  "[PLAYER_JOINED] Production fallback refresh also failed:",
+                  retryErr
+                );
+              });
+            }, 2000);
+          }
+        });
 
         // Production safeguard: additional refresh after 3 seconds to ensure state is updated
         if (process.env.NODE_ENV === "production") {
           playerJoinedTimeoutRef.current = setTimeout(() => {
-            console.log(
+            console.warn(
               "[PLAYER_JOINED] Production safeguard: additional refresh"
             );
             refresh(true).catch((err) => {
@@ -418,7 +493,7 @@ export function useRealtime(
             currentState.gamePhase === "playing" &&
             !currentState.state?.activeRound
           ) {
-            console.log(
+            console.warn(
               "[STUCK] First round not revealed, attempting recovery"
             );
             refresh(true);
@@ -430,7 +505,7 @@ export function useRealtime(
                 retryState.gamePhase === "playing" &&
                 !retryState.state?.activeRound
               ) {
-                console.log("[STUCK] Recovery failed, forcing refresh");
+                console.warn("[STUCK] Recovery failed, forcing refresh");
                 addNotification("Attempting to recover from stuck state...");
                 refresh(true);
               }
@@ -443,12 +518,7 @@ export function useRealtime(
         refresh();
       });
 
-      ch.on("broadcast", { event: "round_revealed" }, (payload) => {
-        console.log(
-          "[ROUND_REVEALED] Processing event for round:",
-          payload?.payload?.roundNo
-        );
-
+      ch.on("broadcast", { event: "round_revealed" }, () => {
         // Simplified: Skip sequence checking to reduce complexity
         setLastEventTime(Date.now());
 
@@ -489,7 +559,7 @@ export function useRealtime(
             currentState.gamePhase === "answering" &&
             !currentState.state?.activeRound?.question
           ) {
-            console.log("[QUESTION_LOAD] Forcing refresh after delay");
+            console.warn("[QUESTION_LOAD] Forcing refresh after delay");
             refresh(true);
           }
         }, 1000);
@@ -555,9 +625,7 @@ export function useRealtime(
 
         const roundNo = payload?.roundNo || "?";
         const totalRounds =
-          useBattleStore.getState().state?.room?.num_questions ??
-          state?.room?.num_questions ??
-          0;
+          useBattleStore.getState().state?.room?.num_questions ?? 0;
 
         if (Number(roundNo) >= totalRounds) {
           return;
@@ -571,7 +639,6 @@ export function useRealtime(
         roundClosedTimeoutRef.current = setTimeout(() => {
           const currentState = useBattleStore.getState();
           if (currentState.gamePhase === "playing") {
-            console.log("[ROUND_CLOSED] Round transition timer triggered");
             refresh(true);
           }
         }, 8000);
@@ -604,14 +671,27 @@ export function useRealtime(
 
       ch.subscribe((status, err) => {
         if (status === "SUBSCRIBED") {
+          isChannelSubscribedRef.current = true;
           if (prevConnectionStateRef.current !== "connected") {
             prevConnectionStateRef.current = "connected";
             setConnectionState("connected");
           }
-          console.log(`✅ Successfully connected to room:${roomId}`);
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`✅ Successfully connected to room:${roomId}`);
+          }
           errorCount = 0;
-          presencePingRef.current?.("online");
+          if (presenceEnabled) {
+            const metadata = latestPresenceMetadataRef.current;
+            if (metadata) {
+              ch.track(metadata).catch((trackErr) => {
+                console.error("[PRESENCE] Track failed:", trackErr);
+              });
+            }
+          } else {
+            presencePingRef.current?.("online");
+          }
         } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          isChannelSubscribedRef.current = false;
           console.error(`❌ Connection error for room:${roomId}`, err);
           const isOnline =
             typeof navigator === "undefined" ? true : navigator.onLine;
@@ -631,19 +711,27 @@ export function useRealtime(
       return () => {
         // Enhanced cleanup
         if (ch) {
+          if (presenceEnabled && isChannelSubscribedRef.current) {
+            ch.untrack().catch((untrackErr) => {
+              console.warn("[PRESENCE] Failed to untrack presence", untrackErr);
+            });
+          }
           ch.unsubscribe()
             .then(() => {
-              console.log(`✅ Successfully unsubscribed from room:${roomId}`);
-              const connectionStats = getConnectionStats();
-              console.log(
-                `📊 Connection stats after cleanup for room:${roomId}`,
-                connectionStats
-              );
+              const connectionStatsAfter = getConnectionStats();
+              if (process.env.NODE_ENV !== "production") {
+                console.log(
+                  `✅ Successfully unsubscribed from room:${roomId}`,
+                  connectionStatsAfter
+                );
+              }
             })
             .catch((err) => {
               console.error(`❌ Error unsubscribing from room:${roomId}`, err);
             });
         }
+        channelRef.current = null;
+        isChannelSubscribedRef.current = false;
 
         // Stop connection monitoring
         connectionMonitor.stopMonitoring();
@@ -695,5 +783,6 @@ export function useRealtime(
         clearTimers();
       };
     }
-  }, [roomId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roomId, presenceKey]);
 }

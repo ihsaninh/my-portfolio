@@ -63,6 +63,7 @@ export function useTimer(
       prevDeadlineRef.current = currentDeadline;
       updateTimer();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.activeRound?.deadlineAt]);
 
   // Cleanup refs when component unmounts

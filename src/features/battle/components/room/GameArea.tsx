@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FaClock, FaUsers } from "react-icons/fa";
 
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
+import { formatBattleTime } from "@/src/features/battle/lib/formatters";
 import type { GameAreaProps } from "@/src/features/battle/types/battle";
 
 import { AnsweringPhase } from "./AnsweringPhase";
@@ -30,12 +31,6 @@ export function GameArea({
   const totalRounds = state?.room?.num_questions || 0;
   const showScoreboard = Boolean(scoreboard) &&
     (gamePhase === "scoreboard" || gamePhase === "playing" || gamePhase === "answering");
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   return (
     <motion.div
@@ -90,7 +85,7 @@ export function GameArea({
                   <FaClock className="h-4 w-4" />
                 </motion.div>
                 <span className="tabular-nums tracking-wide">
-                  {formatTime(timeLeft)}
+                  {formatBattleTime(timeLeft)}
                 </span>
                 {timeLeft <= 10 && (
                   <motion.div

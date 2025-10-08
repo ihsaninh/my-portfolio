@@ -521,6 +521,7 @@ export function HowToPlayModal({ isOpen, onClose }: HowToPlayModalProps) {
       document.addEventListener("keydown", handleKeyDown);
       return () => document.removeEventListener("keydown", handleKeyDown);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, currentStep]);
 
   return (

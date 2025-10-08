@@ -1,13 +1,21 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  type UseMutationOptions,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import {
   battleApi,
   type CreateRoomPayload,
-  ensureSession,
+  type CreateRoomResponse,
   type JoinRoomPayload,
+  type JoinRoomResponse,
   type StartBattlePayload,
   type SubmitAnswerPayload,
+  type SubmitAnswerResponse,
 } from "@/src/features/battle/lib/api";
+import { ensureSession } from "@/src/features/battle/lib/session";
 import { handleApiError } from "@/src/shared/lib/services/client-error-handler";
 
 // Query Keys
@@ -24,6 +32,81 @@ export const battleQueryKeys = {
   scoreboard: (roomId: string) =>
     [...battleQueryKeys.room(roomId), "scoreboard"] as const,
 };
+
+const showBattleNotification = (
+  message: string,
+  type?: "error" | "warning" | "info"
+) => {
+  console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
+};
+
+async function runWithBattleErrorHandling<T>(
+  operation: () => Promise<T>
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    handleApiError(error, showBattleNotification);
+    throw error;
+  }
+}
+
+type InvalidateSelector<TData, TVariables> = (params: {
+  data: TData;
+  variables: TVariables;
+}) => readonly unknown[] | undefined;
+
+type MutationSuccessHandler<TData, TVariables, TContext> = UseMutationOptions<
+  TData,
+  unknown,
+  TVariables,
+  TContext
+>["onSuccess"];
+type MutationErrorHandler<TData, TVariables, TContext> = UseMutationOptions<
+  TData,
+  unknown,
+  TVariables,
+  TContext
+>["onError"];
+
+interface BattleMutationConfig<TData, TVariables, TContext = unknown> {
+  mutationFn: (variables: TVariables) => Promise<TData>;
+  invalidate?: InvalidateSelector<TData, TVariables>[];
+  onSuccess?: MutationSuccessHandler<TData, TVariables, TContext>;
+  onError?: MutationErrorHandler<TData, TVariables, TContext>;
+  errorLabel?: string;
+}
+
+function useBattleMutation<TData, TVariables, TContext = unknown>(
+  config: BattleMutationConfig<TData, TVariables, TContext>
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<TData, unknown, TVariables, TContext>({
+    mutationFn: (variables) =>
+      runWithBattleErrorHandling(() => config.mutationFn(variables)),
+    onSuccess: (data, variables, context) => {
+      config.invalidate?.forEach((selector) => {
+        try {
+          const queryKey = selector({ data, variables });
+          if (queryKey && queryKey.length > 0) {
+            queryClient.invalidateQueries({ queryKey });
+          }
+        } catch (err) {
+          console.error("[Battle Mutation] Failed to invalidate query", err);
+        }
+      });
+
+      config.onSuccess?.(data, variables, context);
+    },
+    onError: (error, variables, context) => {
+      if (config.errorLabel) {
+        console.error(config.errorLabel, error);
+      }
+      config.onError?.(error, variables, context);
+    },
+  });
+}
 
 // Room State Query
 export const useRoomState = (
@@ -96,336 +179,154 @@ export const useRoomStats = (
 
 // Create Room Mutation
 export const useCreateRoom = () => {
-  const queryClient = useQueryClient();
+  return useBattleMutation<
+    CreateRoomResponse,
+    CreateRoomPayload & { skipSessionCreation?: boolean }
+  >({
+    mutationFn: async (payload) => {
+      const { skipSessionCreation, ...roomPayload } = payload;
 
-  return useMutation({
-    mutationFn: async (
-      payload: CreateRoomPayload & { skipSessionCreation?: boolean }
-    ) => {
-      try {
-        const { skipSessionCreation, ...roomPayload } = payload;
-
-        // Create session first if not skipping
-        if (!skipSessionCreation) {
-          const sessionCreated = await ensureSession(
-            roomPayload.hostDisplayName
-          );
-          if (!sessionCreated) {
-            throw new Error("Failed to create session");
-          }
-          // Small delay to ensure cookie is set
-          await new Promise((resolve) => setTimeout(resolve, 100));
+      if (!skipSessionCreation) {
+        const sessionCreated = await ensureSession(roomPayload.hostDisplayName);
+        if (!sessionCreated) {
+          throw new Error("Failed to create session");
         }
 
-        return await battleApi.createRoom(roomPayload);
-      } catch (error) {
-        // Handle API errors with standardized client error handling
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            // You can integrate with your notification system here
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        // Re-throw the original error for React Query to handle
-        throw error;
+        // Small delay to ensure cookie is set
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+
+      return battleApi.createRoom(roomPayload);
     },
-    onSuccess: () => {
-      // Invalidate rooms queries
-      queryClient.invalidateQueries({ queryKey: battleQueryKeys.rooms() });
-    },
-    onError: (error) => {
-      // Additional error handling if needed
-      console.error("Create room failed:", error);
-    },
+    invalidate: [() => battleQueryKeys.rooms()],
+    errorLabel: "Create room failed:",
   });
 };
 
 // Join Room Mutation
 export const useJoinRoom = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      roomId,
-      payload,
-      skipSessionCreation = false,
-    }: {
+  return useBattleMutation<
+    JoinRoomResponse & { roomId: string },
+    {
       roomId: string;
       payload: JoinRoomPayload;
       skipSessionCreation?: boolean;
-    }) => {
-      try {
-        // Ensure room is joinable before creating a session
-        const availability = await battleApi.checkRoomAvailability(roomId);
-        if (!availability.joinable) {
-          const message =
-            availability.message ||
-            (availability.status === "finished"
-              ? "Battle ini sudah selesai."
-              : "Room ini tidak menerima peserta baru saat ini.");
+    }
+  >({
+    mutationFn: async ({ roomId, payload, skipSessionCreation = false }) => {
+      const availability = await battleApi.checkRoomAvailability(roomId);
+      if (!availability.joinable) {
+        const message =
+          availability.message ||
+          (availability.status === "finished"
+            ? "Battle ini sudah selesai."
+            : "Room ini tidak menerima peserta baru saat ini.");
 
-          throw {
-            error: {
-              code: "ROOM_NOT_JOINABLE",
-              message,
-              retryable: false,
-            },
-          };
-        }
-
-        const resolvedRoomId = availability.roomId || roomId;
-
-        // Create session first if not skipping
-        if (!skipSessionCreation) {
-          const sessionCreated = await ensureSession(payload.displayName);
-          if (!sessionCreated) {
-            throw new Error("Failed to create session");
-          }
-          // Small delay to ensure cookie is set
-          await new Promise((resolve) => setTimeout(resolve, 100));
-        }
-
-        const joinResponse = await battleApi.joinRoom(resolvedRoomId, payload);
-
-        return {
-          ...joinResponse,
-          roomId: joinResponse.roomId || resolvedRoomId,
+        throw {
+          error: {
+            code: "ROOM_NOT_JOINABLE",
+            message,
+            retryable: false,
+          },
         };
-      } catch (error) {
-        // Handle API errors with standardized client error handling
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            // You can integrate with your notification system here
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        // Re-throw the original error for React Query to handle
-        throw error;
       }
+
+      const resolvedRoomId = availability.roomId || roomId;
+
+      if (!skipSessionCreation) {
+        const sessionCreated = await ensureSession(payload.displayName);
+        if (!sessionCreated) {
+          throw new Error("Failed to create session");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+
+      const joinResponse = await battleApi.joinRoom(resolvedRoomId, payload);
+
+      return {
+        ...joinResponse,
+        roomId: joinResponse.roomId || resolvedRoomId,
+      };
     },
-    onSuccess: (data, variables) => {
-      const resolvedRoomId = data?.roomId || variables.roomId;
-      // Invalidate room state for the joined room
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(resolvedRoomId),
-      });
-    },
-    onError: (error) => {
-      // Additional error handling if needed
-      console.error("Join room failed:", error);
-    },
+    invalidate: [
+      ({ data, variables }) =>
+        battleQueryKeys.roomState(data?.roomId || variables.roomId),
+    ],
+    errorLabel: "Join room failed:",
   });
 };
 
 // Start Battle Mutation
 export const useStartBattle = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      roomId,
-      payload,
-      headers,
-    }: {
+  return useBattleMutation<
+    void,
+    {
       roomId: string;
       payload: StartBattlePayload;
       headers?: Record<string, string>;
-    }) => {
-      try {
-        return await battleApi.startBattle(roomId, payload, headers);
-      } catch (error) {
-        // Handle API errors with standardized client error handling
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            // You can integrate with your notification system here
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        // Re-throw the original error for React Query to handle
-        throw error;
-      }
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate room state
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(variables.roomId),
-      });
-    },
-    onError: (error) => {
-      // Additional error handling if needed
-      console.error("Start battle failed:", error);
-    },
+    }
+  >({
+    mutationFn: ({ roomId, payload, headers }) =>
+      battleApi.startBattle(roomId, payload, headers),
+    invalidate: [
+      ({ variables }) => battleQueryKeys.roomState(variables.roomId),
+    ],
+    errorLabel: "Start battle failed:",
   });
 };
 
 // Submit Answer Mutation
 export const useSubmitAnswer = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      roomId,
-      roundNo,
-      payload,
-    }: {
-      roomId: string;
-      roundNo: number;
-      payload: SubmitAnswerPayload;
-    }) => {
-      try {
-        return await battleApi.submitAnswer(roomId, roundNo, payload);
-      } catch (error) {
-        // Handle API errors with standardized client error handling
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            // You can integrate with your notification system here
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        // Re-throw the original error for React Query to handle
-        throw error;
-      }
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate answer status and room state
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.answerStatus(variables.roomId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(variables.roomId),
-      });
-    },
-    onError: (error) => {
-      // Additional error handling if needed
-      console.error("Submit answer failed:", error);
-    },
+  return useBattleMutation<
+    SubmitAnswerResponse,
+    { roomId: string; roundNo: number; payload: SubmitAnswerPayload }
+  >({
+    mutationFn: ({ roomId, roundNo, payload }) =>
+      battleApi.submitAnswer(roomId, roundNo, payload),
+    invalidate: [
+      ({ variables }) => battleQueryKeys.answerStatus(variables.roomId),
+      ({ variables }) => battleQueryKeys.roomState(variables.roomId),
+    ],
+    errorLabel: "Submit answer failed:",
   });
 };
 
 // Close Round Mutation
 export const useCloseRound = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      roomId,
-      roundNo,
-    }: {
-      roomId: string;
-      roundNo: number;
-    }) => {
-      try {
-        return await battleApi.closeRound(roomId, roundNo);
-      } catch (error) {
-        // Handle API errors with standardized client error handling
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            // You can integrate with your notification system here
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        // Re-throw the original error for React Query to handle
-        throw error;
-      }
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate room state and answer status
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(variables.roomId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.answerStatus(variables.roomId),
-      });
-    },
-    onError: (error) => {
-      // Additional error handling if needed
-      console.error("Close round failed:", error);
-    },
+  return useBattleMutation<void, { roomId: string; roundNo: number }>({
+    mutationFn: ({ roomId, roundNo }) => battleApi.closeRound(roomId, roundNo),
+    invalidate: [
+      ({ variables }) => battleQueryKeys.roomState(variables.roomId),
+      ({ variables }) => battleQueryKeys.answerStatus(variables.roomId),
+    ],
+    errorLabel: "Close round failed:",
   });
 };
 
 // Reveal Next Round Mutation
 export const useRevealNextRound = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({
-      roomId,
-      roundNo,
-    }: {
-      roomId: string;
-      roundNo: number;
-    }) => {
-      try {
-        return await battleApi.revealNextRound(roomId, roundNo);
-      } catch (error) {
-        // Handle API errors with standardized client error handling
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            // You can integrate with your notification system here
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        // Re-throw the original error for React Query to handle
-        throw error;
-      }
-    },
-    onSuccess: (data, variables) => {
-      // Invalidate room state
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(variables.roomId),
-      });
-    },
-    onError: (error) => {
-      // Additional error handling if needed
-      console.error("Reveal next round failed:", error);
-    },
+  return useBattleMutation<void, { roomId: string; roundNo: number }>({
+    mutationFn: ({ roomId, roundNo }) =>
+      battleApi.revealNextRound(roomId, roundNo),
+    invalidate: [
+      ({ variables }) => battleQueryKeys.roomState(variables.roomId),
+    ],
+    errorLabel: "Reveal next round failed:",
   });
 };
 
 // Advance from scoreboard phase (host only)
 export const useAdvanceFromScoreboard = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ roomId }: { roomId: string }) => {
-      try {
-        return await battleApi.advanceAfterScoreboard(roomId);
-      } catch (error) {
-        handleApiError(
-          error,
-          (message: string, type?: "error" | "warning" | "info") => {
-            console.log(`[${type?.toUpperCase() || "ERROR"}] ${message}`);
-          }
-        );
-
-        throw error;
-      }
-    },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.roomState(variables.roomId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: battleQueryKeys.answerStatus(variables.roomId),
-      });
-    },
-    onError: (error) => {
-      console.error("Advance from scoreboard failed:", error);
-    },
+  return useBattleMutation<
+    { action: string; roundNo?: number },
+    { roomId: string }
+  >({
+    mutationFn: ({ roomId }) => battleApi.advanceAfterScoreboard(roomId),
+    invalidate: [
+      ({ variables }) => battleQueryKeys.roomState(variables.roomId),
+      ({ variables }) => battleQueryKeys.answerStatus(variables.roomId),
+    ],
+    errorLabel: "Advance from scoreboard failed:",
   });
 };
 

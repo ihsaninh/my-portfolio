@@ -8,7 +8,11 @@ import {
   useRoomState,
 } from "@/src/features/battle/hooks/useBattleQueries";
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
-import type { AnswerStatus, GamePhase, StateResp } from "@/src/features/battle/types/battle";
+import type {
+  AnswerStatus,
+  GamePhase,
+  StateResp,
+} from "@/src/features/battle/types/battle";
 
 // Extend Window interface to include custom properties
 declare global {
@@ -315,6 +319,7 @@ export function useBattleRoomState(): {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state, roomId]);
 
   useEffect(() => {
@@ -357,6 +362,7 @@ export function useBattleRoomState(): {
         useBattleStore.getState().setGamePhase(correctPhase);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.room?.status, state?.activeRound]);
 
   // Ensure phase resets to waiting when entering a fresh room

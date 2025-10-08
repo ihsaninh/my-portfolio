@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FaBolt, FaCheck, FaStar } from "react-icons/fa";
 
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
+import { getDifficultyColor, getDifficultyLabel } from "@/src/features/battle/lib/formatters";
 import type { AnsweringPhaseProps } from "@/src/features/battle/types/battle";
 
 export function AnsweringPhase({
@@ -19,19 +20,6 @@ export function AnsweringPhase({
     setSelectedChoiceId,
     timeLeft,
   } = useBattleStore();
-
-  const difficultyLabel = (difficulty: number, language: string) => {
-    if (language === "id") {
-      return difficulty === 1 ? "Mudah" : difficulty === 3 ? "Sulit" : "Sedang";
-    }
-    return difficulty === 1 ? "Easy" : difficulty === 3 ? "Hard" : "Medium";
-  };
-
-  const getDifficultyColor = (difficulty: number) => {
-    if (difficulty === 1) return "text-green-400";
-    if (difficulty === 3) return "text-red-400";
-    return "text-yellow-400";
-  };
 
   if (!state?.activeRound?.question) return null;
 
@@ -55,7 +43,7 @@ export function AnsweringPhase({
                 state.activeRound?.question?.difficulty || 0
               )}`}
             >
-              {difficultyLabel(
+              {getDifficultyLabel(
                 state.activeRound?.question?.difficulty || 0,
                 state.activeRound?.question?.language || ""
               )}

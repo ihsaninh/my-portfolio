@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { FaGamepad } from "react-icons/fa";
 
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
+import { formatBattleTime } from "@/src/features/battle/lib/formatters";
 
 interface RoomInfoProps {
   roomId: string;
@@ -13,12 +14,6 @@ interface RoomInfoProps {
 export function RoomInfo({ variant = "default" }: RoomInfoProps) {
   const { state } = useBattleStore();
   const isCompact = variant === "compact";
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
 
   if (!state?.room) return null;
 
@@ -61,7 +56,7 @@ export function RoomInfo({ variant = "default" }: RoomInfoProps) {
         <div className="flex items-center justify-between">
           <span className="text-gray-400">Time per Round:</span>
           <span className="text-white">
-            {formatTime(state.room.round_time_sec)}
+            {formatBattleTime(state.room.round_time_sec)}
           </span>
         </div>
       </div>

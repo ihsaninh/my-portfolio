@@ -4,7 +4,7 @@ import { supabaseServer } from "@/src/shared/lib/services/supabase";
 
 import { getConnectionStats } from "./client-connections";
 
-const channelQueues = new Map<string, Promise<void>>();
+const channelQueues = new Map<string, Promise<boolean>>();
 const serverChannelStates = new Map<string, ServerChannelState>();
 const channelCreationPromises = new Map<string, Promise<RealtimeChannel>>();
 
@@ -17,9 +17,9 @@ export async function publishBattleEvent(params: {
   roomId: string;
   event: string;
   payload?: Record<string, unknown>;
-}) {
+}): Promise<boolean> {
   const enqueueKey = params.roomId;
-  const previous = channelQueues.get(enqueueKey) ?? Promise.resolve();
+  const previous = channelQueues.get(enqueueKey) ?? Promise.resolve(true);
 
   const eventPayload = {
     sequence: Date.now(),
@@ -42,7 +42,7 @@ export async function publishBattleEvent(params: {
 
         updateChannelUsage(params.roomId);
         console.log(`✅ Published ${params.event} to room:${params.roomId}`);
-        return;
+        return true;
       } catch (err) {
         retryCount++;
         console.error(
@@ -74,14 +74,16 @@ export async function publishBattleEvent(params: {
 
     const connectionStats = getConnectionStats();
     console.log(`📊 Connection stats at time of failure:`, connectionStats);
+    return false;
   };
 
   const task = previous.then(execute, execute);
-  const queuePromise = task.catch(() => undefined);
+  const queuePromise = task.catch(() => false);
   channelQueues.set(enqueueKey, queuePromise);
 
   try {
-    await task;
+    const result = await task;
+    return Boolean(result);
   } finally {
     if (channelQueues.get(enqueueKey) === queuePromise) {
       channelQueues.delete(enqueueKey);

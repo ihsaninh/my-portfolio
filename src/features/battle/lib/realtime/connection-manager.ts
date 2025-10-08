@@ -34,7 +34,10 @@ export class ConnectionManager {
   /**
    * Creates a basic room channel without reconnection logic
    */
-  createRoomChannel(roomId: string): RealtimeChannel | null {
+  createRoomChannel(
+    roomId: string,
+    presenceKey?: string
+  ): RealtimeChannel | null {
     try {
       const sb = supabaseBrowser;
       if (!sb) {
@@ -51,10 +54,14 @@ export class ConnectionManager {
       }
 
       const channel = sb.channel(`room:${roomId}`, {
-        config: {
-          broadcast: { self: false },
-          presence: { key: "" },
-        },
+        config: presenceKey
+          ? {
+              broadcast: { self: false },
+              presence: { key: presenceKey },
+            }
+          : {
+              broadcast: { self: false },
+            },
       });
 
       const channelId = `room:${roomId}`;
@@ -90,9 +97,10 @@ export class ConnectionManager {
    */
   createEnhancedRoomChannel(
     roomId: string,
-    onReconnect?: () => void
+    onReconnect?: () => void,
+    presenceKey?: string
   ): RealtimeChannel | null {
-    const channel = this.createRoomChannel(roomId);
+    const channel = this.createRoomChannel(roomId, presenceKey);
     if (!channel) return null;
 
     if (this.config.enableReconnection) {
