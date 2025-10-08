@@ -82,6 +82,18 @@ export const battleApi = {
     });
   },
 
+  setReadyStatus: async (
+    roomId: string,
+    ready: boolean
+  ): Promise<void> => {
+    await battleRequest(`/rooms/${roomId}/ready`, {
+      method: "POST",
+      body: { ready },
+      parseAs: "void",
+      fallbackMessage: "Failed to update ready status",
+    });
+  },
+
   // Submit answer for current round
   submitAnswer: async (
     roomId: string,

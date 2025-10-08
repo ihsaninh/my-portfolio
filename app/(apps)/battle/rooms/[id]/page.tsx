@@ -39,11 +39,13 @@ export default function BattleRoom() {
     startBattle,
     submitAnswer,
     advanceFromScoreboard,
+    toggleReadyStatus,
 
     // Derived values
     isHost,
     scoreboard,
     advanceFromScoreboardLoading,
+    readyStatusLoading,
   } = useBattleLogic();
 
   // Access to selected answer for quick submit validation
@@ -125,6 +127,8 @@ export default function BattleRoom() {
                   scoreboard={scoreboard}
                   onAdvanceFromScoreboard={advanceFromScoreboard}
                   advanceFromScoreboardLoading={advanceFromScoreboardLoading}
+                  onToggleReady={toggleReadyStatus}
+                  readyLoading={readyStatusLoading}
                 />
               </div>
             </div>

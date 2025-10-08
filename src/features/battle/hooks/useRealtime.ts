@@ -26,6 +26,8 @@ export function useRealtime(
     addNotification,
     clearTimers,
     setTimerIds,
+    setParticipantReady,
+    resetParticipantReadyStates,
   } = useBattleStore();
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -447,6 +449,40 @@ export function useRealtime(
         refresh(true);
       });
 
+      ch.on("broadcast", { event: "participant_ready" }, (payload) => {
+        const update = payload?.payload;
+        type ReadyUpdate = {
+          sessionId?: string;
+          session_id?: string;
+          isReady?: boolean;
+        };
+
+        const updates: ReadyUpdate[] = Array.isArray(update?.updates)
+          ? update.updates
+          : update
+          ? [update]
+          : [];
+
+        if (!updates.length) {
+          return;
+        }
+
+        updates.forEach((item) => {
+          const sessionId =
+            (item?.sessionId as string | undefined) ||
+            (item?.session_id as string | undefined);
+          const isReady = item?.isReady as boolean | undefined;
+
+          if (!sessionId || typeof isReady !== "boolean") {
+            return;
+          }
+
+          setParticipantReady(sessionId, isReady);
+        });
+
+        setLastEventTime(Date.now());
+      });
+
       ch.on("broadcast", { event: "host_changed" }, (payload) => {
         const nextHostSession = payload?.payload?.sessionId as
           | string
@@ -461,11 +497,11 @@ export function useRealtime(
         storeState.setIsHostCache(nextHostSession === mySessionId);
 
         if (nextHostSession === mySessionId) {
-          addNotification("Kamu sekarang menjadi host.");
+          addNotification("You are now the host.");
         } else if (hostDisplayName) {
-          addNotification(`${hostDisplayName} sekarang menjadi host.`);
+          addNotification(`${hostDisplayName} is now the host.`);
         } else {
-          addNotification("Host digantikan pemain lain.");
+          addNotification("The host role has been reassigned.");
         }
 
         refresh(true);
@@ -473,6 +509,7 @@ export function useRealtime(
 
       ch.on("broadcast", { event: "room_started" }, () => {
         setLastEventTime(Date.now());
+        resetParticipantReadyStates();
 
         // Transition to playing on room start
         if (prevGamePhaseRef.current !== "playing") {

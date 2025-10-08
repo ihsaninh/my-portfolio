@@ -78,7 +78,7 @@ export async function GET(
     // Get all participants in the room
     const { data: participants } = await supabase
       .from("battle_room_participants")
-      .select("session_id, display_name, is_host, connection_status")
+      .select("session_id, display_name, is_host, connection_status, is_ready")
       .eq("room_id", roomId)
       .order("display_name", { ascending: true });
 
@@ -101,6 +101,7 @@ export async function GET(
       has_answered: answeredSessionIds.has(p.session_id),
       is_host: p.is_host,
       connection_status: p.connection_status,
+      is_ready: p.is_ready,
     }));
 
     const activeParticipants = participantStatus.filter(

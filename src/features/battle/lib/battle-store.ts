@@ -101,6 +101,62 @@ export const useBattleStore = create<BattleState>()(
             refreshDebounceTimerId: null,
           };
         }),
+      setParticipantReady: (sessionId, isReady) =>
+        set((state) => {
+          const nextState = state.state
+            ? {
+                ...state.state,
+                participants: state.state.participants?.map((participant) =>
+                  participant.session_id === sessionId
+                    ? { ...participant, is_ready: isReady }
+                    : participant
+                ),
+              }
+            : state.state;
+
+          const nextAnswerStatus = state.answerStatus
+            ? {
+                ...state.answerStatus,
+                participants: state.answerStatus.participants.map((participant) =>
+                  participant.session_id === sessionId
+                    ? { ...participant, is_ready: isReady }
+                    : participant
+                ),
+              }
+            : state.answerStatus;
+
+          return {
+            state: nextState,
+            answerStatus: nextAnswerStatus,
+          };
+        }),
+      resetParticipantReadyStates: () =>
+        set((state) => {
+          const nextState = state.state
+            ? {
+                ...state.state,
+                participants: state.state.participants?.map((participant) => ({
+                  ...participant,
+                  is_ready: false,
+                })),
+              }
+            : state.state;
+
+          const nextAnswerStatus = state.answerStatus
+            ? {
+                ...state.answerStatus,
+                participants: state.answerStatus.participants.map((participant) => ({
+                  ...participant,
+                  is_ready: false,
+                })),
+              }
+            : state.answerStatus;
+
+          return {
+            state: nextState,
+            answerStatus: nextAnswerStatus,
+          };
+        }),
       setTimerIds: (timerIds) => set(timerIds),
     }),
     {

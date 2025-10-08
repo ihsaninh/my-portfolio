@@ -38,6 +38,7 @@ export interface BattleParticipant {
   participantId?: string;
   joined_at?: string;
   last_seen_at?: string | null;
+  is_ready?: boolean;
 }
 
 export interface BattleCurrentUser {
@@ -84,10 +85,12 @@ export interface AnswerStatus {
     has_answered: boolean;
     is_host: boolean;
     connection_status?: string;
+    is_ready?: boolean;
   }>;
   currentRound: number | null;
   totalAnswered: number;
   totalParticipants: number;
+  allAnswered?: boolean;
 }
 
 export interface UserAnswer {
@@ -212,6 +215,8 @@ export interface BattleState {
   resetScoreboard: () => void;
   addNotification: (message: string) => void;
   clearTimers: () => void;
+  setParticipantReady: (sessionId: string, isReady: boolean) => void;
+  resetParticipantReadyStates: () => void;
   setTimerIds: (timerIds: {
     stuckDetectionTimerId?: NodeJS.Timeout | null;
     pollingIntervalId?: NodeJS.Timeout | null;
@@ -232,6 +237,8 @@ export interface GameAreaProps {
   scoreboard: RoundScoreboardSnapshot | null;
   onAdvanceFromScoreboard: () => void;
   advanceFromScoreboardLoading: boolean;
+  onToggleReady: () => void;
+  readyLoading: boolean;
 }
 
 export interface ScoreboardPhaseProps {
@@ -245,8 +252,14 @@ export interface ScoreboardPhaseProps {
 
 export interface WaitingPhaseProps {
   onStartBattle: () => void;
+  onToggleReady: () => void;
   isHost: boolean;
   loading: boolean;
+  readyLoading: boolean;
+  participants: BattleParticipant[];
+  currentSessionId: string | null;
+  isReady: boolean;
+  roomCapacity?: number | null;
 }
 
 export interface AnsweringPhaseProps {
@@ -271,4 +284,5 @@ export interface ApiParticipant {
   total_score: number;
   joined_at?: string;
   last_seen_at?: string | null;
+  is_ready?: boolean;
 }

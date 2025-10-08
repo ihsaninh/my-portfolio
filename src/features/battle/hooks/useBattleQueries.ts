@@ -275,6 +275,18 @@ export const useStartBattle = () => {
   });
 };
 
+// Update ready status
+export const useUpdateReadyStatus = () => {
+  return useBattleMutation<void, { roomId: string; ready: boolean }>({
+    mutationFn: ({ roomId, ready }) => battleApi.setReadyStatus(roomId, ready),
+    invalidate: [
+      ({ variables }) => battleQueryKeys.roomState(variables.roomId),
+      ({ variables }) => battleQueryKeys.answerStatus(variables.roomId),
+    ],
+    errorLabel: "Update ready status failed:",
+  });
+};
+
 // Submit Answer Mutation
 export const useSubmitAnswer = () => {
   return useBattleMutation<

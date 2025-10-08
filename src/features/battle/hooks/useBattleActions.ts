@@ -5,6 +5,7 @@ import {
   useCloseRound,
   useStartBattle,
   useSubmitAnswer,
+  useUpdateReadyStatus,
 } from "@/src/features/battle/hooks/useBattleQueries";
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
 import {
@@ -33,6 +34,8 @@ export function useBattleActions(
     setIsProgressing,
     addNotification,
     tabId,
+    setParticipantReady,
+    resetParticipantReadyStates,
   } = useBattleStore();
 
   // Local state for copy timeout
@@ -44,6 +47,7 @@ export function useBattleActions(
   const submitAnswerMutation = useSubmitAnswer();
   const closeRoundMutation = useCloseRound();
   const advanceFromScoreboardMutation = useAdvanceFromScoreboard();
+  const updateReadyMutation = useUpdateReadyStatus();
 
   // Request deduplication for answer submissions
   const submitInProgress = useRef(false);
@@ -89,6 +93,23 @@ export function useBattleActions(
       return;
     }
 
+    const snapshot = useBattleStore.getState();
+    const participants =
+      snapshot.state?.participants ?? state?.participants ?? [];
+    const pendingParticipants = participants.filter(
+      (p) =>
+        !p.is_host && p.connection_status !== "offline" && !p.is_ready
+    );
+    if (pendingParticipants.length > 0) {
+      const names = pendingParticipants
+        .map((p) => p.display_name || "Participant")
+        .join(", ");
+      addNotification(
+        `Still waiting for everyone to be ready: ${names}.`
+      );
+      return;
+    }
+
     try {
       await startBattleMutation.mutateAsync({
         roomId: roomId!,
@@ -102,11 +123,60 @@ export function useBattleActions(
 
       // Ensure phase is set to playing after successful start
       setGamePhase("playing");
+      resetParticipantReadyStates();
       await refresh();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       addNotification(`Start error: ${message}`);
     }
+  };
+
+  const setReadyStatus = async (ready: boolean) => {
+    if (!roomId) {
+      addNotification("Room is not ready yet.");
+      return;
+    }
+
+    if (updateReadyMutation.isPending) {
+      return;
+    }
+
+    const snapshot = useBattleStore.getState();
+    const sessionId =
+      snapshot.state?.currentUser?.session_id ||
+      state?.currentUser?.session_id;
+
+    if (!sessionId) {
+      addNotification("Your session is not available yet.");
+      return;
+    }
+
+    try {
+      await updateReadyMutation.mutateAsync({ roomId, ready });
+      setParticipantReady(sessionId, ready);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Unknown error";
+      addNotification(`Failed to update ready status: ${message}`);
+    }
+  };
+
+  const toggleReadyStatus = async () => {
+    const snapshot = useBattleStore.getState();
+    const sessionId =
+      snapshot.state?.currentUser?.session_id ||
+      state?.currentUser?.session_id;
+
+    if (!sessionId) {
+      addNotification("Your session is not available yet.");
+      return;
+    }
+
+    const participants =
+      snapshot.state?.participants ?? state?.participants ?? [];
+    const me = participants.find((p) => p.session_id === sessionId);
+
+    const nextReady = !(me?.is_ready ?? false);
+    await setReadyStatus(nextReady);
   };
 
   const submitAnswer = async () => {
@@ -271,6 +341,8 @@ export function useBattleActions(
     submitAnswer,
     autoCloseRound,
     advanceFromScoreboard,
+    setReadyStatus,
+    toggleReadyStatus,
     formatTime: formatBattleTime,
     difficultyLabel: getDifficultyLabel,
     getDifficultyColor,
@@ -281,5 +353,6 @@ export function useBattleActions(
     submitAnswerLoading: submitAnswerMutation.isPending,
     closeRoundLoading: closeRoundMutation.isPending,
     advanceFromScoreboardLoading: advanceFromScoreboardMutation.isPending,
+    readyStatusLoading: updateReadyMutation.isPending,
   };
 }

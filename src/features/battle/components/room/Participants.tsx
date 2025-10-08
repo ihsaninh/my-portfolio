@@ -20,6 +20,7 @@ export function Participants({ variant = "default" }: ParticipantsProps) {
     (p) => p.connection_status !== "offline"
   ).length;
   const capacity = state.room?.capacity || state.participants.length;
+  const isWaiting = state.room?.status === "waiting";
 
   return (
     <motion.div
@@ -44,6 +45,7 @@ export function Participants({ variant = "default" }: ParticipantsProps) {
         {state.participants?.map((participant, index) => {
           const itemPadding = isCompact ? "px-3 py-2.5" : "px-4 py-3";
           const isOffline = participant.connection_status === "offline";
+          const isReady = participant.is_ready;
           // Find answer status for this participant
           const participantAnswerStatus = answerStatus?.participants.find(
             (p) => p.session_id === participant.session_id
@@ -94,23 +96,53 @@ export function Participants({ variant = "default" }: ParticipantsProps) {
                     <span className="text-xs">Disconnected</span>
                   </div>
                 ) : (
-                  gamePhase === "answering" &&
-                  answerStatus &&
-                  participantAnswerStatus && (
-                    <div className="flex items-center gap-1">
-                      {participantAnswerStatus.has_answered ? (
-                        <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-300 rounded-full border border-green-500/30">
-                          <FaCheck className="w-3 h-3" />
-                          <span className="text-xs">Answered</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1 px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full border border-gray-500/30">
-                          <div className="w-3 h-3 rounded-full border border-gray-400" />
-                          <span className="text-xs">Waiting</span>
+                  <>
+                    {isWaiting && (
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full border ${
+                          participant.is_host
+                            ? "bg-purple-500/20 text-purple-200 border-purple-400/40"
+                            : isReady
+                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                            : "bg-yellow-500/20 text-yellow-300 border-yellow-400/30"
+                        }`}
+                      >
+                        {participant.is_host ? (
+                          <>
+                            <FaCrown className="w-3 h-3" />
+                            <span className="text-xs">Host</span>
+                          </>
+                        ) : isReady ? (
+                          <>
+                            <FaCheck className="w-3 h-3" />
+                            <span className="text-xs">Ready</span>
+                          </>
+                        ) : (
+                          <>
+                            <div className="w-3 h-3 rounded-full border border-yellow-300" />
+                            <span className="text-xs">Waiting</span>
+                          </>
+                        )}
+                      </div>
+                    )}
+                    {gamePhase === "answering" &&
+                      answerStatus &&
+                      participantAnswerStatus && (
+                        <div className="flex items-center gap-1">
+                          {participantAnswerStatus.has_answered ? (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 text-green-300 rounded-full border border-green-500/30">
+                              <FaCheck className="w-3 h-3" />
+                              <span className="text-xs">Answered</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-500/20 text-gray-400 rounded-full border border-gray-500/30">
+                              <div className="w-3 h-3 rounded-full border border-gray-400" />
+                              <span className="text-xs">Waiting</span>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  )
+                  </>
                 )}
               </div>
             </motion.div>

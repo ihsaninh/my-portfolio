@@ -75,7 +75,7 @@ export async function GET(
     const { data: participants } = await supabase
       .from("battle_room_participants")
       .select(
-        "id, session_id, display_name, is_host, connection_status, total_score, joined_at, last_seen_at"
+        "id, session_id, display_name, is_host, connection_status, total_score, joined_at, last_seen_at, is_ready"
       )
       .eq("room_id", roomId)
       .order("id", { ascending: true }); // Use participant ID for consistent ordering
@@ -154,6 +154,7 @@ export async function GET(
         participantId: p.id, // Keep participantId for UI
         joined_at: p.joined_at,
         last_seen_at: p.last_seen_at,
+        is_ready: p.is_ready,
       })),
       currentUser, // Include current user info for host detection
       activeRound: round

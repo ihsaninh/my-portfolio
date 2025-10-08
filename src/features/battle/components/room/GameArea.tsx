@@ -25,9 +25,17 @@ export function GameArea({
   scoreboard,
   onAdvanceFromScoreboard,
   advanceFromScoreboardLoading,
+  onToggleReady,
+  readyLoading,
 }: GameAreaProps) {
   const { state, gamePhase } = useBattleStore();
   const currentSessionId = state?.currentUser?.session_id || null;
+  const participants = state?.participants ?? [];
+  const myParticipant = participants.find(
+    (p) => p.session_id === currentSessionId
+  );
+  const isReady = !!myParticipant?.is_ready;
+  const roomCapacity = state?.room?.capacity ?? 2;
   const totalRounds = state?.room?.num_questions || 0;
   const showScoreboard = Boolean(scoreboard) &&
     (gamePhase === "scoreboard" || gamePhase === "playing" || gamePhase === "answering");
@@ -140,8 +148,14 @@ export function GameArea({
         {gamePhase === "waiting" && (
           <WaitingPhase
             onStartBattle={onStartBattle}
+            onToggleReady={onToggleReady}
             isHost={isHost}
             loading={loading}
+            readyLoading={readyLoading}
+            participants={participants}
+            currentSessionId={currentSessionId}
+            isReady={isReady}
+            roomCapacity={roomCapacity}
           />
         )}
         {showScoreboard && scoreboard && (

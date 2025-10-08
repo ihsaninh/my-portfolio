@@ -30,6 +30,7 @@ type ParticipantRecord = {
   total_score: number;
   joined_at: string | null;
   last_seen_at: string | null;
+  is_ready: boolean;
 };
 
 async function closeRoundAndAdvance(params: {
@@ -186,12 +187,17 @@ export async function handlePresenceUpdate(params: {
 
   const statusChanges = new Map<string, "online" | "offline">();
 
+  const updatePayload: Record<string, unknown> = {
+    connection_status: params.status,
+    last_seen_at: nowIso,
+  };
+  if (params.status === "offline") {
+    updatePayload.is_ready = false;
+  }
+
   const { error: updateErr } = await supabase
     .from("battle_room_participants")
-    .update({
-      connection_status: params.status,
-      last_seen_at: nowIso,
-    })
+    .update(updatePayload)
     .eq("room_id", params.roomId)
     .eq("session_id", params.sessionId);
 
@@ -221,7 +227,7 @@ export async function handlePresenceUpdate(params: {
   const { data: participantRows, error: participantsErr } = await supabase
     .from("battle_room_participants")
     .select(
-      "id, session_id, display_name, is_host, connection_status, total_score, joined_at, last_seen_at"
+      "id, session_id, display_name, is_host, connection_status, total_score, joined_at, last_seen_at, is_ready"
     )
     .eq("room_id", params.roomId);
 
@@ -246,7 +252,7 @@ export async function handlePresenceUpdate(params: {
   if (staleSessions.length > 0) {
     const { error: staleUpdateErr } = await supabase
       .from("battle_room_participants")
-      .update({ connection_status: "offline" })
+      .update({ connection_status: "offline", is_ready: false })
       .eq("room_id", params.roomId)
       .in("session_id", staleSessions);
 
@@ -406,6 +412,42 @@ export async function handlePresenceUpdate(params: {
 
   if (markedOffline.length) {
     result.markedOffline = markedOffline;
+  }
+
+  if (statusChanges.size > 0) {
+    const participantsBySession = new Map(
+      participants.map((p) => [p.session_id, p])
+    );
+
+    const readinessResets = Array.from(statusChanges.entries())
+      .filter(([, status]) => status === "offline")
+      .map(([sessionId]) => participantsBySession.get(sessionId))
+      .filter((p): p is ParticipantRecord => Boolean(p))
+      .map((p) => ({
+        sessionId: p.session_id,
+        participantId: p.id,
+        displayName: p.display_name,
+        isHost: p.is_host,
+      }));
+
+    if (readinessResets.length > 0) {
+      await Promise.all(
+        readinessResets.map((update) =>
+          publishBattleEvent({
+            roomId: params.roomId,
+            event: "participant_ready",
+            payload: {
+              sessionId: update.sessionId,
+              participantId: update.participantId,
+              displayName: update.displayName,
+              isHost: update.isHost,
+              isReady: false,
+              reason: "offline",
+            },
+          })
+        )
+      );
+    }
   }
 
   if (statusChanges.size > 0) {

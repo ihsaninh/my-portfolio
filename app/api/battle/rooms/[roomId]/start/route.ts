@@ -89,7 +89,7 @@ export async function POST(
     // Check if there are enough participants
     const { data: participants, error: participantsErr } = await supabase
       .from("battle_room_participants")
-      .select("id")
+      .select("id, is_host, is_ready, connection_status, display_name")
       .eq("room_id", roomId);
 
     if (participantsErr) {
@@ -103,6 +103,27 @@ export async function POST(
       return createErrorResponse({
         code: "INSUFFICIENT_PARTICIPANTS",
         message: `Need at least ${minParticipants} participants to start the battle. Currently ${participantCount} participant(s) in the room.`,
+        retryable: true,
+        statusCode: 400,
+      });
+    }
+
+    const activeParticipants =
+      participants?.filter(
+        (p) => p.connection_status !== "offline"
+      ) || [];
+
+    const notReadyParticipants = activeParticipants.filter(
+      (p) => !p.is_host && !p.is_ready
+    );
+
+    if (notReadyParticipants.length > 0) {
+      const names = notReadyParticipants
+        .map((p) => p.display_name || "Participant")
+        .join(", ");
+      return createErrorResponse({
+        code: "PARTICIPANTS_NOT_READY",
+        message: `Some participants aren't ready yet: ${names}.`,
         retryable: true,
         statusCode: 400,
       });
@@ -262,6 +283,12 @@ export async function POST(
     if (updErr) {
       return createErrorResponse(ERROR_TYPES.INTERNAL_ERROR);
     }
+
+    // Reset ready state for next rounds or rematches
+    await supabase
+      .from("battle_room_participants")
+      .update({ is_ready: false })
+      .eq("room_id", roomId);
 
     // Broadcast room started
     await publishBattleEvent({

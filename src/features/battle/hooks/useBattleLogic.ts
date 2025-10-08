@@ -43,9 +43,12 @@ export function useBattleLogic() {
     difficultyLabel,
     getDifficultyColor,
     getRoomStatusColor,
+    setReadyStatus,
+    toggleReadyStatus,
     startBattleLoading,
     submitAnswerLoading,
     advanceFromScoreboardLoading,
+    readyStatusLoading,
   } = useBattleActions(roomId, state, refresh);
 
   const { timeLeft } = useTimer(state, autoCloseRound);
@@ -193,10 +196,13 @@ export function useBattleLogic() {
     getDifficultyColor,
     getRoomStatusColor,
     advanceFromScoreboard,
+    setReadyStatus,
+    toggleReadyStatus,
 
     // Derived values
     isHost: isHost(),
     scoreboard: currentScoreboard,
     advanceFromScoreboardLoading,
+    readyStatusLoading,
   };
 }
