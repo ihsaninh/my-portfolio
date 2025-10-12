@@ -8,7 +8,7 @@ import {
   checkRateLimit,
   generalLimiter,
 } from "@/src/shared/lib/services/rate-limit";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 import {
   createRoomSchema,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     const body = validation.data;
 
     const supabase = supabaseAdmin();
-    const hostSessionId = getSessionIdFromCookies(req);
+    const hostSessionId = getBattleSessionIdFromCookies(req);
     if (!hostSessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     // Ensure host session exists
     const { data: session, error: sessionErr } = await supabase
-      .from("quiz_sessions")
+      .from("battle_sessions")
       .select("*")
       .eq("id", hostSessionId)
       .single();

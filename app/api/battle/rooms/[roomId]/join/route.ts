@@ -6,7 +6,7 @@ import {
   createErrorResponse,
   ERROR_TYPES,
 } from "@/src/shared/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const JoinRoomSchema = z.object({
@@ -21,7 +21,7 @@ export async function POST(
     const { roomId } = await context.params;
     const json = await req.json();
     const body = JoinRoomSchema.parse(json);
-    const sessionId = getSessionIdFromCookies(req);
+    const sessionId = getBattleSessionIdFromCookies(req);
     if (!sessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
@@ -79,7 +79,7 @@ export async function POST(
 
     // Ensure session exists
     const { data: session, error: sessionErr } = await supabase
-      .from("quiz_sessions")
+      .from("battle_sessions")
       .select("id")
       .eq("id", sessionId)
       .single();
@@ -89,7 +89,7 @@ export async function POST(
 
     // Resolve display name from session (single source of truth)
     const { data: sRec } = await supabase
-      .from("quiz_sessions")
+      .from("battle_sessions")
       .select("display_name")
       .eq("id", sessionId)
       .single();

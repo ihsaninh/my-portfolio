@@ -5,7 +5,7 @@ import {
   createErrorResponse,
   ERROR_TYPES,
 } from "@/src/shared/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 type QuestionSummary = {
@@ -23,7 +23,7 @@ export async function GET(
 ) {
   try {
     const { roomId } = await context.params;
-    const sessionId = getSessionIdFromCookies(req);
+    const sessionId = getBattleSessionIdFromCookies(req);
     if (!sessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
@@ -63,7 +63,7 @@ export async function GET(
     let hostDisplayName: string | null = null;
     if (isHostSession && !membership) {
       const { data: hostSession } = await supabase
-        .from("quiz_sessions")
+        .from("battle_sessions")
         .select("display_name")
         .eq("id", sessionId)
         .maybeSingle();

@@ -54,7 +54,7 @@ export const ensureSession = async (displayName: string): Promise<boolean> => {
       payload.fingerprint_hash = fingerprint;
     }
 
-    const response = await fetch("/api/quiz/sessions", {
+    const response = await fetch("/api/battle/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

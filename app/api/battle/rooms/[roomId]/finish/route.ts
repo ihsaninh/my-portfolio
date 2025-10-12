@@ -6,7 +6,7 @@ import {
   createErrorResponse,
   ERROR_TYPES,
 } from "@/src/shared/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseServer } from "@/src/shared/lib/services/supabase";
 
 const FinishSchema = z.object({});
@@ -19,7 +19,7 @@ export async function POST(
     const { roomId } = await context.params;
     FinishSchema.parse(await req.json().catch(() => ({})));
     const supabase = supabaseServer();
-    const hostSessionId = getSessionIdFromCookies(req);
+    const hostSessionId = getBattleSessionIdFromCookies(req);
     if (!hostSessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }

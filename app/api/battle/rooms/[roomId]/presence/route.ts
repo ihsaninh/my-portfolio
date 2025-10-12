@@ -6,7 +6,7 @@ import {
   createErrorResponse,
   ERROR_TYPES,
 } from "@/src/shared/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const PresenceSchema = z.object({
@@ -19,7 +19,7 @@ export async function POST(
 ) {
   try {
     const { roomId } = await context.params;
-    const sessionId = getSessionIdFromCookies(req);
+    const sessionId = getBattleSessionIdFromCookies(req);
 
     if (!sessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);

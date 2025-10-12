@@ -10,7 +10,7 @@ import {
   createErrorResponse,
   ERROR_TYPES,
 } from "@/src/shared/lib/services/api-errors";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const StartSchema = z.object({ useAI: z.boolean().optional() });
@@ -29,7 +29,7 @@ export async function POST(
   try {
     const { roomId } = await context.params;
     const body = StartSchema.parse(await req.json().catch(() => ({})));
-    const hostSessionId = getSessionIdFromCookies(req);
+    const hostSessionId = getBattleSessionIdFromCookies(req);
     if (!hostSessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }

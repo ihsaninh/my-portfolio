@@ -12,7 +12,7 @@ import {
   answerSubmitLimiter,
   checkRateLimit,
 } from "@/src/shared/lib/services/rate-limit";
-import { getSessionIdFromCookies } from "@/src/shared/lib/services/session";
+import { getBattleSessionIdFromCookies } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
 
 const AnswerSchema = z.object({ answer_text: z.string().min(1).max(5000) });
@@ -33,7 +33,7 @@ export async function POST(
 
     const { roomId, roundNo } = await context.params;
     const raw = await req.json();
-    const sessionId = getSessionIdFromCookies(req);
+    const sessionId = getBattleSessionIdFromCookies(req);
     if (!sessionId) {
       return createErrorResponse(ERROR_TYPES.MISSING_SESSION);
     }
