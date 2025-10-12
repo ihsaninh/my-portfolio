@@ -15,6 +15,15 @@ import {
   FaUsers,
 } from "react-icons/fa";
 
+import { battleApi } from "@/src/features/battle/lib/api";
+import {
+  getDifficultyColor,
+  getDifficultyLabel,
+  getStatusColor,
+  getStatusLabel,
+} from "@/src/features/battle/lib/formatters";
+import type { RoomAvailabilityResponse } from "@/src/features/battle/types/api";
+
 interface JoinRoomFormProps {
   joinPlayerName: string;
   joinRoomId: string;
@@ -45,6 +54,42 @@ interface RoomDetails {
   };
 }
 
+const normalizeRoomDetails = (
+  availability: RoomAvailabilityResponse,
+  requestedRoomId: string
+): RoomDetails => {
+  const {
+    roomId,
+    status,
+    joinable,
+    capacity,
+    currentParticipants,
+    message,
+    roomCode,
+    meta,
+  } = availability;
+
+  return {
+    roomId,
+    status:
+      status === "waiting" || status === "active" || status === "finished"
+        ? status
+        : "waiting",
+    joinable: Boolean(joinable),
+    capacity: capacity ?? null,
+    currentParticipants: currentParticipants ?? null,
+    message,
+    roomCode: roomCode ?? requestedRoomId.toUpperCase(),
+    meta: {
+      topic: meta?.topic ?? null,
+      language: meta?.language ?? "en",
+      numQuestions: meta?.numQuestions ?? 0,
+      difficulty: meta?.difficulty ?? null,
+      roundTimeSec: meta?.roundTimeSec ?? null,
+    },
+  };
+};
+
 export function JoinRoomForm({
   joinPlayerName,
   joinRoomId,
@@ -69,66 +114,17 @@ export function JoinRoomForm({
     setRoomDetails(null);
 
     try {
-      const response = await fetch(
-        `/api/battle/rooms/${joinRoomId}/availability`
+      const availability = await battleApi.checkRoomAvailability(
+        joinRoomId.trim()
       );
-      const data = await response.json();
 
-      if (!response.ok) {
-        setCheckError(data.message || "Room not found");
-        return;
-      }
-
-      setRoomDetails(data);
+      setRoomDetails(normalizeRoomDetails(availability, joinRoomId.trim()));
     } catch (error) {
       console.error("Error checking room:", error);
-      setCheckError("Failed to check room. Please try again.");
+      const err = error as Error & { message?: string };
+      setCheckError(err?.message || "Failed to check room. Please try again.");
     } finally {
       setCheckingRoom(false);
-    }
-  };
-
-  const getDifficultyColor = (difficulty: string | null) => {
-    switch (difficulty) {
-      case "easy":
-        return "bg-green-500/20 text-green-300 border-green-500/30";
-      case "medium":
-        return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
-      case "hard":
-        return "bg-red-500/20 text-red-300 border-red-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: string | null) => {
-    if (!difficulty) return "Mixed";
-    return difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "waiting":
-        return "bg-blue-500/20 text-blue-300 border-blue-500/30";
-      case "active":
-        return "bg-orange-500/20 text-orange-300 border-orange-500/30";
-      case "finished":
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
-      default:
-        return "bg-gray-500/20 text-gray-300 border-gray-500/30";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "waiting":
-        return "Waiting";
-      case "active":
-        return "In Progress";
-      case "finished":
-        return "Finished";
-      default:
-        return status;
     }
   };
 

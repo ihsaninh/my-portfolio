@@ -38,7 +38,22 @@ export interface RoomAvailabilityResponse {
     language?: string | null;
     numQuestions?: number | null;
     difficulty?: string | null;
+    roundTimeSec?: number | null;
   };
+}
+
+export interface BattleSessionRequest {
+  display_name: string;
+  fingerprint_hash?: string;
+}
+
+export interface BattleSessionResponse {
+  sessionId: string;
+  id: string;
+  display_name: string;
+  fingerprint_hash: string;
+  created_at: string;
+  last_active_at: string;
 }
 
 export interface StartBattlePayload {

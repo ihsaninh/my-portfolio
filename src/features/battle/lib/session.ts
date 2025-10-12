@@ -1,3 +1,6 @@
+import { battleApi } from "@/src/features/battle/lib/api";
+import type { BattleSessionRequest } from "@/src/features/battle/types/api";
+
 export const ensureSession = async (displayName: string): Promise<boolean> => {
   try {
     const name = displayName?.trim();
@@ -49,21 +52,12 @@ export const ensureSession = async (displayName: string): Promise<boolean> => {
       }
     }
 
-    const payload: Record<string, unknown> = { display_name: name };
+    const payload: BattleSessionRequest = { display_name: name };
     if (fingerprint) {
       payload.fingerprint_hash = fingerprint;
     }
 
-    const response = await fetch("/api/battle/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      return false;
-    }
+    await battleApi.createSession(payload);
 
     if (typeof window !== "undefined" && fingerprint) {
       try {

@@ -1,4 +1,6 @@
 import type {
+  BattleSessionRequest,
+  BattleSessionResponse,
   CreateRoomPayload,
   CreateRoomResponse,
   JoinRoomPayload,
@@ -19,6 +21,16 @@ import type {
 import { battleRequest } from "./api-request";
 
 export const battleApi = {
+  createSession: async (
+    payload: BattleSessionRequest
+  ): Promise<BattleSessionResponse> => {
+    return battleRequest<BattleSessionResponse>("/sessions", {
+      method: "POST",
+      body: payload,
+      fallbackMessage: "Failed to create battle session",
+    });
+  },
+
   // Create a new battle room
   createRoom: async (
     payload: CreateRoomPayload
@@ -171,6 +183,8 @@ export const battleApi = {
 };
 
 export type {
+  BattleSessionRequest,
+  BattleSessionResponse,
   CreateRoomPayload,
   CreateRoomResponse,
   JoinRoomPayload,
