@@ -17,8 +17,6 @@ export function useBattleLogic() {
   const hasRedirectedRef = useRef(false);
   const accessDeniedRef = useRef(false);
 
-  // Local state for timeouts
-  const [shouldResetCopy, setShouldResetCopy] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
 
   // Use the smaller hooks
@@ -78,25 +76,6 @@ export function useBattleLogic() {
     }
   }, [stateError, router]);
 
-  // Reset copy state after 2 seconds using useTimeout
-  useTimeout(
-    () => {
-      useBattleStore.getState().setCopied(false);
-      setShouldResetCopy(false);
-    },
-    shouldResetCopy ? 2000 : null
-  );
-
-  // Redirect to results after 2.5 seconds using useTimeout
-  useTimeout(
-    () => {
-      if (!roomId) return;
-      router.replace(`/battle/result/${roomId}`);
-      setShouldRedirect(false);
-    },
-    shouldRedirect ? 2500 : null
-  );
-
   // Use Zustand store for UI state only
   const {
     // Game state
@@ -116,6 +95,24 @@ export function useBattleLogic() {
     // Actions
     // Note: Actions are handled by smaller hooks
   } = useBattleStore();
+
+  // Reset copy state after 2 seconds using useTimeout
+  useTimeout(
+    () => {
+      useBattleStore.getState().setCopied(false);
+    },
+    copied ? 2000 : null
+  );
+
+  // Redirect to results after 2.5 seconds using useTimeout
+  useTimeout(
+    () => {
+      if (!roomId) return;
+      router.replace(`/battle/result/${roomId}`);
+      setShouldRedirect(false);
+    },
+    shouldRedirect ? 2500 : null
+  );
 
   // Compute whether server already recorded my answer (to avoid UI flicker)
   const mySessionId = useMemo(() => {

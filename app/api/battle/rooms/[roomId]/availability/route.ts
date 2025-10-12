@@ -22,7 +22,7 @@ export async function GET(
 
     const supabase = supabaseAdmin();
     const baseSelect =
-      "id, status, capacity, room_code, topic, language, num_questions, difficulty";
+      "id, status, capacity, room_code, topic, language, num_questions, difficulty, round_time_sec";
 
     // Try to resolve by room ID first
     let roomQuery = supabase
@@ -108,6 +108,7 @@ export async function GET(
         language: room.language,
         numQuestions: room.num_questions,
         difficulty: room.difficulty,
+        roundTimeSec: room.round_time_sec,
       },
     });
   } catch (e: unknown) {

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import {
   useAdvanceFromScoreboard,
@@ -38,10 +38,6 @@ export function useBattleActions(
     resetParticipantReadyStates,
   } = useBattleStore();
 
-  // Local state for copy timeout
-  const [shouldResetCopy, setShouldResetCopy] = useState(false);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
-
   // Mutations
   const startBattleMutation = useStartBattle();
   const submitAnswerMutation = useSubmitAnswer();
@@ -74,7 +70,6 @@ export function useBattleActions(
       .then(() => {
         useBattleStore.getState().setCopied(true);
         addNotification("Room link copied to clipboard!");
-        setShouldResetCopy(true);
       })
       .catch(() => {
         addNotification("Failed to copy link. Please copy it manually.");
@@ -97,16 +92,13 @@ export function useBattleActions(
     const participants =
       snapshot.state?.participants ?? state?.participants ?? [];
     const pendingParticipants = participants.filter(
-      (p) =>
-        !p.is_host && p.connection_status !== "offline" && !p.is_ready
+      (p) => !p.is_host && p.connection_status !== "offline" && !p.is_ready
     );
     if (pendingParticipants.length > 0) {
       const names = pendingParticipants
         .map((p) => p.display_name || "Participant")
         .join(", ");
-      addNotification(
-        `Still waiting for everyone to be ready: ${names}.`
-      );
+      addNotification(`Still waiting for everyone to be ready: ${names}.`);
       return;
     }
 
@@ -143,8 +135,7 @@ export function useBattleActions(
 
     const snapshot = useBattleStore.getState();
     const sessionId =
-      snapshot.state?.currentUser?.session_id ||
-      state?.currentUser?.session_id;
+      snapshot.state?.currentUser?.session_id || state?.currentUser?.session_id;
 
     if (!sessionId) {
       addNotification("Your session is not available yet.");
@@ -163,8 +154,7 @@ export function useBattleActions(
   const toggleReadyStatus = async () => {
     const snapshot = useBattleStore.getState();
     const sessionId =
-      snapshot.state?.currentUser?.session_id ||
-      state?.currentUser?.session_id;
+      snapshot.state?.currentUser?.session_id || state?.currentUser?.session_id;
 
     if (!sessionId) {
       addNotification("Your session is not available yet.");
@@ -329,13 +319,6 @@ export function useBattleActions(
   };
 
   return {
-    // State
-    shouldResetCopy,
-    shouldRedirect,
-    setShouldResetCopy,
-    setShouldRedirect,
-
-    // Functions
     copyRoomLink,
     startBattle,
     submitAnswer,
