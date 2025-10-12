@@ -6,6 +6,7 @@ import { useBattleActions } from "@/src/features/battle/hooks/useBattleActions";
 import { useHostDetection } from "@/src/features/battle/hooks/useHostDetection";
 import { useRealtime } from "@/src/features/battle/hooks/useRealtime";
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
+import { BATTLE_SESSION_COOKIE } from "@/src/shared/lib/services/session";
 
 import { useBattleRoomState } from "./useRoomState";
 import { useTimer } from "./useTimer";
@@ -126,7 +127,7 @@ export function useBattleLogic() {
 
     const cookieMatch = document.cookie
       .split("; ")
-      .find((row) => row.startsWith("quiz_session_id="));
+      .find((row) => row.startsWith(`${BATTLE_SESSION_COOKIE}=`));
 
     return cookieMatch ? cookieMatch.split("=")[1] : null;
   }, [state?.currentUser?.session_id]);

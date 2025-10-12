@@ -13,6 +13,7 @@ import type {
   GamePhase,
   StateResp,
 } from "@/src/features/battle/types/battle";
+import { BATTLE_SESSION_COOKIE } from "@/src/shared/lib/services/session";
 
 // Extend Window interface to include custom properties
 declare global {
@@ -335,7 +336,7 @@ export function useBattleRoomState(): {
           state?.currentUser?.session_id ||
           document.cookie
             .split("; ")
-            .find((row) => row.startsWith("quiz_session_id="))
+            .find((row) => row.startsWith(`${BATTLE_SESSION_COOKIE}=`))
             ?.split("=")[1];
         if (mySessionId && Array.isArray(answerStatus.participants)) {
           const me = answerStatus.participants.find(

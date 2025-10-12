@@ -10,6 +10,7 @@ import {
   getConnectionStats,
 } from "@/src/features/battle/lib/realtime";
 import type { StateResp } from "@/src/features/battle/types/battle";
+import { BATTLE_SESSION_COOKIE } from "@/src/shared/lib/services/session";
 
 export function useRealtime(
   roomId: string | undefined,
@@ -44,7 +45,7 @@ export function useRealtime(
     }
     const cookieMatch = document.cookie
       .split("; ")
-      .find((cookie) => cookie.startsWith("quiz_session_id="));
+      .find((cookie) => cookie.startsWith(`${BATTLE_SESSION_COOKIE}=`));
     return cookieMatch ? cookieMatch.split("=")[1] : null;
   }, [currentUser]);
 

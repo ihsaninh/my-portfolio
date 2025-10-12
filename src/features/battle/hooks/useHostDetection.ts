@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 import { useBattleStore } from "@/src/features/battle/lib/battle-store";
 import type { StateResp } from "@/src/features/battle/types/battle";
+import { BATTLE_SESSION_COOKIE } from "@/src/shared/lib/services/session";
 
 export function useHostDetection(
   roomId: string | undefined,
@@ -36,7 +37,7 @@ export function useHostDetection(
       // If we don't have currentUser but we have participants, check if any participant with our session is host
       const currentSessionId = document.cookie
         .split("; ")
-        .find((row) => row.startsWith("quiz_session_id="))
+        .find((row) => row.startsWith(`${BATTLE_SESSION_COOKIE}=`))
         ?.split("=")[1];
 
       if (currentSessionId) {
