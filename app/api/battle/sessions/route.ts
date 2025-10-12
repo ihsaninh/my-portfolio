@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { BATTLE_SESSION_COOKIE } from "@/src/shared/lib/services/session";
 import { supabaseAdmin } from "@/src/shared/lib/services/supabase";
-
-export const BATTLE_SESSION_COOKIE = "battle_session_id";
 
 export async function POST(request: NextRequest) {
   try {
