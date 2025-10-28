@@ -1,10 +1,7 @@
-const CACHE_NAME = "battle-cache-v1";
+const CACHE_NAME = "portfolio-cache-v1";
 const urlsToCache = [
-  "/battle",
-  "/battle/rooms",
-  "/battle/result",
+  "/",
   "/manifest.json",
-  "/images/battle-icon.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -28,14 +25,12 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.url.includes("/battle")) {
-    event.respondWith(
-      caches.match(event.request).then((response) => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-    );
-  }
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response;
+      }
+      return fetch(event.request);
+    })
+  );
 });

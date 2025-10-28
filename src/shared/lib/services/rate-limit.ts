@@ -68,8 +68,6 @@ class RateLimiter {
 
 // Different rate limiters for different endpoints
 export const generalLimiter = new RateLimiter(60000, 30); // 30 requests per minute
-export const battleActionLimiter = new RateLimiter(10000, 5); // 5 battle actions per 10 seconds
-export const answerSubmitLimiter = new RateLimiter(10000, 5); // 5 answer submissions per 10 seconds
 
 export function checkRateLimit(
   req: NextRequest,

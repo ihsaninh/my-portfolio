@@ -38,7 +38,7 @@ const aiFeatures = [
     title: "Battle Arena",
     description: "Compete in real-time quiz battles with other users",
     icon: <FiClock className="h-6 w-6" />,
-    href: "/battle",
+    href: "https://battle.ihsaninh.com",
     color: "from-red-500 to-orange-500",
     badge: "Real-time",
   },
