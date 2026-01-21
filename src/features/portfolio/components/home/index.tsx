@@ -6,6 +6,16 @@ import Image from "next/image";
 import React from "react";
 import { FiDownload, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 
+import GlowText from "@/src/shared/components/GlowText";
+import {
+  PrimaryMagneticButton,
+  SecondaryMagneticButton,
+} from "@/src/shared/components/MagneticButton";
+import ScrollReveal, {
+  StaggerContainer,
+  StaggerItem,
+} from "@/src/shared/components/ScrollReveal";
+
 import { useHeaderService } from "@/src/features/portfolio/hooks/useHeader";
 
 import AiFeaturesAlert from "./AiFeaturesAlert";
@@ -31,146 +41,154 @@ export default function Home() {
     >
       <LazyMotion features={domAnimation}>
         <div className="flex flex-col items-center lg:py-12">
-          <div className="will-change-auto">
-            <Image
-              src="/images/profile.webp"
-              alt="Portrait of Ihsan Nurul Habib"
-              width={240}
-              height={240}
-              sizes="(min-width: 1024px) 240px, 160px"
-              priority
-              fetchPriority="high"
-              className="w-40 h-40 lg:w-60 lg:h-60 rounded-full object-cover ring-2 ring-slate-200 dark:ring-white/10 shadow-xl"
-            />
-          </div>
+          {/* Profile Photo with Holographic Ring */}
+          <ScrollReveal animation="scale" className="relative">
+            <div className="relative group">
+              {/* Animated gradient ring */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-spin-slow" />
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full opacity-40" />
+              <Image
+                src="/images/profile.webp"
+                alt="Portrait of Ihsan Nurul Habib"
+                width={240}
+                height={240}
+                sizes="(min-width: 1024px) 240px, 160px"
+                priority
+                fetchPriority="high"
+                className="relative w-40 h-40 lg:w-60 lg:h-60 rounded-full object-cover bg-primary"
+              />
+            </div>
+          </ScrollReveal>
 
+          {/* Availability Badge */}
           <m.div
             variants={fadeUp}
             initial="hidden"
             whileInView="show"
             viewport={{ once: true, amount: 0.3 }}
-            className="mt-6 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs text-accent"
+            className="mt-6 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-xs"
           >
-            <span className="inline-block h-2 w-2 rounded-full bg-green-400" />{" "}
-            Available for select projects
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+            </span>
+            <span className="text-slate-700 dark:text-white/80">
+              Available for select projects
+            </span>
           </m.div>
 
+          {/* Headline with Gradient Text */}
           <div className="text-center mt-6">
             <h1 id="home-title" className="h1 leading-snug">
               <span className="text-slate-900 dark:text-white/90">
                 Hello, I&apos;m{" "}
               </span>
-              <span className="text-accent">Ihsan Nurul Habib</span>
+              <GlowText as="span" className="font-bold" gradient glow>
+                Ihsan Nurul Habib
+              </GlowText>
               <br />
               <span className="text-slate-900 dark:text-white/90">
                 Software Engineer — Frontend & Mobile
               </span>
             </h1>
 
-            <m.p
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, amount: 0.3 }}
-              className="mt-4 text-slate-800 dark:text-white/75 leading-8 max-w-3xl mx-auto text-sm lg:text-lg"
-            >
-              I build fast, accessible apps with Next.js, React, Angular, and
-              React Native. 5+ years crafting delightful UIs for enterprise
-              clients. Now specializing in AI-powered applications with
-              Supabase.
-            </m.p>
+            <ScrollReveal animation="fade" delay={0.2}>
+              <p className="mt-4 text-slate-700 dark:text-white/70 leading-8 max-w-3xl mx-auto text-sm lg:text-lg">
+                I build fast, accessible apps with Next.js, React, Angular, and
+                React Native. 5+ years crafting delightful UIs for enterprise
+                clients. Now specializing in AI-powered applications with
+                Supabase.
+              </p>
+            </ScrollReveal>
           </div>
 
           {/* AI Features Alert */}
           <AiFeaturesAlert />
 
-          <m.div
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.2 }}
-            className="mt-8 flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-4"
+          {/* CTA Buttons with Magnetic Effect */}
+          <ScrollReveal animation="slide-up" delay={0.3} className="mt-8">
+            <div className="flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-4">
+              <PrimaryMagneticButton href="#contact">
+                Connect with me
+              </PrimaryMagneticButton>
+
+              <SecondaryMagneticButton
+                href="/document/CV-Ihsan-Nurul-Habib.pdf"
+                download
+                ariaLabel="Download CV as PDF"
+                className="group"
+              >
+                <span>Download CV</span>
+                <FiDownload className="text-lg transition-transform duration-300 group-hover:-rotate-12" />
+              </SecondaryMagneticButton>
+            </div>
+          </ScrollReveal>
+
+          {/* Social Links with Magnetic Effect */}
+          <ScrollReveal animation="fade" delay={0.4}>
+            <div className="mt-5 flex items-center gap-4 text-slate-700 dark:text-white/70">
+              {[
+                {
+                  href: "https://github.com/ihsaninh",
+                  icon: FiGithub,
+                  label: "GitHub",
+                },
+                {
+                  href: "https://www.linkedin.com/in/ihsaninh",
+                  icon: FiLinkedin,
+                  label: "LinkedIn",
+                },
+                {
+                  href: "mailto:ihsan.inh@gmail.com",
+                  icon: FiMail,
+                  label: "Email",
+                },
+              ].map((social) => (
+                <a
+                  key={social.label}
+                  href={social.href}
+                  target={social.href.startsWith("http") ? "_blank" : undefined}
+                  rel={
+                    social.href.startsWith("http")
+                      ? "noopener noreferrer"
+                      : undefined
+                  }
+                  aria-label={social.label}
+                  className="group p-3 rounded-full glass holo-border transition-all duration-300 hover:text-[rgb(var(--accent))]"
+                >
+                  <social.icon className="text-xl transition-transform duration-300 group-hover:scale-110" />
+                </a>
+              ))}
+            </div>
+          </ScrollReveal>
+
+          {/* Stats Cards - Bento Style */}
+          <StaggerContainer
+            staggerDelay={0.1}
+            className="mt-8 grid grid-cols-3 gap-3 lg:gap-4 text-center"
           >
-            <a
-              href="#contact"
-              onClick={handleConnectClick}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm lg:text-base text-primary shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60 whitespace-nowrap"
-            >
-              Connect with me
-            </a>
+            {[
+              { value: "5+", label: "Years Experience" },
+              { value: "10+", label: "Projects shipped" },
+              { value: "3", label: "Enterprise clients" },
+            ].map((stat) => (
+              <StaggerItem key={stat.label} animation="scale">
+                <div className="glass holo-border rounded-2xl px-5 py-4 card-hover">
+                  <p className="text-2xl lg:text-3xl font-bold gradient-text">
+                    {stat.value}
+                  </p>
+                  <p className="text-xs lg:text-sm text-slate-600 dark:text-white/60 mt-1">
+                    {stat.label}
+                  </p>
+                </div>
+              </StaggerItem>
+            ))}
+          </StaggerContainer>
 
-            <a
-              href="/document/CV-Ihsan-Nurul-Habib.pdf"
-              download
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-6 text-sm lg:text-base text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10 group whitespace-nowrap"
-              aria-label="Download CV as PDF"
-            >
-              <span>Download CV</span>
-              <FiDownload className="text-lg transition-transform duration-300 group-hover:-rotate-12" />
-            </a>
-          </m.div>
-
-          <m.div
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.2 }}
-            className="mt-5 flex items-center gap-4 text-slate-700 dark:text-white/70"
-          >
-            <a
-              href="https://github.com/ihsaninh"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub"
-              className="p-2 rounded-full hover:bg-slate-200 hover:text-slate-900 dark:hover:bg白/5 dark:hover:text-white transition transform-gpu will-change-transform"
-            >
-              <FiGithub className="text-xl" />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/ihsaninh"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="p-2 rounded-full hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-white transition transform-gpu will-change-transform"
-            >
-              <FiLinkedin className="text-xl" />
-            </a>
-            <a
-              href="mailto:ihsan.inh@gmail.com"
-              aria-label="Email"
-              className="p-2 rounded-full hover:bg-slate-200 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-white transition transform-gpu will-change-transform"
-            >
-              <FiMail className="text-xl" />
-            </a>
-          </m.div>
-
-          <m.ul
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.2 }}
-            className="mt-8 grid grid-cols-3 gap-4 text-center text-slate-800 dark:text-white/80"
-          >
-            <li className="rounded-2xl border border-slate-300 bg-slate-100 dark:border-white/10 dark:bg-white/5 px-5 py-3">
-              <p className="text-2xl font-semibold">5+</p>
-              <p className="text-xs opacity-80">Years Experience</p>
-            </li>
-            <li className="rounded-2xl border border-slate-300 bg-slate-100 dark:border-white/10 dark:bg-white/5 px-5 py-3">
-              <p className="text-2xl font-semibold">10+</p>
-              <p className="text-xs opacity-80">Projects shipped</p>
-            </li>
-            <li className="rounded-2xl border border-slate-300 bg-slate-100 dark:border-white/10 dark:bg-white/5 px-5 py-3">
-              <p className="text-2xl font-semibold">3</p>
-              <p className="text-xs opacity-80">Enterprise clients</p>{" "}
-            </li>
-          </m.ul>
-
-          <m.ul
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.2 }}
-            className="mt-8 flex flex-wrap justify-center gap-2 text-xs"
+          {/* Tech Stack Tags */}
+          <StaggerContainer
+            staggerDelay={0.05}
+            className="mt-8 flex flex-wrap justify-center gap-2"
             aria-label="Core technologies"
           >
             {[
@@ -183,15 +201,14 @@ export default function Home() {
               "Google AI",
               "Supabase",
               "AI Tools",
-            ].map((t) => (
-              <li
-                key={t}
-                className="rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-slate-800 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-white/80 dark:hover:text-white"
-              >
-                {t}
-              </li>
+            ].map((tech) => (
+              <StaggerItem key={tech} animation="fade">
+                <span className="rounded-full glass px-4 py-1.5 text-xs text-slate-700 dark:text-white/80 hover:text-[rgb(var(--accent))] transition-colors duration-300 cursor-default">
+                  {tech}
+                </span>
+              </StaggerItem>
             ))}
-          </m.ul>
+          </StaggerContainer>
         </div>
       </LazyMotion>
     </section>

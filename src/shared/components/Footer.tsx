@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Link from "next/link";
 
 import Social from "@/src/features/portfolio/components/contact/Social";
@@ -10,74 +11,71 @@ export default function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-12 lg:mt-24">
+    <footer className="relative mt-12 lg:mt-24 pb-8">
       <div className="container">
-        <div className="rounded-2xl border border-slate-300 bg-slate-50 backdrop-blur px-6 py-8 md:px-8 md:py-10 dark:border-white/10 dark:bg-white/5">
+        <div className="glass holo-border rounded-2xl px-6 py-8 md:px-8 md:py-10">
           <div className="grid gap-8 md:grid-cols-3 md:items-center">
+            {/* Brand */}
             <div className="flex items-center gap-3">
               <BrandLogo size="md" />
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">
+                <p className="font-semibold text-slate-900 dark:text-white">
                   Ihsan Nurul Habib
                 </p>
-                <p className="text-sm text-slate-700 dark:text-white/70">
+                <p className="text-sm text-slate-600 dark:text-white/70">
                   Software Engineer — Frontend & Mobile
                 </p>
               </div>
             </div>
 
+            {/* Navigation */}
             <nav
               aria-label="Footer"
-              className="flex flex-wrap justify-start md:justify-center gap-x-6 gap-y-2 text-sm text-slate-700 dark:text-white/80"
+              className="flex flex-wrap justify-start md:justify-center gap-x-6 gap-y-2 text-sm"
             >
-              <Link
-                href="#work"
-                className="hover:text-slate-900 dark:hover:text-white"
-              >
-                Work
-              </Link>
-              <Link
-                href="#about"
-                className="hover:text-slate-900 dark:hover:text-white"
-              >
-                About
-              </Link>
-              <Link
-                href="#blog"
-                className="hover:text-slate-900 dark:hover:text-white"
-              >
-                Blog
-              </Link>
-              <Link
-                href="#contact"
-                className="hover:text-slate-900 dark:hover:text-white"
-              >
-                Contact
-              </Link>
+              {[
+                { href: "#work", label: "Work" },
+                { href: "#skills", label: "Skills" },
+                { href: "#blog", label: "Blog" },
+                { href: "#contact", label: "Contact" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-slate-600 hover:text-[rgb(var(--accent))] dark:text-white/70 dark:hover:text-[rgb(var(--accent))] transition-colors duration-300"
+                >
+                  {link.label}
+                </Link>
+              ))}
             </nav>
 
+            {/* Social */}
             <div className="flex flex-col items-start md:items-end gap-3">
               <Social variant="icon" containerClass="flex gap-3" />
             </div>
           </div>
 
-          <div className="my-6 h-px bg-slate-200 dark:bg-white/10" />
+          {/* Gradient Divider */}
+          <div className="my-6 h-px bg-gradient-to-r from-transparent via-[rgb(var(--accent)/0.3)] to-transparent" />
 
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-slate-700 dark:text-white/70">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs text-slate-600 dark:text-white/60">
             <p>
-              © {year} Ihsan Nurul Habib • Built with Next.js & Tailwind • Based
-              in Bogor, ID
+              © {year} Ihsan Nurul Habib • Built with{" "}
+              <span className="gradient-text font-medium">Next.js</span> &{" "}
+              <span className="gradient-text font-medium">Tailwind</span> •
+              Based in Bogor, ID
             </p>
 
-            <div className="flex items-center gap-4">
-              <a
-                href="#home"
-                className="rounded-full border border-slate-300 bg-slate-100 px-3 py-1.5 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/10"
-                aria-label="Back to top"
-              >
-                ↑ Back to top
-              </a>
-            </div>
+            <motion.a
+              href="#home"
+              className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 text-slate-700 dark:text-white/80 hover:text-[rgb(var(--accent))] transition-colors duration-300"
+              aria-label="Back to top"
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <span>↑</span>
+              <span>Back to top</span>
+            </motion.a>
           </div>
         </div>
       </div>

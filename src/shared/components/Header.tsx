@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { FiDownload } from "react-icons/fi";
 
 import { useHeaderService } from "@/src/features/portfolio/hooks/useHeader";
 
@@ -101,15 +102,16 @@ export default function Header() {
   return (
     <header
       className={[
-        "sticky top-0 z-50 transition duration-300 isolate transform-gpu will-change-transform",
+        "sticky top-0 z-50 transition-all duration-300 isolate transform-gpu will-change-transform",
         scrolled
-          ? "backdrop-blur bg-white/70 supports-[backdrop-filter]:bg-white/70 dark:bg-primary/50 dark:supports-[backdrop-filter]:bg-primary/50 shadow-[0_1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.08)]"
-          : "bg-transparent shadow-none",
+          ? "backdrop-blur-xl bg-white/70 dark:bg-primary/70 border-b border-slate-200/50 dark:border-white/5"
+          : "bg-transparent border-b border-transparent",
       ].join(" ")}
       aria-label="Primary header"
     >
       <div className="container">
         <div className="flex h-16 items-center justify-between gap-3">
+          {/* Logo */}
           <Link
             href={isHome ? "#home" : "/#home"}
             onClick={isHome ? handleNavClick("#home") : undefined}
@@ -117,13 +119,14 @@ export default function Header() {
             aria-label="Go to home"
           >
             <BrandLogo size="sm" />
-            <span className="text-sm font-medium text-slate-800 group-hover:text-slate-900 dark:text-white/70 dark:group-hover:text-white">
+            <span className="text-sm font-medium text-slate-700 group-hover:text-[rgb(var(--accent))] dark:text-white/80 dark:group-hover:text-[rgb(var(--accent))] transition-colors duration-300">
               Ihsan Nurul Habib
             </span>
           </Link>
 
+          {/* Desktop Navigation */}
           <nav className="hidden lg:block" aria-label="Main navigation">
-            <ul className="flex items-center gap-8">
+            <ul className="flex items-center gap-1">
               {navLinks.map((link) => {
                 const isBlogLink = link.name.toLowerCase() === "blog";
 
@@ -137,8 +140,9 @@ export default function Header() {
                 const active = isBlogLink
                   ? isBlog || (isHome && link.isActive)
                   : link.isActive;
+
                 return (
-                  <li key={link.href} className="relative group">
+                  <li key={link.href}>
                     <Link
                       href={hrefFinal}
                       onClick={
@@ -152,10 +156,10 @@ export default function Header() {
                           : undefined
                       }
                       className={[
-                        "text-sm transition-colors",
+                        "relative px-4 py-2 text-sm font-medium rounded-full transition-all duration-300",
                         active
-                          ? "text-accent"
-                          : "text-slate-800 hover:text-slate-900 dark:text-white/80 dark:hover:text-white",
+                          ? "text-white"
+                          : "text-slate-700 hover:text-[rgb(var(--accent))] dark:text-white/80 dark:hover:text-[rgb(var(--accent))]",
                       ].join(" ")}
                       tabIndex={0}
                       onKeyDown={(e: React.KeyboardEvent) => {
@@ -163,99 +167,118 @@ export default function Header() {
                           handleNavClick(link.href)(e);
                       }}
                     >
+                      {/* Active background pill with glow */}
+                      {active && (
+                        <motion.span
+                          layoutId="activeNavPill"
+                          className="absolute inset-0 rounded-full -z-10"
+                          style={{
+                            background:
+                              "linear-gradient(135deg, rgb(var(--accent)), rgb(var(--accent-secondary)))",
+                            boxShadow:
+                              "0 0 20px rgb(var(--accent) / 0.4), 0 0 40px rgb(var(--accent) / 0.2)",
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                      {/* Hover underline for inactive items */}
+                      {!active && (
+                        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))] rounded-full transition-all duration-300 group-hover:w-4" />
+                      )}
                       {link.name}
-                      <span
-                        className={[
-                          "absolute left-0 -bottom-1 h-[2px] bg-accent transition-all duration-300",
-                          active ? "w-full" : "w-0 group-hover:w-full",
-                        ].join(" ")}
-                        aria-hidden
-                      />
                     </Link>
                   </li>
                 );
               })}
 
-              <li>
+              <li className="ml-2">
                 <ThemeToggle />
               </li>
             </ul>
           </nav>
 
+          {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button
+            <motion.button
               type="button"
-              className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-slate-100 p-2 text-slate-800 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+              className="inline-flex items-center justify-center rounded-xl glass p-2.5"
               aria-label="Toggle navigation menu"
               aria-controls="mobile-nav"
               aria-expanded={open}
               onClick={() => setOpen((v) => !v)}
+              whileTap={{ scale: 0.95 }}
             >
               <span className="relative block h-4 w-5">
                 <span
                   className={[
-                    "absolute left-0 top-0 block h-0.5 w-5 bg-slate-900 dark:bg-white transition-transform",
+                    "absolute left-0 top-0 block h-0.5 w-5 bg-slate-800 dark:bg-white transition-all duration-300",
                     open ? "translate-y-2 rotate-45" : "",
                   ].join(" ")}
                 />
                 <span
                   className={[
-                    "absolute left-0 top-2 block h-0.5 w-5 bg-slate-900 dark:bg-white transition-opacity",
-                    open ? "opacity-0" : "opacity-100",
+                    "absolute left-0 top-2 block h-0.5 w-5 bg-slate-800 dark:bg-white transition-all duration-300",
+                    open ? "opacity-0 scale-0" : "opacity-100",
                   ].join(" ")}
                 />
                 <span
                   className={[
-                    "absolute left-0 top-4 block h-0.5 w-5 bg-slate-900 dark:bg-white transition-transform",
+                    "absolute left-0 top-4 block h-0.5 w-5 bg-slate-800 dark:bg-white transition-all duration-300",
                     open ? "-translate-y-2 -rotate-45" : "",
                   ].join(" ")}
                 />
               </span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Navigation */}
       <AnimatePresence>
         {open && (
           <motion.nav
             id="mobile-nav"
             ref={navRef}
-            initial={{ opacity: 0, y: -8 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
             className="lg:hidden"
             aria-label="Mobile navigation"
           >
-            <div className="container">
-              <div className="mt-2 rounded-2xl border border-slate-300 bg-slate-50 backdrop-blur shadow-xl dark:border-white/10 dark:bg-white/5">
-                <ul className="flex flex-col divide-y divide-slate-200 dark:divide-white/10">
+            <div className="container pb-4">
+              <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-primary shadow-xl overflow-hidden">
+                <ul className="flex flex-col">
                   {navLinks.map((link) => (
                     <li key={link.href}>
                       <a
                         href={link.href}
                         onClick={handleNavClick(link.href)}
                         className={[
-                          "block px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 rounded-md",
+                          "block px-5 py-3.5 text-sm font-medium transition-all duration-300 border-b border-slate-100 dark:border-white/5 last:border-b-0",
                           link.isActive
-                            ? "text-accent"
-                            : "text-slate-800 hover:text-slate-900 dark:text-white/90 dark:hover:text-white",
+                            ? "text-[rgb(var(--accent))] bg-[rgb(var(--accent)/0.05)]"
+                            : "text-slate-700 hover:text-[rgb(var(--accent))] dark:text-white/90",
                         ].join(" ")}
                       >
                         {link.name}
                       </a>
                     </li>
                   ))}
-                  <li className="p-2">
+                  <li className="p-3 border-t border-slate-100 dark:border-white/5">
                     <a
                       href="/document/CV-Ihsan-Nurul-Habib.pdf"
-                      className="block rounded-xl border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-800 hover:bg-slate-200 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10"
+                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))] px-4 py-2.5 text-sm font-medium text-white shadow-lg"
                     >
+                      <FiDownload className="text-lg" />
                       Download CV
                     </a>
                   </li>
-                  <li className="p-2">
+                  <li className="p-3 flex justify-center">
                     <ThemeToggle />
                   </li>
                 </ul>

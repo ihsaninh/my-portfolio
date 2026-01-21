@@ -3,6 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
+import ScrollReveal from "@/src/shared/components/ScrollReveal";
+
 import {
   certifications,
   educationData,
@@ -19,52 +21,65 @@ export default function Resume() {
 
   return (
     <section className="container mt-12 lg:mt-24" id="resume">
-      <h2 className="section-title">Resume</h2>
+      <ScrollReveal animation="slide-up">
+        <h2 className="section-title">Resume</h2>
+      </ScrollReveal>
 
-      <div className="flex flex-col lg:flex-row gap-12 mt-6">
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut" }}
-          viewport={{ once: true }}
-          className="lg:w-1/3"
-        >
-          <p className="pt-6">
+      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-6">
+        {/* Left sidebar */}
+        <ScrollReveal animation="slide-right" className="lg:w-1/3">
+          <p className="pt-4 text-slate-700 dark:text-white/70">
             Here are my experiences, educations, and skills. Feel free to check
             them out.
           </p>
 
-          <div className="flex flex-row lg:flex-col gap-4 mt-8 overflow-x-auto">
-            {resumeMenus.map((menu) => (
-              <button
-                key={menu.id}
-                onClick={() => setActiveMenu(menu.id)}
-                className={`py-2 rounded-lg cursor-pointer px-6 lg:px-0 border border-slate-300 ${
-                  activeMenu === menu.id
-                    ? "bg-accent text-primary"
-                    : "text-slate-800 bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-white/90"
-                }`}
-              >
-                <p className="text-center text-sm lg:text-base">{menu.name}</p>
-              </button>
-            ))}
+          {/* Clean Tab Navigation */}
+          <div className="flex flex-row lg:flex-col gap-2 mt-6 overflow-x-auto pb-2 lg:pb-0">
+            {resumeMenus.map((menu) => {
+              const isActive = activeMenu === menu.id;
+              return (
+                <button
+                  key={menu.id}
+                  onClick={() => setActiveMenu(menu.id)}
+                  className={`
+                    relative py-3 px-5 rounded-xl cursor-pointer text-sm lg:text-base font-medium 
+                    transition-all duration-300 whitespace-nowrap border
+                    ${
+                      isActive
+                        ? "text-white shadow-lg border-transparent"
+                        : "text-slate-700 dark:text-white/80 bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-[rgb(var(--accent)/0.3)]"
+                    }
+                  `}
+                >
+                  {/* Background for active state */}
+                  <span
+                    className={`
+                      absolute inset-0 rounded-xl transition-all duration-300
+                      ${
+                        isActive
+                          ? "bg-gradient-to-r from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))] opacity-100"
+                          : "opacity-0"
+                      }
+                    `}
+                  />
+
+                  <span className="relative z-10">{menu.name}</span>
+                </button>
+              );
+            })}
           </div>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-          viewport={{ once: true }}
-          className="lg:w-2/3 lg:mt-6"
-        >
+        </ScrollReveal>
+
+        {/* Right content */}
+        <div className="lg:w-2/3">
           <AnimatePresence mode="wait">
             {activeMenu === 0 && (
               <motion.div
                 key="experience"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 <ResumeContent
                   title="My Experiences"
@@ -78,10 +93,10 @@ export default function Resume() {
             {activeMenu === 1 && (
               <motion.div
                 key="education"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 <ResumeContent
                   title="My Educations"
@@ -95,10 +110,10 @@ export default function Resume() {
             {activeMenu === 2 && (
               <motion.div
                 key="certifications"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.4 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 <ResumeContent
                   title="My Certifications"
@@ -109,7 +124,7 @@ export default function Resume() {
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

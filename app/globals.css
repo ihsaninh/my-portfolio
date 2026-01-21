@@ -3,18 +3,30 @@
 
 @layer base {
   :root {
-    --accent: 16 185 129;
-    --accent-hover: 14 159 110;
+    /* Gen-Z 2026 Colors - Emerald Green Base (Light Mode) */
+    --accent: 5 150 105; /* Deeper emerald for light mode */
+    --accent-hover: 4 120 87;
+    --accent-secondary: 6 182 212; /* Deeper cyan */
+    --accent-tertiary: 37 99 235; /* Deeper blue */
+
+    /* Glass effect colors - slightly tinted for warmth */
+    --glass-bg: 255 255 255;
+    --glass-border: 100 116 139; /* slate-500 for better visibility */
   }
   .dark {
-    --accent: 0 255 153;
-    --accent-hover: 0 225 135;
+    --accent: 52 211 153; /* Lighter emerald for dark mode */
+    --accent-hover: 16 185 129;
+    --accent-secondary: 103 232 249;
+    --accent-tertiary: 96 165 250;
+
+    --glass-bg: 255 255 255;
+    --glass-border: 255 255 255;
   }
   html {
     @apply scroll-smooth scroll-p-32;
   }
   body {
-    @apply font-primary leading-loose bg-slate-50 text-slate-900 dark:bg-primary dark:text-white;
+    @apply font-primary leading-loose bg-white text-slate-800 dark:bg-primary dark:text-white;
   }
   html,
   body {
@@ -31,12 +43,265 @@
   }
 }
 
+/* ============================================
+   GEN-Z 2026 DESIGN SYSTEM
+   ============================================ */
+
+/* Glassmorphism Cards */
+.glass {
+  @apply backdrop-blur-xl border shadow-xl;
+  background: rgb(var(--glass-bg) / 0.05);
+  border-color: rgb(var(--glass-border) / 0.1);
+}
+.glass-strong {
+  @apply backdrop-blur-2xl border shadow-2xl;
+  background: rgb(var(--glass-bg) / 0.1);
+  border-color: rgb(var(--glass-border) / 0.15);
+}
+.dark .glass {
+  background: rgb(var(--glass-bg) / 0.03);
+  border-color: rgb(var(--glass-border) / 0.08);
+}
+.dark .glass-strong {
+  background: rgb(var(--glass-bg) / 0.06);
+  border-color: rgb(var(--glass-border) / 0.12);
+}
+
+/* Holographic/Iridescent Border Effect */
+.holo-border {
+  position: relative;
+}
+.holo-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(16, 185, 129, 0.5),
+    rgba(34, 211, 238, 0.5),
+    rgba(59, 130, 246, 0.5),
+    rgba(16, 185, 129, 0.5)
+  );
+  background-size: 300% 300%;
+  animation: gradient-x 4s ease infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+.holo-border:hover::before {
+  opacity: 1;
+}
+
+/* Glow Text Effect */
+.glow-text {
+  text-shadow:
+    0 0 10px rgb(var(--accent) / 0.5),
+    0 0 20px rgb(var(--accent) / 0.3),
+    0 0 40px rgb(var(--accent) / 0.2);
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(
+    135deg,
+    rgb(var(--accent)),
+    rgb(var(--accent-secondary)),
+    rgb(var(--accent-tertiary))
+  );
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Neon Glow Effect */
+.neon-glow {
+  box-shadow:
+    0 0 5px rgb(var(--accent) / 0.3),
+    0 0 20px rgb(var(--accent) / 0.2),
+    0 0 40px rgb(var(--accent) / 0.1);
+}
+.neon-glow:hover {
+  box-shadow:
+    0 0 10px rgb(var(--accent) / 0.5),
+    0 0 30px rgb(var(--accent) / 0.3),
+    0 0 60px rgb(var(--accent) / 0.2);
+}
+
+/* Magnetic Button Base */
+.magnetic-btn {
+  @apply relative overflow-hidden transition-all duration-300;
+  transform-style: preserve-3d;
+}
+.magnetic-btn::before {
+  content: "";
+  @apply absolute inset-0 opacity-0 transition-opacity duration-300;
+  background: linear-gradient(
+    135deg,
+    rgb(var(--accent) / 0.2),
+    rgb(var(--accent-secondary) / 0.2)
+  );
+}
+.magnetic-btn:hover::before {
+  opacity: 1;
+}
+
+/* Bento Grid System */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .bento-grid {
+    gap: 1.5rem;
+  }
+}
+.bento-1x1 {
+  grid-column: span 6;
+}
+.bento-2x1 {
+  grid-column: span 12;
+}
+.bento-1x2 {
+  grid-column: span 6;
+  grid-row: span 2;
+}
+.bento-2x2 {
+  grid-column: span 12;
+  grid-row: span 2;
+}
+
+@media (min-width: 768px) {
+  .bento-1x1 {
+    grid-column: span 3;
+  }
+  .bento-2x1 {
+    grid-column: span 6;
+  }
+  .bento-1x2 {
+    grid-column: span 3;
+    grid-row: span 2;
+  }
+  .bento-2x2 {
+    grid-column: span 6;
+    grid-row: span 2;
+  }
+}
+@media (min-width: 1024px) {
+  .bento-1x1 {
+    grid-column: span 3;
+  }
+  .bento-2x1 {
+    grid-column: span 6;
+  }
+  .bento-1x2 {
+    grid-column: span 3;
+    grid-row: span 2;
+  }
+  .bento-2x2 {
+    grid-column: span 6;
+    grid-row: span 2;
+  }
+}
+
+/* Animated Gradient Background */
+.gradient-mesh-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -10;
+  overflow: hidden;
+}
+.gradient-mesh-bg::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgb(var(--accent) / 0.15) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgb(var(--accent-secondary) / 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 60%,
+      rgb(var(--accent-tertiary) / 0.08) 0%,
+      transparent 50%
+    );
+  animation: blob 20s ease-in-out infinite;
+}
+.dark .gradient-mesh-bg::before {
+  background:
+    radial-gradient(
+      circle at 20% 20%,
+      rgb(var(--accent) / 0.12) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgb(var(--accent-secondary) / 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 60%,
+      rgb(var(--accent-tertiary) / 0.06) 0%,
+      transparent 50%
+    );
+}
+
+/* Shimmer Animation for Loading States */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgb(var(--glass-bg) / 0) 0%,
+    rgb(var(--glass-bg) / 0.1) 50%,
+    rgb(var(--glass-bg) / 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Card Hover Effects */
+.card-hover {
+  @apply transition-all duration-300;
+}
+.card-hover:hover {
+  @apply -translate-y-2;
+  box-shadow:
+    0 20px 40px -10px rgb(var(--accent) / 0.15),
+    0 0 0 1px rgb(var(--accent) / 0.1);
+}
+
+/* ============================================
+   EXISTING STYLES (UPDATED)
+   ============================================ */
+
 .hamburger-line {
-  @apply w-[30px] h-0.5 block my-2 bg-slate-700 dark:bg-white/80;
+  @apply w-[30px] h-0.5 block my-2 bg-slate-700 dark:bg-white/80 transition-all duration-300;
 }
 
 .hamburger-active span:nth-child(1) {
-  @apply rotate-45;
+  @apply rotate-45 translate-y-2.5;
 }
 
 .hamburger-active span:nth-child(2) {
@@ -44,11 +309,17 @@
 }
 
 .hamburger-active span:nth-child(3) {
-  @apply -rotate-45;
+  @apply -rotate-45 -translate-y-2.5;
 }
 
 .navbar-fixed {
-  @apply fixed z-[9999] dark:bg-primary/70 bg-white/70 shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.06)] dark:shadow-[inset_0_-1px_0_0_rgba(0,0,0,0.1)] backdrop-blur-[5px];
+  @apply fixed z-[9999] backdrop-blur-xl border-b transition-all duration-300;
+  background: rgb(var(--glass-bg) / 0.7);
+  border-color: rgb(var(--glass-border) / 0.1);
+}
+.dark .navbar-fixed {
+  background: rgba(10, 10, 15, 0.8);
+  border-color: rgb(var(--glass-border) / 0.05);
 }
 
 .hero-bg {
@@ -56,29 +327,40 @@
   inset: 0;
   pointer-events: none;
   z-index: -10;
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       60% 40% at 50% 0%,
-      rgb(var(--accent) / 0.16),
+      rgb(var(--accent) / 0.2),
       transparent 60%
     ),
     radial-gradient(
-      80% 60% at 50% 20%,
-      rgba(59, 130, 246, 0.08),
+      80% 60% at 80% 20%,
+      rgb(var(--accent-secondary) / 0.12),
       transparent 60%
     ),
-    linear-gradient(
-      to bottom,
-      rgba(148, 163, 184, 0.12),
-      rgba(148, 163, 184, 0)
+    radial-gradient(
+      60% 50% at 20% 40%,
+      rgb(var(--accent-tertiary) / 0.08),
+      transparent 60%
     );
 }
 .dark .hero-bg {
-  background-image: radial-gradient(
+  background-image:
+    radial-gradient(
       60% 40% at 50% 0%,
-      rgba(99, 102, 241, 0.15),
+      rgb(var(--accent) / 0.15),
       transparent 60%
     ),
-    linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.35));
+    radial-gradient(
+      80% 60% at 80% 20%,
+      rgb(var(--accent-secondary) / 0.1),
+      transparent 60%
+    ),
+    radial-gradient(
+      60% 50% at 20% 40%,
+      rgb(var(--accent-tertiary) / 0.06),
+      transparent 60%
+    );
 }
 
 .app-bg {
@@ -86,36 +368,22 @@
   inset: 0;
   pointer-events: none;
   z-index: -10;
-  background-image: radial-gradient(
-      circle,
-      rgba(2, 6, 23, 0.035) 1px,
-      transparent 1px
-    ),
-    repeating-linear-gradient(
-      135deg,
-      rgba(2, 6, 23, 0.018) 0 2px,
-      transparent 2px 8px
-    ),
-    linear-gradient(rgba(2, 6, 23, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(2, 6, 23, 0.04) 1px, transparent 1px),
+  background-image:
+    radial-gradient(circle, rgba(2, 6, 23, 0.02) 1px, transparent 1px),
     radial-gradient(
       70% 50% at 50% -10%,
       rgb(var(--accent) / 0.1),
       transparent 60%
     ),
     radial-gradient(
-      80% 60% at 50% 20%,
-      rgba(59, 130, 246, 0.06),
+      80% 60% at 80% 20%,
+      rgb(var(--accent-secondary) / 0.06),
       transparent 60%
-    ),
-    linear-gradient(
-      to bottom,
-      rgba(148, 163, 184, 0.08),
-      rgba(148, 163, 184, 0)
     );
-  background-size: 14px 14px, auto, 24px 24px, 24px 24px, auto, auto, auto;
-  background-position: top left, top left, top left, top left, center, center,
-    center;
+  background-size:
+    16px 16px,
+    auto,
+    auto;
   -webkit-mask-image: radial-gradient(
     60% 45% at 50% 0%,
     black 40%,
@@ -124,37 +392,30 @@
   mask-image: radial-gradient(60% 45% at 50% 0%, black 40%, transparent 80%);
 }
 .dark .app-bg {
-  background-image: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.035) 1px,
-      transparent 1px
-    ),
-    repeating-linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0.015) 0 2px,
-      transparent 2px 8px
-    ),
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
     radial-gradient(
       60% 40% at 50% 0%,
-      rgba(99, 102, 241, 0.12),
+      rgb(var(--accent) / 0.12),
       transparent 60%
     ),
-    linear-gradient(to bottom, transparent, rgba(15, 23, 42, 0.35));
-  background-size: 14px 14px, auto, 24px 24px, 24px 24px, auto, auto;
-  background-position: top left, top left, top left, top left, center, center;
-  -webkit-mask-image: radial-gradient(
-    60% 45% at 50% 0%,
-    black 35%,
-    transparent 85%
-  );
-  mask-image: radial-gradient(60% 45% at 50% 0%, black 35%, transparent 85%);
+    radial-gradient(
+      80% 60% at 80% 20%,
+      rgb(var(--accent-secondary) / 0.08),
+      transparent 60%
+    );
+  background-size:
+    16px 16px,
+    auto,
+    auto;
 }
 
 @media (min-width: 1024px) {
   .app-bg {
-    background-size: 16px 16px, auto, 32px 32px, 32px 32px, auto, auto, auto;
+    background-size:
+      20px 20px,
+      auto,
+      auto;
     -webkit-mask-image: radial-gradient(
       55% 40% at 50% 0%,
       black 45%,
@@ -162,18 +423,9 @@
     );
     mask-image: radial-gradient(55% 40% at 50% 0%, black 45%, transparent 85%);
   }
-  .dark .app-bg {
-    background-size: 16px 16px, auto, 32px 32px, 32px 32px, auto, auto;
-    -webkit-mask-image: radial-gradient(
-      55% 40% at 50% 0%,
-      black 40%,
-      transparent 90%
-    );
-    mask-image: radial-gradient(55% 40% at 50% 0%, black 40%, transparent 90%);
-  }
 }
 
-/* Shared section title styling */
+/* Shared section title styling - Updated for 2026 */
 .section-title {
   @apply relative inline-block text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white;
 }
@@ -182,17 +434,19 @@
   content: "";
   position: absolute;
   left: 0;
-  bottom: -0.75rem; /* similar spacing to previous design */
+  bottom: -0.75rem;
   height: 4px;
   width: 56%;
   border-radius: 9999px;
   background: linear-gradient(
     to right,
     rgb(var(--accent)) 0%,
-    rgb(var(--accent) / 0.7) 60%,
-    rgb(var(--accent) / 0.3) 100%
+    rgb(var(--accent-secondary)) 50%,
+    rgb(var(--accent-tertiary)) 100%
   );
-  transition: width 400ms ease, opacity 300ms ease;
+  transition:
+    width 400ms ease,
+    opacity 300ms ease;
 }
 
 .section-title:hover::after,
@@ -232,8 +486,9 @@
 }
 .mdx-content code:not(pre code) {
   @apply rounded-md px-1.5 py-0.5 text-sm bg-slate-100 text-slate-800 dark:bg-white/10 dark:text-white/90;
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
 }
 
 .mdx-content table {
@@ -259,8 +514,9 @@ pre[class*="language-"] {
   color: #abb2bf;
   background: none;
   text-shadow: none;
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family:
+    var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
   font-size: 0.9rem;
   direction: ltr;
   text-align: left;
@@ -279,14 +535,14 @@ pre[class*="language-"] {
 
 .mdx-content pre[class*="language-"] {
   @apply rounded-xl p-4 overflow-auto border border-slate-200/60 dark:border-white/10;
-  background: #282c34; /* One Dark background */
+  background: #1a1a2e;
 }
 .dark .mdx-content pre[class*="language-"] {
-  background: #1e1f25;
+  background: #0f0f1a;
 }
 .mdx-content :not(pre) > code[class*="language-"] {
   @apply rounded px-1.5 py-0.5 text-sm;
-  background: #282c34;
+  background: #1a1a2e;
   color: #e6e6e6;
 }
 
@@ -427,4 +683,37 @@ pre[class*="language-"] .line-highlight {
 .bp-scale-in-200 {
   animation: bp-scale-in 440ms ease-out both;
   animation-delay: 200ms;
+}
+
+/* Additional keyframes for new animations */
+@keyframes gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) rotate(0deg);
+  }
+  33% {
+    transform: translate(20px, -30px) rotate(120deg);
+  }
+  66% {
+    transform: translate(-15px, 15px) rotate(240deg);
+  }
+  100% {
+    transform: translate(0px, 0px) rotate(360deg);
+  }
 }
