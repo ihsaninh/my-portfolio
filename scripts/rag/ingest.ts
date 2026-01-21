@@ -6,6 +6,7 @@
 import fs from "fs";
 import path from "path";
 
+import { NavLinks } from "@/src/features/portfolio/data/navLinks";
 // Import data sources
 import { projects } from "@/src/features/portfolio/data/projects";
 import {
@@ -15,7 +16,6 @@ import {
   skills,
 } from "@/src/features/portfolio/data/resume";
 import { socials } from "@/src/features/portfolio/data/socials";
-import { NavLinks } from "@/src/features/portfolio/data/navLinks";
 import { chunkText } from "@/src/shared/lib/ai/rag/chunker";
 import { embedBatch } from "@/src/shared/lib/ai/rag/embeddings";
 import { getAllPostSlugs, getPostBySlug } from "@/src/shared/lib/mdx";

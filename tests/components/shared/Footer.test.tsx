@@ -1,8 +1,8 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'bun:test';
 
-import Footer from '../../../src/shared/components/Footer';
 import { socials } from '../../../src/features/portfolio/data/socials';
+import Footer from '../../../src/shared/components/Footer';
 
 describe('Footer Component', () => {
   afterEach(() => {

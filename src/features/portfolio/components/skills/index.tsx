@@ -2,12 +2,11 @@
 
 import { motion } from "framer-motion";
 
+import { skills } from "@/src/features/portfolio/data/resume";
 import ScrollReveal, {
   StaggerContainer,
   StaggerItem,
 } from "@/src/shared/components/ScrollReveal";
-
-import { skills } from "@/src/features/portfolio/data/resume";
 
 export default function Skills() {
   return (
@@ -25,7 +24,7 @@ export default function Skills() {
         staggerDelay={0.06}
         className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-5"
       >
-        {skills.map((skill, index) => (
+        {skills.map((skill) => (
           <StaggerItem key={skill.name} animation="scale">
             <motion.div
               className="group cursor-default"

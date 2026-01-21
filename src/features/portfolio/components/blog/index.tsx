@@ -2,7 +2,6 @@ import Link from "next/link";
 import { FiArrowRight } from "react-icons/fi";
 
 import ScrollReveal from "@/src/shared/components/ScrollReveal";
-
 import { getAllPostsMeta } from "@/src/shared/lib/mdx";
 
 import PostsGrid from "./PostsGrid";

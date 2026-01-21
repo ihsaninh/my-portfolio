@@ -3,14 +3,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
-import ScrollReveal from "@/src/shared/components/ScrollReveal";
-
 import {
   certifications,
   educationData,
   experienceData,
   resumeMenus,
 } from "@/src/features/portfolio/data/resume";
+import ScrollReveal from "@/src/shared/components/ScrollReveal";
 
 import CertificationsList from "./CertificationsList";
 import ResumeContent from "./ResumeContent";

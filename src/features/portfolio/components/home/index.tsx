@@ -16,8 +16,6 @@ import ScrollReveal, {
   StaggerItem,
 } from "@/src/shared/components/ScrollReveal";
 
-import { useHeaderService } from "@/src/features/portfolio/hooks/useHeader";
-
 import AiFeaturesAlert from "./AiFeaturesAlert";
 
 const fadeUp: Variants = {
@@ -26,13 +24,6 @@ const fadeUp: Variants = {
 };
 
 export default function Home() {
-  const { setActiveLink } = useHeaderService();
-
-  const handleConnectClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    setActiveLink("#contact");
-  };
-
   return (
     <section
       id="home"
