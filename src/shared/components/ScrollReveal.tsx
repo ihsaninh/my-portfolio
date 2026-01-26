@@ -1,179 +1,140 @@
 "use client";
 
-import { motion, Variants } from "framer-motion";
-import { ReactNode } from "react";
-
-type AnimationType =
-  | "fade"
-  | "slide-up"
-  | "slide-down"
-  | "slide-left"
-  | "slide-right"
-  | "scale"
-  | "blur";
+import { ReactNode, useEffect, useRef } from "react";
 
 interface ScrollRevealProps {
   children: ReactNode;
+  width?: "fit-content" | "100%";
   className?: string;
-  animation?: AnimationType;
+  animation?:
+    | "fade-up"
+    | "fade-in"
+    | "scale-in"
+    | "slide-in-right"
+    | "slide-in-left"
+    | "scale";
   delay?: number;
   duration?: number;
-  once?: boolean;
-  amount?: number;
-  staggerChildren?: number;
 }
 
-const getVariants = (animation: AnimationType): Variants => {
-  const baseTransition = {
-    type: "spring" as const,
-    damping: 20,
-    stiffness: 100,
+export const ScrollReveal = ({
+  children,
+  width = "fit-content",
+  className = "",
+  animation = "fade-up",
+  delay = 0,
+  duration = 0.5,
+}: ScrollRevealProps) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-reveal");
+            entry.target.classList.remove(
+              "opacity-0",
+              "translate-y-8",
+              "scale-95",
+              "translate-x-8",
+              "-translate-x-8",
+            );
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      },
+    );
+
+    const currentRef = ref.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  }, []);
+
+  const getInitialClass = () => {
+    switch (animation) {
+      case "fade-up":
+        return "opacity-0 translate-y-8";
+      case "fade-in":
+        return "opacity-0";
+      case "scale-in":
+        return "opacity-0 scale-95";
+      case "slide-in-right":
+        return "opacity-0 translate-x-8";
+      case "slide-in-left":
+        return "opacity-0 -translate-x-8";
+      default:
+        return "opacity-0 translate-y-8";
+    }
   };
 
-  switch (animation) {
-    case "fade":
-      return {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: baseTransition },
-      };
-    case "slide-up":
-      return {
-        hidden: { opacity: 0, y: 40 },
-        visible: { opacity: 1, y: 0, transition: baseTransition },
-      };
-    case "slide-down":
-      return {
-        hidden: { opacity: 0, y: -40 },
-        visible: { opacity: 1, y: 0, transition: baseTransition },
-      };
-    case "slide-left":
-      return {
-        hidden: { opacity: 0, x: 40 },
-        visible: { opacity: 1, x: 0, transition: baseTransition },
-      };
-    case "slide-right":
-      return {
-        hidden: { opacity: 0, x: -40 },
-        visible: { opacity: 1, x: 0, transition: baseTransition },
-      };
-    case "scale":
-      return {
-        hidden: { opacity: 0, scale: 0.8 },
-        visible: { opacity: 1, scale: 1, transition: baseTransition },
-      };
-    case "blur":
-      return {
-        hidden: { opacity: 0, filter: "blur(10px)" },
-        visible: {
-          opacity: 1,
-          filter: "blur(0px)",
-          transition: baseTransition,
-        },
-      };
-    default:
-      return {
-        hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: baseTransition },
-      };
-  }
-};
-
-export default function ScrollReveal({
-  children,
-  className = "",
-  animation = "slide-up",
-  delay = 0,
-  duration = 0.6,
-  once = true,
-  amount = 0.2,
-  staggerChildren,
-}: ScrollRevealProps) {
-  const variants = getVariants(animation);
-
-  const containerVariants: Variants = staggerChildren
-    ? {
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            staggerChildren,
-            delayChildren: delay,
-          },
-        },
-      }
-    : variants;
-
   return (
-    <motion.div
-      className={className}
-      variants={containerVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once, amount }}
-      transition={{ delay, duration }}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/* Stagger container for child animations */
-interface StaggerContainerProps {
-  children: ReactNode;
-  className?: string;
-  staggerDelay?: number;
-  delayChildren?: number;
-  once?: boolean;
-  amount?: number;
-}
-
-export function StaggerContainer({
-  children,
-  className = "",
-  staggerDelay = 0.1,
-  delayChildren = 0,
-  once = true,
-  amount = 0.2,
-}: StaggerContainerProps) {
-  return (
-    <motion.div
-      className={className}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once, amount }}
-      variants={{
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            staggerChildren: staggerDelay,
-            delayChildren,
-          },
-        },
+    <div
+      ref={ref}
+      className={`transition-all ease-out ${getInitialClass()} ${className}`}
+      style={{
+        width,
+        transitionDuration: `${duration}s`,
+        transitionDelay: `${delay}s`,
       }}
     >
       {children}
-    </motion.div>
+    </div>
   );
-}
+};
 
-/* Stagger item to use inside StaggerContainer */
-interface StaggerItemProps {
-  children: ReactNode;
-  className?: string;
-  animation?: AnimationType;
-}
-
-export function StaggerItem({
+export const StaggerContainer = ({
   children,
   className = "",
-  animation = "slide-up",
-}: StaggerItemProps) {
-  const variants = getVariants(animation);
-
+  ...props
+}: {
+  children: ReactNode;
+  staggerDelay?: number;
+  className?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}) => {
   return (
-    <motion.div className={className} variants={variants}>
+    <div className={className} {...props}>
       {children}
-    </motion.div>
+    </div>
   );
-}
+};
+
+export const StaggerItem = ({
+  children,
+  animation = "fade-up",
+  className = "",
+  ...props
+}: {
+  children: ReactNode;
+  animation?:
+    | "fade-up"
+    | "fade-in"
+    | "scale-in"
+    | "slide-in-right"
+    | "slide-in-left"
+    | "scale";
+  className?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}) => {
+  return (
+    <ScrollReveal animation={animation} className={className} {...props}>
+      {children}
+    </ScrollReveal>
+  );
+};
+
+export default ScrollReveal;

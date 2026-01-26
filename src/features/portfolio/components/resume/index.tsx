@@ -20,13 +20,13 @@ export default function Resume() {
 
   return (
     <section className="container mt-12 lg:mt-24" id="resume">
-      <ScrollReveal animation="slide-up">
+      <ScrollReveal animation="fade-up">
         <h2 className="section-title">Resume</h2>
       </ScrollReveal>
 
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 mt-6">
         {/* Left sidebar */}
-        <ScrollReveal animation="slide-right" className="lg:w-1/3">
+        <ScrollReveal animation="slide-in-left" className="lg:w-1/3">
           <p className="pt-4 text-slate-700 dark:text-white/70">
             Here are my experiences, educations, and skills. Feel free to check
             them out.

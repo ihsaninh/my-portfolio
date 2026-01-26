@@ -39,32 +39,78 @@
     }
   }
   .h1 {
-    @apply text-[36px] lg:text-[58px] leading-[1.1] font-semibold tracking-tight;
+    @apply text-[40px] lg:text-[64px] leading-tight font-extrabold tracking-tight;
   }
+  .h2 {
+    @apply text-[32px] lg:text-[48px] leading-tight font-bold tracking-tight;
+  }
+  .h3 {
+    @apply text-[24px] lg:text-[32px] leading-snug font-bold tracking-tight;
+  }
+  .subtitle {
+    @apply text-lg lg:text-xl text-slate-600 dark:text-slate-400 font-medium leading-relaxed;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-300 dark:bg-slate-700 rounded-full border-[2px] border-transparent bg-clip-content;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-400 dark:bg-slate-600;
 }
 
 /* ============================================
    GEN-Z 2026 DESIGN SYSTEM
    ============================================ */
 
-/* Glassmorphism Cards */
+/* Glassmorphism Cards - Enhanced for 2026 */
 .glass {
-  @apply backdrop-blur-xl border shadow-xl;
-  background: rgb(var(--glass-bg) / 0.05);
-  border-color: rgb(var(--glass-border) / 0.1);
+  @apply backdrop-blur-xl border transition-all duration-300;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
 }
+
+.glass:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
 .glass-strong {
-  @apply backdrop-blur-2xl border shadow-2xl;
-  background: rgb(var(--glass-bg) / 0.1);
-  border-color: rgb(var(--glass-border) / 0.15);
+  @apply backdrop-blur-2xl border transition-all duration-300;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
+
 .dark .glass {
-  background: rgb(var(--glass-bg) / 0.03);
-  border-color: rgb(var(--glass-border) / 0.08);
+  background: rgba(2, 6, 23, 0.4);
+  border-color: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
+
+.dark .glass:hover {
+  background: rgba(2, 6, 23, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
 .dark .glass-strong {
-  background: rgb(var(--glass-bg) / 0.06);
-  border-color: rgb(var(--glass-border) / 0.12);
+  background: rgba(2, 6, 23, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Holographic/Iridescent Border Effect */

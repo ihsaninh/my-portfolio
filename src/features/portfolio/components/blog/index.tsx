@@ -11,7 +11,7 @@ export default function BlogSection() {
 
   return (
     <section className="container mt-12 lg:mt-24" id="blog">
-      <ScrollReveal animation="slide-up">
+      <ScrollReveal animation="fade-up" width="100%">
         <div className="flex items-end justify-between">
           <h2 className="section-title">Blog</h2>
           <Link

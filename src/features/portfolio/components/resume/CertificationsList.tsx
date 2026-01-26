@@ -104,16 +104,14 @@ export default function CertificationsList({
       {/* Show more/less button */}
       {canToggle && (
         <div className="flex justify-center mt-6">
-          <motion.button
+          <button
             type="button"
             aria-expanded={expanded}
             onClick={() => setExpanded((v) => !v)}
-            className="px-6 py-2.5 text-sm font-medium rounded-xl glass holo-border text-slate-700 dark:text-white/90 hover:text-[rgb(var(--accent))] transition-all duration-300"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            className="relative z-10 cursor-pointer px-6 py-2.5 text-sm font-medium rounded-xl glass holo-border text-slate-700 dark:text-white/90 hover:text-[rgb(var(--accent))] transition-all duration-300 active:scale-95"
           >
             {expanded ? "Show less" : `Show all (${items.length})`}
-          </motion.button>
+          </button>
         </div>
       )}
     </div>

@@ -1,152 +1,101 @@
 "use client";
 
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import { ReactNode, useRef } from "react";
+import Link from "next/link";
+import { MouseEvent, ReactNode, useRef, useState } from "react";
 
 interface MagneticButtonProps {
   children: ReactNode;
   className?: string;
   onClick?: () => void;
+  variant?: "primary" | "outline" | "ghost";
   href?: string;
   download?: boolean;
+  ariaLabel?: string;
   target?: string;
-  rel?: string;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
-  magnetStrength?: number;
-  ariaLabel?: string;
 }
 
-export default function MagneticButton({
+export const MagneticButton = ({
   children,
   className = "",
   onClick,
+  variant = "primary",
   href,
   download,
+  ariaLabel,
   target,
-  rel,
   type = "button",
   disabled = false,
-  magnetStrength = 0.3,
-  ariaLabel,
-}: MagneticButtonProps) {
+}: MagneticButtonProps) => {
   const ref = useRef<HTMLElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
 
-  const springConfig = { damping: 20, stiffness: 400 };
-  const xSpring = useSpring(x, springConfig);
-  const ySpring = useSpring(y, springConfig);
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!ref.current || disabled) return;
-
-    const rect = ref.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
-
-    const deltaX = (e.clientX - centerX) * magnetStrength;
-    const deltaY = (e.clientY - centerY) * magnetStrength;
-
-    x.set(deltaX);
-    y.set(deltaY);
+  const handleMouseMove = (e: MouseEvent<HTMLElement>) => {
+    if (!ref.current) return;
+    const { left, top, width, height } = ref.current.getBoundingClientRect();
+    const x = e.clientX - (left + width / 2);
+    const y = e.clientY - (top + height / 2);
+    setPosition({ x: x * 0.2, y: y * 0.2 });
   };
 
   const handleMouseLeave = () => {
-    x.set(0);
-    y.set(0);
+    setPosition({ x: 0, y: 0 });
   };
 
-  const baseClassName = `
-    relative overflow-hidden
-    inline-flex items-center justify-center gap-2
-    rounded-xl px-6 py-3
-    font-medium text-sm
-    transition-all duration-300
-    disabled:opacity-50 disabled:cursor-not-allowed
-    ${className}
-  `;
+  const getVariantClass = () => {
+    switch (variant) {
+      case "primary":
+        return "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-lg hover:shadow-xl";
+      case "outline":
+        return "border border-slate-200 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-white/10";
+      case "ghost":
+        return "hover:bg-slate-100 dark:hover:bg-white/5";
+      default:
+        return "";
+    }
+  };
 
-  const MotionComponent = href ? motion.a : motion.button;
-  const componentProps = href
-    ? { href, download, target, rel }
-    : { type, onClick, disabled };
+  const commonProps = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ref: ref as any,
+    onMouseMove: handleMouseMove,
+    onMouseLeave: handleMouseLeave,
+    className: `magnetic-btn px-6 py-3 rounded-full font-medium transition-transform duration-200 ease-out active:scale-95 flex items-center justify-center gap-2 ${getVariantClass()} ${className}`,
+    style: { transform: `translate(${position.x}px, ${position.y}px)` },
+    "aria-label": ariaLabel,
+  };
+
+  if (href) {
+    if (download || target === "_blank") {
+      return (
+        <a
+          href={href}
+          download={download}
+          target={target}
+          rel={target === "_blank" ? "noopener noreferrer" : undefined}
+          {...commonProps}
+        >
+          <span className="relative z-10 flex items-center gap-2 pointer-events-none">
+            {children}
+          </span>
+        </a>
+      );
+    }
+    return (
+      <Link href={href} {...commonProps} onClick={onClick}>
+        <span className="relative z-10 flex items-center gap-2 pointer-events-none">
+          {children}
+        </span>
+      </Link>
+    );
+  }
 
   return (
-    <MotionComponent
-      ref={ref as React.RefObject<HTMLButtonElement & HTMLAnchorElement>}
-      className={baseClassName}
-      style={{ x: xSpring, y: ySpring }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      whileHover={{ scale: disabled ? 1 : 1.05 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
-      aria-label={ariaLabel}
-      {...componentProps}
-    >
-      {/* Glow background effect */}
-      <motion.div
-        className="absolute inset-0 opacity-0 transition-opacity duration-300"
-        style={{
-          background:
-            "radial-gradient(circle at center, rgb(var(--accent) / 0.3) 0%, transparent 70%)",
-        }}
-        whileHover={{ opacity: 1 }}
-      />
-
-      {/* Shimmer effect */}
-      <div className="absolute inset-0 overflow-hidden rounded-xl">
-        <div
-          className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover:translate-x-full transition-transform duration-700"
-          style={{ transform: "skewX(-15deg)" }}
-        />
-      </div>
-
-      {/* Content */}
-      <span className="relative z-10 flex items-center gap-2">{children}</span>
-    </MotionComponent>
+    <button onClick={onClick} type={type} disabled={disabled} {...commonProps}>
+      <span className="relative z-10 flex items-center gap-2 pointer-events-none">
+        {children}
+      </span>
+    </button>
   );
-}
-
-/* Preset variants */
-export function PrimaryMagneticButton({
-  children,
-  className = "",
-  ...props
-}: MagneticButtonProps) {
-  return (
-    <MagneticButton
-      className={`
-        bg-gradient-to-r from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))]
-        text-white shadow-lg
-        hover:shadow-xl hover:shadow-[rgb(var(--accent))/30]
-        ${className}
-      `}
-      {...props}
-    >
-      {children}
-    </MagneticButton>
-  );
-}
-
-export function SecondaryMagneticButton({
-  children,
-  className = "",
-  ...props
-}: MagneticButtonProps) {
-  return (
-    <MagneticButton
-      className={`
-        border border-slate-300 bg-slate-100/80
-        text-slate-800
-        hover:bg-slate-200
-        dark:border-white/10 dark:bg-white/5 dark:text-white
-        dark:hover:bg-white/10
-        ${className}
-      `}
-      {...props}
-    >
-      {children}
-    </MagneticButton>
-  );
-}
+};

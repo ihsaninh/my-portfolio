@@ -7,10 +7,7 @@ import React from "react";
 import { FiDownload, FiGithub, FiLinkedin, FiMail } from "react-icons/fi";
 
 import GlowText from "@/src/shared/components/GlowText";
-import {
-  PrimaryMagneticButton,
-  SecondaryMagneticButton,
-} from "@/src/shared/components/MagneticButton";
+import { MagneticButton } from "@/src/shared/components/MagneticButton";
 import ScrollReveal, {
   StaggerContainer,
   StaggerItem,
@@ -23,6 +20,42 @@ const fadeUp: Variants = {
   show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: easeOut } },
 };
 
+const socialLinks = [
+  {
+    href: "https://github.com/ihsaninh",
+    icon: FiGithub,
+    label: "GitHub",
+  },
+  {
+    href: "https://www.linkedin.com/in/ihsaninh",
+    icon: FiLinkedin,
+    label: "LinkedIn",
+  },
+  {
+    href: "mailto:ihsan.inh@gmail.com",
+    icon: FiMail,
+    label: "Email",
+  },
+];
+
+const stats = [
+  { value: "5+", label: "Years Experience" },
+  { value: "10+", label: "Projects Shipped" },
+  { value: "3", label: "Enterprise Clients" },
+];
+
+const techStack = [
+  "Next.js",
+  "React",
+  "TypeScript",
+  "Angular",
+  "React Native",
+  "Tailwind CSS",
+  "Google AI",
+  "Supabase",
+  "AI Tools",
+];
+
 export default function Home() {
   return (
     <section
@@ -31,22 +64,24 @@ export default function Home() {
       className="container relative"
     >
       <LazyMotion features={domAnimation}>
-        <div className="flex flex-col items-center lg:py-12">
+        <div className="flex flex-col items-center pt-20 pb-8 lg:py-16">
           {/* Profile Photo with Holographic Ring */}
           <ScrollReveal animation="scale" className="relative">
             <div className="relative group">
+              {/* Outer glow effect */}
+              <div className="absolute -inset-3 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
               {/* Animated gradient ring */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-md opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-spin-slow" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-spin-slow" />
               <div className="absolute -inset-0.5 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full opacity-40" />
               <Image
                 src="/images/profile.webp"
                 alt="Portrait of Ihsan Nurul Habib"
-                width={240}
-                height={240}
-                sizes="(min-width: 1024px) 240px, 160px"
+                width={200}
+                height={200}
+                sizes="(min-width: 1024px) 200px, 160px"
                 priority
                 fetchPriority="high"
-                className="relative w-40 h-40 lg:w-60 lg:h-60 rounded-full object-cover bg-primary"
+                className="relative w-40 h-40 lg:w-[200px] lg:h-[200px] rounded-full object-cover bg-primary ring-4 ring-white dark:ring-slate-900"
               />
             </div>
           </ScrollReveal>
@@ -63,28 +98,40 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
             </span>
-            <span className="text-slate-700 dark:text-white/80">
+            <span className="text-slate-700 dark:text-white/80 font-medium">
               Available for select projects
             </span>
           </m.div>
 
-          {/* Headline with Gradient Text */}
+          {/* Headline */}
           <div className="text-center mt-6">
-            <h1 id="home-title" className="h1 leading-snug">
-              <span className="text-slate-900 dark:text-white/90">
-                Hello, I&apos;m{" "}
-              </span>
-              <GlowText as="span" className="font-bold" gradient glow>
-                Ihsan Nurul Habib
-              </GlowText>
-              <br />
-              <span className="text-slate-900 dark:text-white/90">
-                Software Engineer — Frontend & Mobile
-              </span>
+            <h1 id="home-title" className="leading-tight">
+              <ScrollReveal animation="fade-up" delay={0.1} width="100%">
+                <span className="text-slate-800 dark:text-white/90 text-lg lg:text-xl font-medium block mb-2">
+                  Hello, I&apos;m
+                </span>
+              </ScrollReveal>
+
+              <ScrollReveal animation="fade-up" delay={0.15} width="100%">
+                <GlowText
+                  as="span"
+                  className="font-bold text-4xl lg:text-6xl block"
+                  gradient
+                  glow
+                >
+                  Ihsan Nurul Habib
+                </GlowText>
+              </ScrollReveal>
+
+              <ScrollReveal animation="fade-up" delay={0.2} width="100%">
+                <span className="text-slate-700 dark:text-white/80 text-xl lg:text-2xl font-medium mt-3 block">
+                  Software Engineer — Frontend & Mobile
+                </span>
+              </ScrollReveal>
             </h1>
 
-            <ScrollReveal animation="fade" delay={0.2}>
-              <p className="mt-4 text-slate-700 dark:text-white/70 leading-8 max-w-3xl mx-auto text-sm lg:text-lg">
+            <ScrollReveal animation="fade-in" delay={0.3} width="100%">
+              <p className="mt-5 text-slate-600 dark:text-white/60 leading-relaxed text-sm lg:text-base mx-auto max-w-2xl">
                 I build fast, accessible apps with Next.js, React, Angular, and
                 React Native. 5+ years crafting delightful UIs for enterprise
                 clients. Now specializing in AI-powered applications with
@@ -93,17 +140,12 @@ export default function Home() {
             </ScrollReveal>
           </div>
 
-          {/* AI Features Alert */}
-          <AiFeaturesAlert />
+          {/* CTA Buttons */}
+          <ScrollReveal animation="fade-up" delay={0.4} className="mt-8">
+            <div className="flex flex-row flex-wrap items-center justify-center gap-3">
+              <MagneticButton href="#contact">Connect with me</MagneticButton>
 
-          {/* CTA Buttons with Magnetic Effect */}
-          <ScrollReveal animation="slide-up" delay={0.3} className="mt-8">
-            <div className="flex flex-row flex-wrap items-center justify-center gap-3 sm:gap-4">
-              <PrimaryMagneticButton href="#contact">
-                Connect with me
-              </PrimaryMagneticButton>
-
-              <SecondaryMagneticButton
+              <MagneticButton
                 href="/document/CV-Ihsan-Nurul-Habib.pdf"
                 download
                 ariaLabel="Download CV as PDF"
@@ -111,30 +153,14 @@ export default function Home() {
               >
                 <span>Download CV</span>
                 <FiDownload className="text-lg transition-transform duration-300 group-hover:-rotate-12" />
-              </SecondaryMagneticButton>
+              </MagneticButton>
             </div>
           </ScrollReveal>
 
-          {/* Social Links with Magnetic Effect */}
-          <ScrollReveal animation="fade" delay={0.4}>
-            <div className="mt-5 flex items-center gap-4 text-slate-700 dark:text-white/70">
-              {[
-                {
-                  href: "https://github.com/ihsaninh",
-                  icon: FiGithub,
-                  label: "GitHub",
-                },
-                {
-                  href: "https://www.linkedin.com/in/ihsaninh",
-                  icon: FiLinkedin,
-                  label: "LinkedIn",
-                },
-                {
-                  href: "mailto:ihsan.inh@gmail.com",
-                  icon: FiMail,
-                  label: "Email",
-                },
-              ].map((social) => (
+          {/* Social Links */}
+          <ScrollReveal animation="fade-in" delay={0.5}>
+            <div className="mt-6 flex items-center gap-3 text-slate-600 dark:text-white/60">
+              {socialLinks.map((social) => (
                 <a
                   key={social.label}
                   href={social.href}
@@ -145,61 +171,66 @@ export default function Home() {
                       : undefined
                   }
                   aria-label={social.label}
-                  className="group p-3 rounded-full glass holo-border transition-all duration-300 hover:text-[rgb(var(--accent))]"
+                  className="group p-2.5 rounded-xl glass holo-border transition-all duration-300 hover:text-[rgb(var(--accent))]"
                 >
-                  <social.icon className="text-xl transition-transform duration-300 group-hover:scale-110" />
+                  <social.icon className="text-lg transition-transform duration-300 group-hover:scale-110" />
                 </a>
               ))}
             </div>
           </ScrollReveal>
 
-          {/* Stats Cards - Bento Style */}
-          <StaggerContainer
-            staggerDelay={0.1}
-            className="mt-8 grid grid-cols-3 gap-3 lg:gap-4 text-center"
-          >
-            {[
-              { value: "5+", label: "Years Experience" },
-              { value: "10+", label: "Projects shipped" },
-              { value: "3", label: "Enterprise clients" },
-            ].map((stat) => (
-              <StaggerItem key={stat.label} animation="scale">
-                <div className="glass holo-border rounded-2xl px-5 py-4 card-hover">
-                  <p className="text-2xl lg:text-3xl font-bold gradient-text">
-                    {stat.value}
-                  </p>
-                  <p className="text-xs lg:text-sm text-slate-600 dark:text-white/60 mt-1">
-                    {stat.label}
-                  </p>
-                </div>
-              </StaggerItem>
-            ))}
+          {/* Stats Cards */}
+          <StaggerContainer staggerDelay={0.1} className="mt-10">
+            <div className="grid grid-cols-3 gap-2 lg:gap-4 max-w-md lg:max-w-lg mx-auto">
+              {stats.map((stat) => (
+                <StaggerItem key={stat.label} animation="scale">
+                  <div className="glass holo-border rounded-2xl p-3 lg:p-5 text-center card-hover group h-full">
+                    <p className="text-xl lg:text-3xl font-bold gradient-text group-hover:scale-105 transition-transform duration-300">
+                      {stat.value}
+                    </p>
+                    <p className="text-[9px] lg:text-xs text-slate-500 dark:text-white/50 mt-1.5 font-medium leading-tight">
+                      {stat.label}
+                    </p>
+                  </div>
+                </StaggerItem>
+              ))}
+            </div>
           </StaggerContainer>
 
           {/* Tech Stack Tags */}
-          <StaggerContainer
-            staggerDelay={0.05}
-            className="mt-8 flex flex-wrap justify-center gap-2"
-            aria-label="Core technologies"
+          <ScrollReveal
+            animation="fade-in"
+            delay={0.2}
+            className="mt-10 w-full"
           >
-            {[
-              "Next.js",
-              "React",
-              "TypeScript",
-              "Angular",
-              "React Native",
-              "Tailwind CSS",
-              "Google AI",
-              "Supabase",
-              "AI Tools",
-            ].map((tech) => (
-              <StaggerItem key={tech} animation="fade">
-                <span className="rounded-full glass px-4 py-1.5 text-xs text-slate-700 dark:text-white/80 hover:text-[rgb(var(--accent))] transition-colors duration-300 cursor-default">
-                  {tech}
-                </span>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
+            <div className="text-center">
+              <p className="text-xs text-slate-400 dark:text-white/40 uppercase tracking-widest font-medium mb-4">
+                Tech Stack
+              </p>
+              <div
+                className="flex flex-wrap justify-center gap-2"
+                aria-label="Core technologies"
+              >
+                {techStack.map((tech, index) => (
+                  <m.span
+                    key={tech}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.05, duration: 0.3 }}
+                    className="rounded-full glass px-4 py-2 text-xs lg:text-sm text-slate-600 dark:text-white/70 hover:text-[rgb(var(--accent))] hover:border-[rgb(var(--accent)/.3)] transition-colors duration-300 cursor-default font-medium"
+                  >
+                    {tech}
+                  </m.span>
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
+
+          {/* AI Features Alert */}
+          <div className="w-full mt-10">
+            <AiFeaturesAlert />
+          </div>
         </div>
       </LazyMotion>
     </section>

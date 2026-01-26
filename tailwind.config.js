@@ -49,11 +49,13 @@ module.exports = {
       animation: {
         shimmer: "shimmer 2s linear infinite",
         float: "float 6s ease-in-out infinite",
+        "float-slow": "float 8s ease-in-out infinite",
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         "gradient-x": "gradient-x 3s ease infinite",
         "spin-slow": "spin 8s linear infinite",
         blob: "blob 7s infinite",
         tilt: "tilt 10s infinite linear",
+        "rubber-band": "rubberBand 1s",
       },
       keyframes: {
         shimmer: {
@@ -82,6 +84,15 @@ module.exports = {
           "0%, 50%, 100%": { transform: "rotate(0deg)" },
           "25%": { transform: "rotate(1deg)" },
           "75%": { transform: "rotate(-1deg)" },
+        },
+        rubberBand: {
+          "0%": { transform: "scale(1)" },
+          "30%": { transform: "scale(1.25, 0.75)" },
+          "40%": { transform: "scale(0.75, 1.25)" },
+          "50%": { transform: "scale(1.15, 0.85)" },
+          "65%": { transform: "scale(0.95, 1.05)" },
+          "75%": { transform: "scale(1.05, 0.95)" },
+          "100%": { transform: "scale(1)" },
         },
       },
       boxShadow: {

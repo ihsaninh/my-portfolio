@@ -5,11 +5,8 @@ import { motion } from "framer-motion";
 import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
-import { PrimaryMagneticButton } from "@/src/shared/components/MagneticButton";
-import ScrollReveal, {
-  StaggerContainer,
-  StaggerItem,
-} from "@/src/shared/components/ScrollReveal";
+import { MagneticButton } from "@/src/shared/components/MagneticButton";
+import ScrollReveal from "@/src/shared/components/ScrollReveal";
 
 import Social from "./Social";
 
@@ -67,7 +64,7 @@ export default function Contact() {
       id="contact"
       aria-labelledby="contact-title"
     >
-      <ScrollReveal animation="slide-up">
+      <ScrollReveal animation="fade-up">
         <h2 id="contact-title" className="section-title">
           Contact
         </h2>
@@ -75,42 +72,44 @@ export default function Contact() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         {/* Left side - Info */}
-        <ScrollReveal animation="slide-right" className="flex flex-col gap-6">
+        <ScrollReveal
+          animation="slide-in-left"
+          width="100%"
+          className="flex flex-col gap-6"
+        >
           <div className="glass holo-border rounded-2xl p-6 flex flex-col gap-5">
             <p className="leading-8 text-slate-700 dark:text-white/80">
               Have an idea you&apos;d like me to work on? Reach out via the
               form, or use social links below.
             </p>
 
-            {/* Stats */}
-            <StaggerContainer
-              staggerDelay={0.1}
-              className="mt-4 grid grid-cols-3 gap-3 text-center"
-            >
+            {/* Stats - Unified Layout */}
+            <div className="mt-6 grid grid-cols-3 divide-x divide-slate-200 dark:divide-white/10 glass rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden">
               {[
-                { value: "5+", label: "Years" },
+                { value: "5+", label: "Years Exp." },
                 { value: "10+", label: "Projects" },
                 { value: "3", label: "Enterprise" },
               ].map((stat) => (
-                <StaggerItem key={stat.label} animation="scale">
-                  <div className="glass rounded-xl px-4 py-3">
-                    <p className="text-xl font-bold gradient-text">
-                      {stat.value}
-                    </p>
-                    <p className="text-[11px] text-slate-600 dark:text-white/60">
-                      {stat.label}
-                    </p>
-                  </div>
-                </StaggerItem>
+                <div
+                  key={stat.label}
+                  className="px-4 py-4 flex flex-col items-center justify-center text-center group hover:bg-white/5 transition-colors"
+                >
+                  <p className="text-lg sm:text-l font-bold text-slate-900 dark:text-white group-hover:text-[rgb(var(--accent))] transition-colors">
+                    {stat.value}
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-slate-500 dark:text-white/60 mt-1">
+                    {stat.label}
+                  </p>
+                </div>
               ))}
-            </StaggerContainer>
+            </div>
           </div>
 
           <Social variant="pill" containerClass="flex flex-wrap gap-3" />
         </ScrollReveal>
 
         {/* Right side - Form */}
-        <ScrollReveal animation="slide-left" delay={0.2}>
+        <ScrollReveal animation="slide-in-right" delay={0.2} width="100%">
           <motion.form
             noValidate
             onSubmit={handleSubmit(onSubmit)}
@@ -211,14 +210,14 @@ export default function Contact() {
             </div>
 
             {/* Submit */}
-            <div className="flex items-center gap-4 pt-2">
-              <PrimaryMagneticButton
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <MagneticButton
                 type="submit"
                 disabled={!isValid || isSubmitting}
-                className="flex-1 sm:flex-none"
+                variant="primary"
               >
                 {isSubmitting ? "Sending…" : "Submit"}
-              </PrimaryMagneticButton>
+              </MagneticButton>
 
               <a
                 href="mailto:ihsan.inh@gmail.com"

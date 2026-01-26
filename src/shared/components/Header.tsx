@@ -4,9 +4,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { FiDownload } from "react-icons/fi";
+import { FiDownload, FiMenu, FiX } from "react-icons/fi";
 
 import { useHeaderService } from "@/src/features/portfolio/hooks/useHeader";
+import { MagneticButton } from "@/src/shared/components/MagneticButton";
 
 import BrandLogo from "./BrandLogo";
 import ThemeToggle from "./ThemeToggle";
@@ -21,7 +22,7 @@ export default function Header() {
   const isBlog = pathname.startsWith("/blog");
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -100,43 +101,49 @@ export default function Header() {
   };
 
   return (
-    <header
-      className={[
-        "sticky top-0 z-50 transition-all duration-300 isolate transform-gpu will-change-transform",
-        scrolled
-          ? "backdrop-blur-xl bg-white/70 dark:bg-primary/70 border-b border-slate-200/50 dark:border-white/5"
-          : "bg-transparent border-b border-transparent",
-      ].join(" ")}
-      aria-label="Primary header"
-    >
-      <div className="container">
-        <div className="flex h-16 items-center justify-between gap-3">
-          {/* Logo */}
-          <Link
-            href={isHome ? "#home" : "/#home"}
-            onClick={isHome ? handleNavClick("#home") : undefined}
-            className="group inline-flex items-center gap-2"
-            aria-label="Go to home"
+    <>
+      <header
+        className={`fixed top-4 inset-x-0 z-[100] transition-all duration-300 isolate ${
+          scrolled ? "py-2" : "py-4"
+        }`}
+      >
+        <div className="container mx-auto max-w-5xl px-4">
+          <motion.nav
+            layout
+            className={`mx-auto flex items-center justify-between rounded-full border p-2 transition-all duration-300 ${
+              scrolled
+                ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/50 dark:border-white/10 shadow-lg shadow-black/5"
+                : "bg-white/50 dark:bg-slate-900/50 backdrop-blur-md border-transparent shadow-none"
+            }`}
           >
-            <BrandLogo size="sm" />
-            <span className="text-sm font-medium text-slate-700 group-hover:text-[rgb(var(--accent))] dark:text-white/80 dark:group-hover:text-[rgb(var(--accent))] transition-colors duration-300">
-              Ihsan Nurul Habib
-            </span>
-          </Link>
+            {/* Logo */}
+            <Link
+              href={isHome ? "#home" : "/#home"}
+              onClick={isHome ? handleNavClick("#home") : undefined}
+              className="group pl-2 inline-flex items-center gap-2"
+              aria-label="Go to home"
+            >
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))] text-white shadow-lg">
+                <BrandLogo size="xs" />
+              </div>
+              <span
+                className={`text-sm font-semibold tracking-tight transition-all duration-300 ${scrolled ? "opacity-100 max-w-[100px]" : "opacity-0 max-w-0 overflow-hidden"}`}
+              >
+                Ihsan
+              </span>
+            </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:block" aria-label="Main navigation">
-            <ul className="flex items-center gap-1">
+            {/* Desktop Navigation */}
+            <ul className="hidden md:flex items-center gap-1 mx-2">
               {navLinks.map((link) => {
                 const isBlogLink = link.name.toLowerCase() === "blog";
-
-                let hrefFinal: string;
-                if (isBlogLink) {
-                  hrefFinal = isHome ? "#blog" : "/blog";
-                } else {
-                  hrefFinal = isHome ? link.href : `/${link.href}`;
-                }
-
+                const hrefFinal = isBlogLink
+                  ? isHome
+                    ? "#blog"
+                    : "/blog"
+                  : isHome
+                    ? link.href
+                    : `/${link.href}`;
                 const active = isBlogLink
                   ? isBlog || (isHome && link.isActive)
                   : link.isActive;
@@ -147,146 +154,144 @@ export default function Header() {
                       href={hrefFinal}
                       onClick={
                         isHome
-                          ? (() => {
-                              if (isBlogLink) {
-                                return handleNavClick("#blog");
-                              }
-                              return handleNavClick(link.href);
-                            })()
+                          ? isBlogLink
+                            ? handleNavClick("#blog")
+                            : handleNavClick(link.href)
                           : undefined
                       }
-                      className={[
-                        "relative px-4 py-2 text-sm font-medium rounded-full transition-all duration-300",
+                      className={`relative px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
                         active
                           ? "text-white"
-                          : "text-slate-700 hover:text-[rgb(var(--accent))] dark:text-white/80 dark:hover:text-[rgb(var(--accent))]",
-                      ].join(" ")}
-                      tabIndex={0}
-                      onKeyDown={(e: React.KeyboardEvent) => {
-                        if (e.key === "Enter" && isHome && !isBlogLink)
-                          handleNavClick(link.href)(e);
-                      }}
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
+                      }`}
                     >
-                      {/* Active background pill with glow */}
                       {active && (
                         <motion.span
                           layoutId="activeNavPill"
-                          className="absolute inset-0 rounded-full -z-10"
-                          style={{
-                            background:
-                              "linear-gradient(135deg, rgb(var(--accent)), rgb(var(--accent-secondary)))",
-                            boxShadow:
-                              "0 0 20px rgb(var(--accent) / 0.4), 0 0 40px rgb(var(--accent) / 0.2)",
-                          }}
+                          className="absolute inset-0 rounded-full bg-slate-900 dark:bg-white -z-10"
                           transition={{
                             type: "spring",
-                            stiffness: 400,
+                            stiffness: 300,
                             damping: 30,
                           }}
                         />
                       )}
-                      {/* Hover underline for inactive items */}
-                      {!active && (
-                        <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-gradient-to-r from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))] rounded-full transition-all duration-300 group-hover:w-4" />
-                      )}
+                      <span
+                        className={
+                          active ? "text-white dark:text-slate-900" : ""
+                        }
+                      >
+                        {link.name}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <div className="flex items-center gap-2 pr-1">
+              <div className="hidden md:block">
+                <ThemeToggle />
+              </div>
+              <MagneticButton
+                variant="primary"
+                className="hidden md:flex text-sm px-5 py-2.5 h-10 w-auto"
+                onClick={() =>
+                  window.open("/document/CV-Ihsan-Nurul-Habib.pdf", "_blank")
+                }
+              >
+                <span className="text-xs">CV</span>
+                <FiDownload className="text-sm" />
+              </MagneticButton>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setOpen(!open)}
+                className="md:hidden p-2 rounded-full hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+              >
+                {open ? (
+                  <FiX className="text-xl" />
+                ) : (
+                  <FiMenu className="text-xl" />
+                )}
+              </button>
+            </div>
+          </motion.nav>
+        </div>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed inset-x-4 top-24 z-[90] md:hidden rounded-3xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl border border-slate-200 dark:border-white/10 shadow-2xl overflow-hidden p-4"
+          >
+            <ul className="flex flex-col gap-2">
+              {navLinks.map((link) => {
+                const isBlogLink = link.name.toLowerCase() === "blog";
+                const hrefFinal = isBlogLink
+                  ? isHome
+                    ? "#blog"
+                    : "/blog"
+                  : isHome
+                    ? link.href
+                    : `/${link.href}`;
+                const active = isBlogLink
+                  ? isBlog || (isHome && link.isActive)
+                  : link.isActive;
+
+                return (
+                  <li key={link.href}>
+                    <Link
+                      href={hrefFinal}
+                      onClick={(e) => {
+                        if (isHome) {
+                          if (isBlogLink) {
+                            handleNavClick("#blog")(e);
+                          } else {
+                            handleNavClick(link.href)(e);
+                          }
+                        }
+                        setOpen(false);
+                      }}
+                      className={`block px-4 py-3 rounded-xl text-lg font-medium transition-all ${
+                        active
+                          ? "bg-slate-100 dark:bg-white/10 text-[rgb(var(--accent))]"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
+                      }`}
+                    >
                       {link.name}
                     </Link>
                   </li>
                 );
               })}
-
-              <li className="ml-2">
+              <hr className="my-2 border-slate-200 dark:border-white/10" />
+              <li className="flex items-center justify-between px-4 py-2">
+                <span className="text-sm text-slate-500">Theme</span>
                 <ThemeToggle />
               </li>
+              <li>
+                <a
+                  href="/document/CV-Ihsan-Nurul-Habib.pdf"
+                  target="_blank"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-3 font-semibold transition-transform active:scale-95"
+                >
+                  Download CV <FiDownload />
+                </a>
+              </li>
             </ul>
-          </nav>
-
-          {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <motion.button
-              type="button"
-              className="inline-flex items-center justify-center rounded-xl glass p-2.5"
-              aria-label="Toggle navigation menu"
-              aria-controls="mobile-nav"
-              aria-expanded={open}
-              onClick={() => setOpen((v) => !v)}
-              whileTap={{ scale: 0.95 }}
-            >
-              <span className="relative block h-4 w-5">
-                <span
-                  className={[
-                    "absolute left-0 top-0 block h-0.5 w-5 bg-slate-800 dark:bg-white transition-all duration-300",
-                    open ? "translate-y-2 rotate-45" : "",
-                  ].join(" ")}
-                />
-                <span
-                  className={[
-                    "absolute left-0 top-2 block h-0.5 w-5 bg-slate-800 dark:bg-white transition-all duration-300",
-                    open ? "opacity-0 scale-0" : "opacity-100",
-                  ].join(" ")}
-                />
-                <span
-                  className={[
-                    "absolute left-0 top-4 block h-0.5 w-5 bg-slate-800 dark:bg-white transition-all duration-300",
-                    open ? "-translate-y-2 -rotate-45" : "",
-                  ].join(" ")}
-                />
-              </span>
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Navigation */}
-      <AnimatePresence>
-        {open && (
-          <motion.nav
-            id="mobile-nav"
-            ref={navRef}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="lg:hidden"
-            aria-label="Mobile navigation"
-          >
-            <div className="container pb-4">
-              <div className="rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-primary shadow-xl overflow-hidden">
-                <ul className="flex flex-col">
-                  {navLinks.map((link) => (
-                    <li key={link.href}>
-                      <a
-                        href={link.href}
-                        onClick={handleNavClick(link.href)}
-                        className={[
-                          "block px-5 py-3.5 text-sm font-medium transition-all duration-300 border-b border-slate-100 dark:border-white/5 last:border-b-0",
-                          link.isActive
-                            ? "text-[rgb(var(--accent))] bg-[rgb(var(--accent)/0.05)]"
-                            : "text-slate-700 hover:text-[rgb(var(--accent))] dark:text-white/90",
-                        ].join(" ")}
-                      >
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                  <li className="p-3 border-t border-slate-100 dark:border-white/5">
-                    <a
-                      href="/document/CV-Ihsan-Nurul-Habib.pdf"
-                      className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[rgb(var(--accent))] to-[rgb(var(--accent-secondary))] px-4 py-2.5 text-sm font-medium text-white shadow-lg"
-                    >
-                      <FiDownload className="text-lg" />
-                      Download CV
-                    </a>
-                  </li>
-                  <li className="p-3 flex justify-center">
-                    <ThemeToggle />
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </motion.nav>
+          </motion.div>
         )}
       </AnimatePresence>
-    </header>
+      {open && (
+        <div
+          className="fixed inset-0 z-[80] bg-black/20 dark:bg-black/50 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }

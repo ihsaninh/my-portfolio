@@ -41,21 +41,29 @@ export default function Lightbox({
   // Disable page scroll when lightbox is open
   useEffect(() => {
     if (!open) return;
-    const { overflow, paddingRight } = document.body.style;
-    const prevOverflow = overflow;
-    const prevPaddingRight = paddingRight;
 
-    // Prevent layout shift when hiding scrollbar
-    const scrollbarWidth =
-      window.innerWidth - document.documentElement.clientWidth;
+    // Save previous styles
+    const body = document.body;
+    const html = document.documentElement;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyPaddingRight = body.style.paddingRight;
+    const prevHtmlOverflow = html.style.overflow;
+
+    // Calculate scrollbar width to prevent layout shift
+    const scrollbarWidth = window.innerWidth - html.clientWidth;
+
+    // Apply styles to prevent scrolling
     if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
+      body.style.paddingRight = `${scrollbarWidth}px`;
     }
-    document.body.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    html.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
+      // Restore previous styles
+      body.style.overflow = prevBodyOverflow;
+      body.style.paddingRight = prevBodyPaddingRight;
+      html.style.overflow = prevHtmlOverflow;
     };
   }, [open]);
 
@@ -64,7 +72,7 @@ export default function Lightbox({
       {open && (
         <motion.div
           key="lightbox-backdrop"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

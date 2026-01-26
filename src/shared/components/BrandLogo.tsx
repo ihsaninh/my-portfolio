@@ -3,7 +3,7 @@
 import clsx from "clsx";
 
 type BrandLogoProps = {
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   abbr?: string;
   className?: string;
 };
@@ -18,6 +18,8 @@ export default function BrandLogo({
     sizeClass = "h-12 w-12 text-[13px]";
   } else if (size === "md") {
     sizeClass = "h-10 w-10 text-[12px]";
+  } else if (size === "xs") {
+    sizeClass = "h-6 w-6 text-[9px]";
   } else {
     sizeClass = "h-8 w-8 text-[11px]";
   }
@@ -36,7 +38,7 @@ export default function BrandLogo({
         // subtle elevation
         "shadow-[0_2px_8px_rgba(2,6,23,0.06)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.35)]",
         sizeClass,
-        className
+        className,
       )}
       style={{
         backgroundImage:
