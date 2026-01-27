@@ -763,3 +763,21 @@ pre[class*="language-"] .line-highlight {
     transform: translate(0px, 0px) rotate(360deg);
   }
 }
+
+/* Performance optimizations for animations */
+.animate-spin-slow,
+.animate-ping,
+.gradient-text,
+.holo-border::before,
+.gradient-mesh-bg::before {
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translateZ(0);
+}
+
+.card-hover,
+.magnetic-btn {
+  will-change: transform;
+  transform: translateZ(0);
+}

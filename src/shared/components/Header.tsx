@@ -22,15 +22,27 @@ export default function Header() {
   const isBlog = pathname.startsWith("/blog");
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    let timeoutId: NodeJS.Timeout;
+    const onScroll = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setScrolled(window.scrollY > 20);
+      }, 10);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (timeoutId) clearTimeout(timeoutId);
+    };
   }, []);
 
   useEffect(() => {
     if (!isHome) return;
     let ticking = false;
+    let lastScrollTime = 0;
+    const throttleDelay = 100; // Throttle scroll spy to every 100ms
+
     const spy = () => {
       let active: string | null = null;
       for (const link of navLinks) {
@@ -48,12 +60,16 @@ export default function Header() {
       if (active) setActiveLinkByScroll(active);
     };
     const onScroll = () => {
+      const now = Date.now();
+      if (now - lastScrollTime < throttleDelay) return;
+
       if (!ticking) {
         requestAnimationFrame(() => {
           spy();
           ticking = false;
         });
         ticking = true;
+        lastScrollTime = now;
       }
     };
     spy();
@@ -108,8 +124,7 @@ export default function Header() {
         }`}
       >
         <div className="container mx-auto max-w-5xl px-4">
-          <motion.nav
-            layout
+          <nav
             className={`mx-auto flex items-center justify-between rounded-full border p-2 transition-all duration-300 ${
               scrolled
                 ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-slate-200/50 dark:border-white/10 shadow-lg shadow-black/5"
@@ -216,7 +231,7 @@ export default function Header() {
                 )}
               </button>
             </div>
-          </motion.nav>
+          </nav>
         </div>
       </header>
 

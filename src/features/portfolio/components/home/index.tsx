@@ -71,7 +71,7 @@ export default function Home() {
               {/* Outer glow effect */}
               <div className="absolute -inset-3 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-700" />
               {/* Animated gradient ring */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-spin-slow" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full blur-sm opacity-60 group-hover:opacity-100 transition-opacity duration-500 animate-spin-slow will-change-transform" />
               <div className="absolute -inset-0.5 bg-gradient-to-r from-[rgb(var(--accent))] via-[rgb(var(--accent-secondary))] to-[rgb(var(--accent-tertiary))] rounded-full opacity-40" />
               <Image
                 src="/images/profile.webp"
