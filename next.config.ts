@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 import rehypePrism from "rehype-prism-plus";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["next-mdx-remote"],
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   images: {
     formats: ["image/avif", "image/webp"],
