@@ -1,12 +1,17 @@
 import { google } from "@ai-sdk/google";
 import { embed, embedMany } from "ai";
 
-// Google text-embedding-004 returns 768-d vectors. Keep consistent with DB schema.
+const embeddingModel = google.textEmbedding("gemini-embedding-001");
+
+const providerOptions = {
+  google: { outputDimensionality: 768 },
+};
 
 export async function embedOne(text: string): Promise<number[]> {
   const { embedding } = await embed({
-    model: google.textEmbeddingModel("text-embedding-004"),
+    model: embeddingModel,
     value: text,
+    providerOptions,
   });
   return embedding;
 }
@@ -14,8 +19,9 @@ export async function embedOne(text: string): Promise<number[]> {
 export async function embedBatch(texts: string[]): Promise<number[][]> {
   if (!texts.length) return [];
   const { embeddings } = await embedMany({
-    model: google.textEmbeddingModel("text-embedding-004"),
+    model: embeddingModel,
     values: texts,
+    providerOptions,
   });
   return embeddings;
 }

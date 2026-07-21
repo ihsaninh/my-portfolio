@@ -13,7 +13,7 @@ function cleanCacheIfNeeded() {
     // Remove oldest entries (simple FIFO)
     const keysToDelete = Array.from(scoreCache.keys()).slice(
       0,
-      scoreCache.size - MAX_CACHE_SIZE + 100
+      scoreCache.size - MAX_CACHE_SIZE + 100,
     );
     keysToDelete.forEach((key) => scoreCache.delete(key));
   }
@@ -147,7 +147,7 @@ export async function evaluateAnswer(params: {
 
     // Check for explicit "unknown" patterns first
     const isUnknown = unknownPatterns.some(
-      (p) => lower === p || lower.includes(p)
+      (p) => lower === p || lower.includes(p),
     );
 
     // For short answers, be more lenient - only penalize if BOTH short AND clearly inadequate
@@ -253,7 +253,7 @@ Hard rules (objective):
 Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly formal language. Follow the schema.`;
 
     const result = await generateObject({
-      model: google("gemini-2.5-flash-lite"),
+      model: google("gemini-3.5-flash"),
       schema: ScoringSchema,
       prompt,
       temperature: 0.1, // Very low temperature for maximum consistency
@@ -266,7 +266,7 @@ Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly form
       ] || 1.0;
     const adjustedScore = Math.min(
       100,
-      Math.max(0, Math.round(result.object.score * difficultyMultiplier))
+      Math.max(0, Math.round(result.object.score * difficultyMultiplier)),
     );
 
     const finalResult = {
@@ -287,7 +287,7 @@ Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly form
 
 function getDifficultyLabel(
   difficulty: number,
-  language: string = "en"
+  language: string = "en",
 ): string {
   const isIndonesian = language === "id";
 
@@ -307,7 +307,7 @@ function generateFallbackScore(
   answer: string,
   category: string,
   difficulty: number,
-  language: string = "en"
+  language: string = "en",
 ): AIScoreResult {
   const isIndonesian = language === "id";
   const wordCount = answer.trim().split(/\s+/).length;
@@ -319,7 +319,7 @@ function generateFallbackScore(
   const categoryKey = category.toLowerCase() as keyof typeof CATEGORY_CRITERIA;
   const criteria = CATEGORY_CRITERIA[categoryKey] || CATEGORY_CRITERIA.tech;
   const keywordMatches = criteria.keywords.filter((keyword) =>
-    answer.toLowerCase().includes(keyword.toLowerCase())
+    answer.toLowerCase().includes(keyword.toLowerCase()),
   ).length;
 
   // Quality indicators
@@ -353,7 +353,7 @@ function generateFallbackScore(
 
   // Check for explicit unknowns first
   const isExplicitUnknown = unknowns.some(
-    (p) => ansLower === p || ansLower.includes(p)
+    (p) => ansLower === p || ansLower.includes(p),
   );
 
   // For short answers, be more lenient - only penalize if BOTH very short AND meaningless

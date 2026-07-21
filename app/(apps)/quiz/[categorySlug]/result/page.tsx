@@ -5,7 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { Button, Card } from "@/src/features/quiz/components";
-import { LeaderboardEntry, QuizCategory, QuizSession } from "@/src/features/quiz/types/quiz";
+import {
+  LeaderboardEntry,
+  QuizCategory,
+  QuizSession,
+} from "@/src/features/quiz/types/quiz";
 import {
   DEFAULT_LANGUAGE,
   getPerformanceCategoryLabel,
@@ -68,7 +72,7 @@ export default function QuizResultPage() {
         if (categoriesResponse.ok) {
           const categories = await categoriesResponse.json();
           const currentCategory = categories.find(
-            (cat: QuizCategory) => cat.slug === categorySlug
+            (cat: QuizCategory) => cat.slug === categorySlug,
           );
           setCategory(currentCategory);
         }
@@ -78,12 +82,12 @@ export default function QuizResultPage() {
         if (leaderboardResponse.ok) {
           const leaderboardData = await leaderboardResponse.json();
           const userScore = Math.round(
-            (result.totalScore / result.maxScore) * 100
+            (result.totalScore / result.maxScore) * 100,
           );
 
           // Find user's rank (approximate)
           const betterScores = leaderboardData.filter(
-            (entry: LeaderboardEntry) => entry.percentage > userScore
+            (entry: LeaderboardEntry) => entry.percentage > userScore,
           );
           setUserRank(betterScores.length + 1);
         }
@@ -126,10 +130,10 @@ export default function QuizResultPage() {
   }
 
   const finalScore = Math.round(
-    (quizResult.totalScore / quizResult.maxScore) * 100
+    (quizResult.totalScore / quizResult.maxScore) * 100,
   );
   const averageScore = Math.round(
-    quizResult.totalScore / quizResult.answers.length
+    quizResult.totalScore / quizResult.answers.length,
   );
 
   const getScoreMessage = (score: number) => {
@@ -328,7 +332,7 @@ export default function QuizResultPage() {
                           (quizResult.endTime!.getTime() -
                             quizResult.startTime.getTime()) /
                             1000 /
-                            60
+                            60,
                         )}
                         min
                       </div>
@@ -377,8 +381,8 @@ export default function QuizResultPage() {
                       {finalScore >= 80
                         ? t.aiFeedbackMessages.excellent
                         : finalScore >= 60
-                        ? t.aiFeedbackMessages.good
-                        : t.aiFeedbackMessages.average}
+                          ? t.aiFeedbackMessages.good
+                          : t.aiFeedbackMessages.average}
                     </p>
 
                     <Button
@@ -429,7 +433,8 @@ export default function QuizResultPage() {
                             </div>
                           </div>
                           <p className="text-slate-600 dark:text-slate-300 text-sm mb-3">
-                            {quizResult.questions[index]?.question}
+                            {quizResult.questions[index]?.question ||
+                              quizResult.questions[index]?.prompt}
                           </p>
                           <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 mb-3">
                             <p className="text-sm text-slate-700 dark:text-slate-300">
@@ -454,7 +459,7 @@ export default function QuizResultPage() {
                                     {answer.detailedFeedback.strengths.map(
                                       (strength, idx) => (
                                         <li key={idx}>• {strength}</li>
-                                      )
+                                      ),
                                     )}
                                   </ul>
                                 </div>
@@ -470,7 +475,7 @@ export default function QuizResultPage() {
                                     {answer.detailedFeedback.improvements.map(
                                       (improvement, idx) => (
                                         <li key={idx}>• {improvement}</li>
-                                      )
+                                      ),
                                     )}
                                   </ul>
                                 </div>
@@ -486,17 +491,17 @@ export default function QuizResultPage() {
                                     "excellent"
                                       ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300"
                                       : answer.detailedFeedback.category ===
-                                        "good"
-                                      ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                                      : answer.detailedFeedback.category ===
-                                        "average"
-                                      ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                                      : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
+                                          "good"
+                                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                                        : answer.detailedFeedback.category ===
+                                            "average"
+                                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                                          : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300"
                                   }`}
                                 >
                                   {getPerformanceCategoryLabel(
                                     answer.detailedFeedback.category,
-                                    language
+                                    language,
                                   )}
                                 </span>
                               </div>

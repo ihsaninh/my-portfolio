@@ -1,6 +1,5 @@
 import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
-import rehypePrism from "rehype-prism-plus";
 
 import { SITE_URL } from "./src/shared/lib/constants";
 
@@ -111,9 +110,6 @@ const nextConfig: NextConfig = {
 
 const withMDX = createMDX({
   extension: /\.(md|mdx)$/,
-  options: {
-    rehypePlugins: [rehypePrism],
-  },
 });
 
 export default withMDX(nextConfig);

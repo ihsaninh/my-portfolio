@@ -24,6 +24,7 @@ const aiFeatures = [
     href: "/quiz",
     color: "from-purple-500 to-indigo-500",
     badge: "Popular",
+    disabled: false,
   },
   {
     title: "Hire Me Simulator",
@@ -33,14 +34,16 @@ const aiFeatures = [
     href: "/hire-me",
     color: "from-blue-500 to-cyan-500",
     badge: "Interactive",
+    disabled: false,
   },
   {
     title: "Battle Arena",
     description: "Compete in real-time quiz battles with other users",
     icon: <FiClock className="h-6 w-6" />,
-    href: "https://battle.ihsaninh.dev",
+    href: "#",
     color: "from-red-500 to-orange-500",
-    badge: "Real-time",
+    badge: "Coming Soon",
+    disabled: true,
   },
 ];
 
@@ -93,52 +96,90 @@ export default function AiFeaturesPage() {
       {/* Features Grid */}
       <div className="container pb-16 lg:pb-24">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {aiFeatures.map((feature, index) => (
-            <Link
-              key={index}
-              href={feature.href}
-              className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/5 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:border-accent/50 hover:-translate-y-2"
-            >
-              {/* Gradient Background Effect */}
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
-              />
-
-              {/* Badge */}
-              <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
-                {feature.badge}
-              </div>
-
-              <div className="relative p-8">
-                {/* Icon */}
+          {aiFeatures.map((feature, index) => {
+            if (feature.disabled) {
+              return (
                 <div
-                  className={`inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r ${feature.color} text-white mb-6 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}
+                  key={index}
+                  className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/5 dark:bg-gray-800/50 backdrop-blur-sm opacity-50 cursor-not-allowed select-none"
                 >
-                  {feature.icon}
+                  {/* Badge */}
+                  <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-slate-500/10 text-slate-500 text-xs font-semibold">
+                    {feature.badge}
+                  </div>
+
+                  <div className="relative p-8">
+                    <div
+                      className={`inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r ${feature.color} text-white mb-6 shadow-lg grayscale`}
+                    >
+                      {feature.icon}
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+                      {feature.title}
+                    </h3>
+
+                    <p className="text-slate-600 dark:text-white/60 leading-relaxed mb-6 min-h-[4rem]">
+                      {feature.description}
+                    </p>
+
+                    <div className="flex items-center text-slate-400 font-semibold gap-2">
+                      <span>Coming soon</span>
+                    </div>
+                  </div>
+
+                  <div className="h-1 bg-slate-300 dark:bg-white/10" />
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={index}
+                href={feature.href}
+                className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white dark:border-white/5 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-500 hover:shadow-2xl hover:border-accent/50 hover:-translate-y-2"
+              >
+                {/* Gradient Background Effect */}
+                <div
+                  className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
+                />
+
+                {/* Badge */}
+                <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold">
+                  {feature.badge}
                 </div>
 
-                {/* Content */}
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-accent transition-colors duration-300">
-                  {feature.title}
-                </h3>
+                <div className="relative p-8">
+                  {/* Icon */}
+                  <div
+                    className={`inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r ${feature.color} text-white mb-6 shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}
+                  >
+                    {feature.icon}
+                  </div>
 
-                <p className="text-slate-600 dark:text-white/60 leading-relaxed mb-6 min-h-[4rem]">
-                  {feature.description}
-                </p>
+                  {/* Content */}
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3 group-hover:text-accent transition-colors duration-300">
+                    {feature.title}
+                  </h3>
 
-                {/* CTA */}
-                <div className="flex items-center text-accent font-semibold group-hover:gap-3 gap-2 transition-all duration-300">
-                  <span>Try it now</span>
-                  <FiArrowRight className="h-5 w-5 transform group-hover:translate-x-2 transition-transform duration-300" />
+                  <p className="text-slate-600 dark:text-white/60 leading-relaxed mb-6 min-h-[4rem]">
+                    {feature.description}
+                  </p>
+
+                  {/* CTA */}
+                  <div className="flex items-center text-accent font-semibold group-hover:gap-3 gap-2 transition-all duration-300">
+                    <span>Try it now</span>
+                    <FiArrowRight className="h-5 w-5 transform group-hover:translate-x-2 transition-transform duration-300" />
+                  </div>
                 </div>
-              </div>
 
-              {/* Bottom Accent Line */}
-              <div
-                className={`h-1 bg-gradient-to-r ${feature.color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}
-              />
-            </Link>
-          ))}
+                {/* Bottom Accent Line */}
+                <div
+                  className={`h-1 bg-gradient-to-r ${feature.color} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left`}
+                />
+              </Link>
+            );
+          })}
         </div>
       </div>
 

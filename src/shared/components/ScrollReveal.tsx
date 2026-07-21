@@ -96,6 +96,7 @@ export const ScrollReveal = ({
 
 export const StaggerContainer = ({
   children,
+  staggerDelay: _staggerDelay,
   className = "",
   ...props
 }: {
@@ -105,6 +106,7 @@ export const StaggerContainer = ({
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }) => {
+  void _staggerDelay;
   return (
     <div className={className} {...props}>
       {children}

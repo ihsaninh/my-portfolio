@@ -4,7 +4,10 @@ import { NextRequest } from "next/server";
 
 import { retrieveSimilar } from "@/src/shared/lib/ai/rag/retriever";
 import { chatCache } from "@/src/shared/lib/services/chat-cache";
-import { checkRateLimit, generalLimiter } from "@/src/shared/lib/services/rate-limit";
+import {
+  checkRateLimit,
+  generalLimiter,
+} from "@/src/shared/lib/services/rate-limit";
 
 export const runtime = "edge";
 export const maxDuration = 30;
@@ -52,14 +55,14 @@ function buildContextBlock(
     title: string | null;
     url: string | null;
     similarity: number;
-  }[]
+  }[],
 ) {
   const lines: string[] = [];
   chunks.forEach((c, i) => {
     lines.push(
       `[#${i + 1}] title: ${c.title ?? "(untitled)"} | url: ${
         c.url ?? "-"
-      } | score: ${c.similarity.toFixed(3)}`
+      } | score: ${c.similarity.toFixed(3)}`,
     );
     lines.push(c.content.trim());
     lines.push("");
@@ -76,49 +79,49 @@ function isTextPart(p: unknown): p is { type: "text"; text: string } {
 function isGreeting(text: string): boolean {
   const t = text.toLowerCase();
   return /^(halo|hai|hai\s|halo\s|selamat\s(pagi|siang|sore|malam)|hi\b)/.test(
-    t
+    t,
   );
 }
 
 function isIntroductionIntent(text: string): boolean {
   const t = text.toLowerCase();
   return /perkenalkan|kenalan|introduce|perkenalan|siapa\s*kamu|profil\s*kamu|cerita\s*tentang\s*kamu/.test(
-    t
+    t,
   );
 }
 
 function isExperienceIntent(text: string): boolean {
   const t = text.toLowerCase();
   return /pengalaman|experience|proyek|project|pernah|riwayat|cv|portfolio/.test(
-    t
+    t,
   );
 }
 
 function isLastProjectIntent(text: string): boolean {
   const t = text.toLowerCase();
   return /pro(j|y)ek\s*(terakhir|terbaru)|last\s*project|recent\s*project|project\s*apa\s*y(g|ang)\s*kamu\s*kerjakan/.test(
-    t
+    t,
   );
 }
 
 function isProjectStackIntent(text: string): boolean {
   const t = text.toLowerCase();
   return /stack|teknologi|tech\s*stack|pakai\s*apa|tools?|framework|library/.test(
-    t
+    t,
   );
 }
 
 function isLocationIntent(text: string): boolean {
   const t = text.toLowerCase();
   return /domisili|tinggal\s*(dimana|di\s*mana)|lokasi|alamat|tempat\s*tinggal|rumah|daerah|wilayah/.test(
-    t
+    t,
   );
 }
 
 function isTenureIntent(text: string): boolean {
   const t = text.toLowerCase();
   return /berapa\s*tahun|sudah\s*\d+\s*tahun|berapa\s*lama|tahun\s*ini|yoe|lama\s*kerja/.test(
-    t
+    t,
   );
 }
 
@@ -217,7 +220,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = streamText({
-      model: google("gemini-2.5-flash-lite"),
+      model: google("gemini-3.5-flash"),
       system: `Jawab salam dengan natural dan friendly seperti orang Indonesia biasa dalam konteks interview atau profesional.
 
       Aturan:
@@ -247,106 +250,111 @@ export async function POST(req: NextRequest) {
     return response;
   }
 
-  // Retrieve context dari Supabase dengan filter sumber berdasarkan intent
-  const allowedSources = isTenureIntent(userMsg)
-    ? ["experience", "profile"]
-    : isLastProjectIntent(userMsg)
-    ? ["project"]
-    : isExperienceIntent(userMsg)
-    ? ["profile", "experience", "project"]
-    : isIntroductionIntent(userMsg)
-    ? ["profile", "skills", "experience"]
-    : isProjectStackIntent(userMsg)
-    ? ["project", "skills"]
-    : isLocationIntent(userMsg)
-    ? ["profile"]
-    : undefined;
-
-  let retrieved = await retrieveSimilar(userMsg, {
-    matchCount: isTenureIntent(userMsg)
-      ? 4
-      : isLastProjectIntent(userMsg)
-      ? 5
-      : isIntroductionIntent(userMsg)
-      ? 6
-      : isProjectStackIntent(userMsg)
-      ? 8
-      : isLocationIntent(userMsg)
-      ? 3
-      : 6,
-    threshold: isTenureIntent(userMsg)
-      ? 0.6
-      : isLastProjectIntent(userMsg)
-      ? 0.55
-      : isIntroductionIntent(userMsg)
-      ? 0.5
-      : isProjectStackIntent(userMsg)
-      ? 0.45
-      : isLocationIntent(userMsg)
-      ? 0.3
-      : 0.5,
-    allowedSources,
-  });
-
-  // Jika tanya proyek terakhir/terbaru, urutkan berdasarkan tahun pada metadata.period (desc), lalu similarity
-  if (isLastProjectIntent(userMsg)) {
-    const yearScore = (meta: unknown): number => {
-      if (!meta || typeof meta !== "object") return 0;
-      const m = meta as Record<string, unknown>;
-      const p = String(m.period ?? "");
-      const years = Array.from(p.matchAll(/\b(19|20)\d{2}\b/g)).map((x) =>
-        Number(x[0])
-      );
-      return years.length ? Math.max(...years) : 0;
-    };
-    retrieved = [...retrieved].sort(
-      (a, b) =>
-        yearScore(b.metadata) - yearScore(a.metadata) ||
-        b.similarity - a.similarity
-    );
-  }
-
-  const contextBlock = buildContextBlock(
-    retrieved.map((r) => ({
-      content: r.content,
-      title: r.title,
-      url: r.url,
-      similarity: r.similarity,
-    }))
-  );
-
-  const system = ragSystemPrompt(mode);
-  const extraRules = isTenureIntent(userMsg)
-    ? `Kalau ditanya soal berapa tahun kerja/pengalaman: lihat tanggal di Context, hitung dari September 2019 sampai sekarang (2025), terus jawab natural kayak "Udah sekitar 5-6 tahun nih" atau "Kalau dihitung-hitung sekitar 5 tahun lebih". JANGAN pakai numbering atau format list. Jawab dalam bentuk kalimat biasa. Kalau tanggalnya kurang lengkap, bilang aja "Hmm, kurang jelas tanggalnya, bisa spesifik yang mana?"`
-    : isLastProjectIntent(userMsg)
-    ? `Kalau ditanya proyek terakhir/terbaru: pilih yang paling baru dari Context (liat tahun/periode). Jawab santai tapi spesifik: nama proyek + role + tech stack YANG BENER sesuai Context + hasil. Contoh: "Terakhir aku ngerjain [nama project], pakai [exact tech dari Context] buat [tujuan]". Pastikan tech stack akurat!`
-    : isIntroductionIntent(userMsg)
-    ? `Kalau diminta perkenalan diri: fokus ke pengalaman kerja, skills utama, dan domain expertise (telco/enterprise). Sebutkan 2-3 highlight terpenting. Jangan terlalu panjang, maksimal 2-3 kalimat.`
-    : isProjectStackIntent(userMsg)
-    ? `Kalau ditanya tentang tech stack/teknologi: sebutkan tech stack yang PERSIS sesuai Context. Jangan mengarang atau salah sebut teknologi. Kalau ada beberapa proyek, sebutkan yang paling relevan dengan pertanyaan.`
-    : isLocationIntent(userMsg)
-    ? `Kalau ditanya tentang domisili/lokasi tinggal: HANYA jawab kalau ada info lokasi di Context. Kalau tidak ada info lokasi sama sekali di Context, bilang "Wah, kayaknya belum ada info lokasi di data aku. Ada yang lain?" JANGAN mengarang lokasi dan JANGAN pakai referensi [#]!`
-    : `Jawab sesuai pertanyaan aja, jangan nambah-nambah info yang gak ditanya. Keep it simple and direct.`;
-
-  const preamble = `Context (pakai info ini aja, jawab maksimal 2 paragraf, fokus ke pertanyaan, JANGAN pakai referensi [#], JANGAN pakai numbering atau bullet points, jawab seperti obrolan natural):\n\n${extraRules}\n\n${contextBlock}`;
-
-  // Convert to model messages, but be resilient if conversion fails (fallback to empty history)
-  let modelMessages: Parameters<typeof streamText>[0]["messages"] = [];
   try {
-    modelMessages = convertToModelMessages(messages);
-  } catch {
-    modelMessages = [];
+    // Retrieve context dari Supabase dengan filter sumber berdasarkan intent
+    const allowedSources = isTenureIntent(userMsg)
+      ? ["experience", "profile"]
+      : isLastProjectIntent(userMsg)
+        ? ["project"]
+        : isExperienceIntent(userMsg)
+          ? ["profile", "experience", "project"]
+          : isIntroductionIntent(userMsg)
+            ? ["profile", "skills", "experience"]
+            : isProjectStackIntent(userMsg)
+              ? ["project", "skills"]
+              : isLocationIntent(userMsg)
+                ? ["profile"]
+                : undefined;
+
+    let retrieved = await retrieveSimilar(userMsg, {
+      matchCount: isTenureIntent(userMsg)
+        ? 4
+        : isLastProjectIntent(userMsg)
+          ? 5
+          : isIntroductionIntent(userMsg)
+            ? 6
+            : isProjectStackIntent(userMsg)
+              ? 8
+              : isLocationIntent(userMsg)
+                ? 3
+                : 6,
+      threshold: isTenureIntent(userMsg)
+        ? 0.6
+        : isLastProjectIntent(userMsg)
+          ? 0.55
+          : isIntroductionIntent(userMsg)
+            ? 0.5
+            : isProjectStackIntent(userMsg)
+              ? 0.45
+              : isLocationIntent(userMsg)
+                ? 0.3
+                : 0.5,
+      allowedSources,
+    });
+
+    // Jika tanya proyek terakhir/terbaru, urutkan berdasarkan tahun pada metadata.period (desc), lalu similarity
+    if (isLastProjectIntent(userMsg)) {
+      const yearScore = (meta: unknown): number => {
+        if (!meta || typeof meta !== "object") return 0;
+        const m = meta as Record<string, unknown>;
+        const p = String(m.period ?? "");
+        const years = Array.from(p.matchAll(/\b(19|20)\d{2}\b/g)).map((x) =>
+          Number(x[0]),
+        );
+        return years.length ? Math.max(...years) : 0;
+      };
+      retrieved = [...retrieved].sort(
+        (a, b) =>
+          yearScore(b.metadata) - yearScore(a.metadata) ||
+          b.similarity - a.similarity,
+      );
+    }
+
+    const contextBlock = buildContextBlock(
+      retrieved.map((r) => ({
+        content: r.content,
+        title: r.title,
+        url: r.url,
+        similarity: r.similarity,
+      })),
+    );
+
+    const system = ragSystemPrompt(mode);
+    const extraRules = isTenureIntent(userMsg)
+      ? `Kalau ditanya soal berapa tahun kerja/pengalaman: lihat tanggal di Context, hitung dari September 2019 sampai sekarang (2025), terus jawab natural kayak "Udah sekitar 5-6 tahun nih" atau "Kalau dihitung-hitung sekitar 5 tahun lebih". JANGAN pakai numbering atau format list. Jawab dalam bentuk kalimat biasa. Kalau tanggalnya kurang lengkap, bilang aja "Hmm, kurang jelas tanggalnya, bisa spesifik yang mana?"`
+      : isLastProjectIntent(userMsg)
+        ? `Kalau ditanya proyek terakhir/terbaru: pilih yang paling baru dari Context (liat tahun/periode). Jawab santai tapi spesifik: nama proyek + role + tech stack YANG BENER sesuai Context + hasil. Contoh: "Terakhir aku ngerjain [nama project], pakai [exact tech dari Context] buat [tujuan]". Pastikan tech stack akurat!`
+        : isIntroductionIntent(userMsg)
+          ? `Kalau diminta perkenalan diri: fokus ke pengalaman kerja, skills utama, dan domain expertise (telco/enterprise). Sebutkan 2-3 highlight terpenting. Jangan terlalu panjang, maksimal 2-3 kalimat.`
+          : isProjectStackIntent(userMsg)
+            ? `Kalau ditanya tentang tech stack/teknologi: sebutkan tech stack yang PERSIS sesuai Context. Jangan mengarang atau salah sebut teknologi. Kalau ada beberapa proyek, sebutkan yang paling relevan dengan pertanyaan.`
+            : isLocationIntent(userMsg)
+              ? `Kalau ditanya tentang domisili/lokasi tinggal: HANYA jawab kalau ada info lokasi di Context. Kalau tidak ada info lokasi sama sekali di Context, bilang "Wah, kayaknya belum ada info lokasi di data aku. Ada yang lain?" JANGAN mengarang lokasi dan JANGAN pakai referensi [#]!`
+              : `Jawab sesuai pertanyaan aja, jangan nambah-nambah info yang gak ditanya. Keep it simple and direct.`;
+
+    const preamble = `Context (pakai info ini aja, jawab maksimal 2 paragraf, fokus ke pertanyaan, JANGAN pakai referensi [#], JANGAN pakai numbering atau bullet points, jawab seperti obrolan natural):\n\n${extraRules}\n\n${contextBlock}`;
+
+    // Convert to model messages, but be resilient if conversion fails (fallback to empty history)
+    let modelMessages: Parameters<typeof streamText>[0]["messages"] = [];
+    try {
+      modelMessages = convertToModelMessages(messages);
+    } catch {
+      modelMessages = [];
+    }
+
+    const result = streamText({
+      model: google("gemini-3.5-flash"),
+      system,
+      messages: [
+        ...modelMessages.filter((m) => m.role !== "system"),
+        { role: "user" as const, content: preamble },
+      ],
+      temperature: mode === "HR" ? 0.3 : 0.2,
+    });
+
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error("Ask API error:", error);
+    return new Response("Internal server error", { status: 500 });
   }
-
-  const result = streamText({
-    model: google("gemini-2.5-flash-lite"),
-    system,
-    messages: [
-      ...modelMessages.filter((m) => m.role !== "system"),
-      { role: "user" as const, content: preamble },
-    ],
-    temperature: mode === "HR" ? 0.3 : 0.2,
-  });
-
-  return result.toUIMessageStreamResponse();
 }
