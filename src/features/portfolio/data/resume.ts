@@ -1,8 +1,8 @@
 import {
   SiAngular,
+  SiClaude,
   SiFlutter,
   SiNextdotjs,
-  SiOpenai,
   SiReact,
   SiReactquery,
   SiRedux,
@@ -11,7 +11,12 @@ import {
   SiTypescript,
 } from "react-icons/si";
 
-import { Certification, ResumeData, ResumeMenu, Skill } from "@/src/features/portfolio/types/resume";
+import {
+  Certification,
+  ResumeData,
+  ResumeMenu,
+  Skill,
+} from "@/src/features/portfolio/types/resume";
 
 export const resumeMenus: ResumeMenu[] = [
   { id: 0, name: "Experiences" },
@@ -30,7 +35,7 @@ export const skills: Skill[] = [
   { name: "TailwindCSS", icon: SiTailwindcss },
   { name: "Flutter", icon: SiFlutter },
   { name: "Supabase", icon: SiSupabase },
-  { name: "AI Tools", icon: SiOpenai },
+  { name: "AI Tools", icon: SiClaude },
 ];
 
 export const educationData: ResumeData[] = [

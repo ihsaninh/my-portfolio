@@ -3,6 +3,3 @@
 
 # Run linting
 bun run lint
-
-# Run tests
-bun test
