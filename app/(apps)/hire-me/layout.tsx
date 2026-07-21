@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 
+import { SITE_URL } from "@/src/shared/lib/constants";
 import { breadcrumbJsonLd } from "@/src/shared/lib/seo";
 
 export const metadata: Metadata = {
@@ -34,12 +35,12 @@ export default function HireMeLayout({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             breadcrumbJsonLd([
-              { name: "Home", item: "https://ihsaninh.com/" },
+              { name: "Home", item: `${SITE_URL}/` },
               {
                 name: "Hire Me Simulator",
-                item: "https://ihsaninh.com/hire-me",
+                item: `${SITE_URL}/hire-me`,
               },
-            ])
+            ]),
           ),
         }}
       />

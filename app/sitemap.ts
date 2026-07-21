@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 
+import { SITE_URL } from "@/src/shared/lib/constants";
 import { getAllPostsMeta } from "@/src/shared/lib/mdx";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://ihsaninh.dev";
+  const baseUrl = SITE_URL;
 
   const posts = getAllPostsMeta();
   const toDate = (d?: string) => (d ? new Date(d) : new Date());
@@ -13,7 +14,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
-      lastModified: new Date("2025-07-01"),
+      lastModified: latestModified,
       changeFrequency: "monthly",
       priority: 1.0,
     },

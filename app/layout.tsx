@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 
 import CopyCodeClient from "@/src/features/portfolio/components/blog/CopyCodeClient";
 import QueryProvider from "@/src/shared/components/providers/QueryProvider";
+import { SITE_AUTHOR, SITE_NAME, SITE_URL } from "@/src/shared/lib/constants";
 import { personJsonLd, websiteJsonLd } from "@/src/shared/lib/seo";
 
 const outfit = Outfit({
@@ -21,11 +22,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://ihsaninh.com"),
+  metadataBase: new URL(SITE_URL),
   title: "Ihsan Nurul Habib - Frontend Developer",
   description:
     "Personal portfolio of Ihsan Nurul Habib, a frontend developer specializing in Next.js, React, and modern web technologies.",
-  authors: [{ name: "Ihsan Nurul Habib" }],
+  authors: [{ name: SITE_AUTHOR }],
   keywords: [
     "Ihsan Nurul Habib",
     "Frontend Developer",
@@ -38,8 +39,8 @@ export const metadata: Metadata = {
     title: "Ihsan Nurul Habib - Frontend Developer",
     description:
       "Personal portfolio of Ihsan Nurul Habib, a frontend developer specializing in Next.js, React, and modern web technologies.",
-    url: "https://ihsaninh.com",
-    siteName: "Ihsan Nurul Habib — Portfolio",
+    url: SITE_URL,
+    siteName: SITE_NAME,
     type: "website",
   },
   twitter: {
@@ -68,14 +69,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(
               personJsonLd({
-                name: "Ihsan Nurul Habib",
-                url: "https://ihsaninh.com",
+                name: SITE_AUTHOR,
+                url: SITE_URL,
                 jobTitle: "Frontend Developer",
                 sameAs: [
                   "https://github.com/ihsaninh",
                   "https://www.linkedin.com/in/ihsaninh",
                 ],
-              })
+              }),
             ),
           }}
         />
@@ -85,10 +86,10 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify(
               websiteJsonLd({
-                url: "https://ihsaninh.com",
-                name: "Ihsan Nurul Habib — Portfolio",
-                publisherName: "Ihsan Nurul Habib",
-              })
+                url: SITE_URL,
+                name: SITE_NAME,
+                publisherName: SITE_AUTHOR,
+              }),
             ),
           }}
         />

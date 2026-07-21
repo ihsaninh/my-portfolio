@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { SITE_URL } from "@/src/shared/lib/constants";
+
 export function middleware(request: NextRequest) {
   // Create response
   const response = NextResponse.next();
@@ -7,7 +9,7 @@ export function middleware(request: NextRequest) {
   // Add security headers that can't be set in next.config.ts
   response.headers.set(
     "Strict-Transport-Security",
-    "max-age=31536000; includeSubDomains; preload"
+    "max-age=31536000; includeSubDomains; preload",
   );
 
   // Add additional CORS headers for API routes
@@ -17,7 +19,7 @@ export function middleware(request: NextRequest) {
       return new NextResponse(null, {
         status: 200,
         headers: {
-          "Access-Control-Allow-Origin": "https://ihsaninh.com",
+          "Access-Control-Allow-Origin": SITE_URL,
           "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
           "Access-Control-Max-Age": "86400",

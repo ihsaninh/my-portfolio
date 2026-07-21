@@ -1,3 +1,7 @@
+export const SITE_URL = "https://ihsaninh.dev";
+export const SITE_NAME = "Ihsan Nurul Habib — Portfolio";
+export const SITE_AUTHOR = "Ihsan Nurul Habib";
+
 export const HR_PRESETS = [
   "Kenapa tertarik dengan posisi ini?",
   "Ceritakan proyek terbaru yang paling kamu banggakan.",

@@ -1,6 +1,6 @@
 # Project Overview
 
-This is the personal portfolio & apps platform of Ihsan Nurul Habib (ihsaninh.com), built with modern web technologies.
+This is the personal portfolio & apps platform of Ihsan Nurul Habib (ihsaninh.dev), built with modern web technologies.
 
 ## Tech Stack
 

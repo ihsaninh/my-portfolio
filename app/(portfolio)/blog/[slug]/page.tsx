@@ -6,6 +6,7 @@ import remarkGfm from "remark-gfm";
 
 import { mdxComponents } from "@/mdx-components";
 import BlogPostLayout from "@/src/features/portfolio/components/blog/BlogPostLayout";
+import { SITE_AUTHOR, SITE_URL } from "@/src/shared/lib/constants";
 import { getAllPostSlugs, getPostBySlug } from "@/src/shared/lib/mdx";
 import {
   blogPostingJsonLd,
@@ -25,21 +26,20 @@ export async function generateMetadata({ params }: Params) {
   const post = getPostBySlug(slug);
   if (!post) return {};
   const { meta } = post;
-  const origin = "https://ihsaninh.com";
-  const url = `${origin}/blog/${slug}`;
+  const url = `${SITE_URL}/blog/${slug}`;
   const og = buildPostOpenGraph({
     title: meta.title,
     description: meta.description || meta.excerpt,
     url,
     cover: meta.cover,
-    origin,
+    origin: SITE_URL,
     published: meta.date,
   });
   const twitter = buildTwitterCard({
     title: meta.title,
     description: meta.description || meta.excerpt,
     cover: meta.cover,
-    origin,
+    origin: SITE_URL,
   });
   return {
     title: meta.title,
@@ -75,9 +75,9 @@ export default async function BlogPostPage({ params }: Params) {
               excerpt: meta.excerpt,
               image: meta.cover,
               datePublished: meta.date,
-              authorName: "Ihsan Nurul Habib",
-              pageUrl: `https://ihsaninh.com/blog/${slug}`,
-            })
+              authorName: SITE_AUTHOR,
+              pageUrl: `${SITE_URL}/blog/${slug}`,
+            }),
           ),
         }}
       />
@@ -87,10 +87,10 @@ export default async function BlogPostPage({ params }: Params) {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             breadcrumbJsonLd([
-              { name: "Home", item: "https://ihsaninh.com/" },
-              { name: "Blog", item: "https://ihsaninh.com/blog" },
-              { name: meta.title, item: `https://ihsaninh.com/blog/${slug}` },
-            ])
+              { name: "Home", item: `${SITE_URL}/` },
+              { name: "Blog", item: `${SITE_URL}/blog` },
+              { name: meta.title, item: `${SITE_URL}/blog/${slug}` },
+            ]),
           ),
         }}
       />

@@ -6,7 +6,7 @@ import { FiArrowLeft } from "react-icons/fi";
 import BlogListAnimated from "@/src/features/portfolio/components/blog/BlogListAnimated";
 import Pagination from "@/src/features/portfolio/components/blog/Pagination";
 import ScrollToTop from "@/src/shared/components/ScrollToTop";
-import { BLOG_PAGE_SIZE } from "@/src/shared/lib/constants";
+import { BLOG_PAGE_SIZE, SITE_URL } from "@/src/shared/lib/constants";
 import { getAllPostsMeta } from "@/src/shared/lib/mdx";
 import { breadcrumbJsonLd, getBlogPageMetadata } from "@/src/shared/lib/seo";
 
@@ -19,7 +19,7 @@ export async function generateMetadata({
   const p = Math.max(1, Number(sp?.page ?? "1"));
   const totalPages = Math.max(
     1,
-    Math.ceil(getAllPostsMeta().length / BLOG_PAGE_SIZE)
+    Math.ceil(getAllPostsMeta().length / BLOG_PAGE_SIZE),
   );
   return getBlogPageMetadata({ page: p, totalPages });
 }
@@ -41,9 +41,9 @@ export default async function BlogPage({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(
             breadcrumbJsonLd([
-              { name: "Home", item: "https://ihsaninh.com/" },
-              { name: "Blog", item: "https://ihsaninh.com/blog" },
-            ])
+              { name: "Home", item: `${SITE_URL}/` },
+              { name: "Blog", item: `${SITE_URL}/blog` },
+            ]),
           ),
         }}
       />

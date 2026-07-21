@@ -3,11 +3,11 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15.3.4-black?logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-4.0-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://ihsaninh.com)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://ihsaninh.dev)
 
 Modern personal portfolio website with interactive features and AI-powered experiences.
 
-🌐 **Live Demo:** [ihsaninh.com](https://ihsaninh.com)
+🌐 **Live Demo:** [ihsaninh.dev](https://ihsaninh.dev)
 
 ## ✨ Features
 
@@ -97,7 +97,7 @@ MIT License - see [LICENSE](LICENSE) file
 
 **Ihsan Nurul Habib** - Full Stack Developer
 
-- 🌐 [ihsaninh.com](https://ihsaninh.com)
+- 🌐 [ihsaninh.dev](https://ihsaninh.dev)
 - 📧 [ihsan.inh@gmail.com](mailto:ihsan.inh@gmail.com)
 - 💼 [LinkedIn](https://linkedin.com/in/ihsaninh)
 - 🐙 [GitHub](https://github.com/ihsaninh)

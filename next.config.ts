@@ -2,6 +2,8 @@ import createMDX from "@next/mdx";
 import type { NextConfig } from "next";
 import rehypePrism from "rehype-prism-plus";
 
+import { SITE_URL } from "./src/shared/lib/constants";
+
 const nextConfig: NextConfig = {
   transpilePackages: ["next-mdx-remote"],
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
@@ -65,7 +67,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: "Access-Control-Allow-Origin",
-            value: "https://ihsaninh.com",
+            value: SITE_URL,
           },
           {
             key: "Access-Control-Allow-Methods",
