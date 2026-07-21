@@ -3,7 +3,7 @@ import type { MetadataRoute } from "next";
 import { getAllPostsMeta } from "@/src/shared/lib/mdx";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://ihsaninh.com";
+  const baseUrl = "https://ihsaninh.dev";
 
   const posts = getAllPostsMeta();
   const toDate = (d?: string) => (d ? new Date(d) : new Date());
