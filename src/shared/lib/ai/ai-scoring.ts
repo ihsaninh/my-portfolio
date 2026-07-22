@@ -253,7 +253,7 @@ Hard rules (objective):
 Tone: friendly, supportive, slightly playful. 2–4 sentences. Avoid overly formal language. Follow the schema.`;
 
     const result = await generateObject({
-      model: google("gemini-3.5-flash"),
+      model: google("gemini-3.5-flash-lite"),
       schema: ScoringSchema,
       prompt,
       temperature: 0.1, // Very low temperature for maximum consistency

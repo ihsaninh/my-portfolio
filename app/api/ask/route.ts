@@ -220,7 +220,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = streamText({
-      model: google("gemini-3.5-flash"),
+      model: google("gemini-3.5-flash-lite"),
       system: `Jawab salam dengan natural dan friendly seperti orang Indonesia biasa dalam konteks interview atau profesional.
 
       Aturan:
@@ -343,7 +343,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = streamText({
-      model: google("gemini-3.5-flash"),
+      model: google("gemini-3.5-flash-lite"),
       system,
       messages: [
         ...modelMessages.filter((m) => m.role !== "system"),
